@@ -1,0 +1,388 @@
+/* src/components/LoginSection.css */
+.login-section {
+  padding: 6rem 2rem;
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  min-height: 100vh;
+  transition: background var(--transition-speed);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.section-title {
+  font-size: 3rem;
+  font-weight: 700;
+  background: linear-gradient(45deg, var(--text-primary), var(--accent-gold));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 1rem;
+}
+
+.section-subtitle {
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.login-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 3rem;
+}
+
+.toggle-btn {
+  padding: 1rem 3rem;
+  background: transparent;
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  color: #888;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.toggle-btn.active {
+  background: linear-gradient(45deg, #ffd700, #ffed4e);
+  color: #0a0a0a;
+  border-color: transparent;
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+}
+
+.toggle-btn:hover:not(.active) {
+  border-color: rgba(255, 215, 0, 0.5);
+  color: #ffffff;
+}
+
+.login-form-container {
+  max-width: 800px;
+  margin: 0 auto;
+  background: var(--card-bg);
+  border-radius: 20px;
+  padding: 2.5rem;
+  border: 1px solid var(--border-color);
+  backdrop-filter: blur(10px);
+  min-height: 450px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* ── Portal Selection ── */
+.portal-selection {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.portal-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  overflow: hidden;
+}
+
+.portal-card:hover {
+  transform: translateY(-10px);
+  background: rgba(212, 175, 55, 0.05);
+  border-color: rgba(212, 175, 55, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.portal-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, #d4af37, transparent);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.portal-card:hover::after {
+  transform: translateX(100%);
+}
+
+.portal-card-icon {
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+  filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.2));
+}
+
+.portal-card h3 {
+  font-size: 1.8rem;
+  color: #fff;
+  margin-bottom: 1rem;
+}
+
+.portal-card p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.select-portal-btn {
+  padding: 0.8rem 1.5rem;
+  background: transparent;
+  border: 1px solid #d4af37;
+  color: #d4af37;
+  border-radius: 30px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.portal-card:hover .select-portal-btn {
+  background: #d4af37;
+  color: #000;
+}
+
+/* ── Registration Success View ── */
+.registration-success-card {
+  text-align: center;
+  padding: 3rem 2rem;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.success-icon {
+  font-size: 5rem;
+  margin-bottom: 2rem;
+  filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.4));
+}
+
+.registration-success-card h3 {
+  font-size: 2.2rem;
+  color: #fff;
+  margin-bottom: 1.5rem;
+}
+
+.success-details {
+  color: #aaa;
+  font-size: 1.1rem;
+  line-height: 1.8;
+  margin-bottom: 2.5rem;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.credential-reminder {
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 10px;
+  padding: 1.2rem;
+  margin-top: 1.5rem;
+  color: #d4af37;
+}
+
+.back-btn.center {
+  margin: 1.5rem auto 0;
+  justify-content: center;
+}
+
+/* ── Login Form Adjustments ── */
+.login-form.pulse-in, .register-form.fade-in {
+  max-width: 450px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: #d4af37;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.back-btn:hover {
+  color: #fff;
+  transform: translateX(-5px);
+}
+
+.login-form h3 {
+  color: #ffffff;
+  font-size: 1.8rem;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  color: #cccccc;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #ffd700;
+  box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.1);
+}
+
+.dob-hint {
+  margin-left: 8px;
+  font-size: 0.75rem;
+  color: #d4af37;
+  opacity: 0.8;
+}
+
+.login-error-msg {
+  background: rgba(220, 53, 69, 0.15);
+  border: 1px solid rgba(220, 53, 69, 0.4);
+  border-radius: 6px;
+  padding: 0.6rem 0.9rem;
+  color: #ff6b6b;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+  animation: shake 0.4s ease;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(45deg, #ffd700, #ffed4e);
+  color: #0a0a0a;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+}
+
+.submit-btn.portal-submit {
+  background: #d4af37;
+  color: #000;
+}
+
+.submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.login-info {
+  text-align: center;
+  margin-top: 3rem;
+  color: #888;
+}
+
+.login-info a {
+  color: #ffd700;
+  text-decoration: none;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.fade-in { animation: fadeIn 0.5s ease-out; }
+.pulse-in { animation: pulse-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+@media (max-width: 768px) {
+  .login-section { padding: 4rem 1.5rem; }
+  .section-title { font-size: 2.2rem; }
+  .portal-selection { grid-template-columns: 1fr; gap: 1.5rem; }
+  .login-form-container { padding: 2rem 1.5rem; }
+  .form-row { grid-template-columns: 1fr; gap: 0; }
+}
+
+/* ── LIGHT MODE OVERRIDES ── */
+[data-theme='light'] .section-subtitle,
+[data-theme='light'] .portal-card p,
+[data-theme='light'] .form-group label,
+[data-theme='light'] .login-info,
+[data-theme='light'] .success-details {
+  color: #000000;
+}
+
+[data-theme='light'] .portal-card h3,
+[data-theme='light'] .login-form h3,
+[data-theme='light'] .registration-success-card h3 {
+  color: #000000;
+}
+
+[data-theme='light'] .portal-card {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='light'] .toggle-btn:not(.active) {
+  color: #555;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='light'] .form-group input,
+[data-theme='light'] .form-group select {
+  background: #ffffff;
+  color: #000000;
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme='light'] .back-btn {
+  color: #c2410c;
+}
+
+[data-theme='light'] .back-btn:hover {
+  color: #000;
+}

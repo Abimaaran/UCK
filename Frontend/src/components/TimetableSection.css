@@ -1,0 +1,108 @@
+/* src/components/TimetableSection.css */
+.timetable-section {
+  padding: 6rem 2rem;
+  background: var(--bg-primary);
+  position: relative;
+  overflow: hidden;
+  transition: background var(--transition-speed);
+}
+
+.timetable-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-top: 3rem;
+}
+
+.schedule-card {
+  position: relative;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 15px;
+  padding: 2rem;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.schedule-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(212, 175, 55, 0.4);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.day-badge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: linear-gradient(135deg, #d4af37, #f1c40f);
+  color: #000;
+  padding: 0.5rem 1.5rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  border-bottom-right-radius: 15px;
+}
+
+.card-inner {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.session-time, .session-level, .session-coach {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+}
+
+.session-time .icon, .session-level .icon, .session-coach .icon {
+  font-size: 1.2rem;
+  opacity: 0.8;
+}
+
+.session-level {
+  color: #d4af37;
+  font-weight: 600;
+}
+
+.session-coach {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.card-decoration {
+  position: absolute;
+  bottom: -20px;
+  right: -20px;
+  font-size: 5rem;
+  opacity: 0.03;
+  color: #d4af37;
+  pointer-events: none;
+}
+
+.timetable-note {
+  text-align: center;
+  margin-top: 4rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+.empty-timetable {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 4rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 15px;
+  color: #888;
+}
+
+@media (max-width: 768px) {
+  .timetable-section {
+    padding: 4rem 1rem;
+  }
+}

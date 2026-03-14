@@ -1,0 +1,578 @@
+/* src/components/HeroSection.css */
+.hero-section {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  padding-top: 200px;
+  position: relative;
+  overflow: hidden;
+  transition: background var(--transition-speed);
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(255, 215, 0, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 215, 0, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.hero-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 4rem 2rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-content {
+  max-width: 600px;
+}
+
+.hero-title {
+  font-size: 4rem;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, var(--accent-gold), var(--text-primary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+[data-theme='light'] .hero-title {
+  background: linear-gradient(135deg, #92400e, #000000);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.highlight {
+  position: relative;
+  display: inline-block;
+}
+
+.highlight::after {
+  content: '';
+  position: absolute;
+  bottom: 5px;
+  left: 0;
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 215, 0, 0.3);
+  z-index: -1;
+}
+
+.hero-subtitle {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin-bottom: 3rem;
+  max-width: 500px;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 4rem;
+  flex-wrap: wrap;
+}
+
+.hero-btn {
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.hero-btn.primary {
+  background: linear-gradient(135deg, var(--accent-gold), #000000);
+  color: #ffffff;
+  box-shadow: 0 4px 20px rgba(194, 65, 12, 0.4);
+}
+
+[data-theme='light'] .hero-btn.primary {
+  background: linear-gradient(135deg, #c2410c, #000000);
+  color: #ffffff;
+}
+
+.hero-btn.primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 25px rgba(255, 215, 0, 0.6);
+}
+
+.hero-btn.secondary {
+  background: transparent;
+  color: var(--text-primary);
+  border: 2px solid var(--border-color);
+  backdrop-filter: blur(10px);
+}
+
+.hero-btn.secondary:hover {
+  background: rgba(255, 215, 0, 0.1);
+  border-color: #cc7400;
+}
+
+.hero-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  margin-top: 4rem;
+}
+
+.stat {
+  text-align: center;
+}
+
+.stat h3 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--accent-gold), var(--text-primary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 0.5rem;
+}
+
+.stat p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.hero-image {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.chessboard-animation {
+  width: 400px;
+  height: 400px;
+  background: 
+    linear-gradient(45deg, rgba(255,255,255,0.8) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.8) 75%, rgba(255,255,255,0.8)),
+    linear-gradient(45deg, rgba(255,255,255,0.8) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.8) 75%, rgba(255,255,255,0.8));
+  background-size: 100px 100px;
+  background-position: 0 0, 50px 50px;
+  border: 4px solid var(--border-color);
+  position: relative;
+  overflow: hidden;
+  animation: rotateBoard 20s linear infinite;
+}
+
+/* Chess Pieces Styling */
+.chess-piece {
+  position: absolute;
+  width: 50px;
+  height: 80px;
+  background: linear-gradient(145deg, #ddd0d0, #cc7400);
+  border-radius: 10px;
+  box-shadow: 
+    0 8px 25px rgba(150, 149, 149, 0.3),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.2),
+    inset 0 2px 5px rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Georgia', serif;
+  font-weight: bold;
+  font-size: 3rem;
+  text-shadow: 5px 3px 4px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+/* King Piece (White) */
+.chess-piece.king {
+  top: 50px;
+  left: 30px;
+  background: linear-gradient(145deg, #ffffff, #d4af37);
+  color: #000000;
+  animation: floatKing 4s ease-in-out infinite;
+}
+
+.chess-piece.king::before {
+  content: '♔';
+  position: absolute;
+}
+
+/* Queen Piece (Black) */
+.chess-piece.queen {
+  bottom: 30px;
+  right: 40px;
+  background: linear-gradient(145deg, #2d1a0a, #000000);
+  color: #ffffff;
+  animation: floatQueen 4s ease-in-out infinite 0.8s;
+  box-shadow: 
+    0 8px 25px rgba(0, 0, 0, 0.4),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.4),
+    inset 0 2px 5px rgba(255, 215, 0, 0.1);
+}
+
+.chess-piece.queen::before {
+  content: '♕';
+  position: absolute;
+}
+
+/* Knight Piece (Additional - White) */
+.chess-piece.knight {
+  top: 150px;
+  right: 60px;
+  background: linear-gradient(145deg, #ffffff, #d4af37);
+  color: #000000;
+  animation: floatKnight 3.5s ease-in-out infinite 0.4s;
+  width: 70px;
+  height: 70px;
+  font-size: 2.5rem;
+}
+
+.chess-piece.knight::before {
+  content: '♘';
+  position: absolute;
+}
+
+/* Bishop Piece (Additional - Black) */
+.chess-piece.bishop {
+  bottom: 120px;
+  left: 80px;
+  background: linear-gradient(145deg, #2d1a0a, #000000);
+  color: #ffffff;
+  animation: floatBishop 3.8s ease-in-out infinite 1.2s;
+  width: 65px;
+  height: 65px;
+  font-size: 2.3rem;
+}
+
+.chess-piece.bishop::before {
+  content: '♗';
+  position: absolute;
+}
+
+/* Pawn Pieces (Multiple - White) */
+.chess-piece.pawn-white {
+  top: 250px;
+  left: 150px;
+  background: linear-gradient(145deg, #ffffff, #d4af37);
+  color: #000000;
+  animation: floatPawnWhite 2.8s ease-in-out infinite 0.6s;
+  width: 50px;
+  height: 50px;
+  font-size: 1.8rem;
+  border-radius: 50%;
+}
+
+.chess-piece.pawn-white::before {
+  content: '♙';
+  position: absolute;
+}
+
+/* Pawn Pieces (Multiple - Black) */
+.chess-piece.pawn-black {
+  top: 80px;
+  right: 180px;
+  background: linear-gradient(145deg, #2d1a0a, #000000);
+  color: #ffffff;
+  animation: floatPawnBlack 3.2s ease-in-out infinite 1s;
+  width: 50px;
+  height: 50px;
+  font-size: 1.8rem;
+  border-radius: 50%;
+}
+
+.chess-piece.pawn-black::before {
+  content: '♟';
+  position: absolute;
+}
+
+/* Rook Piece (Additional - White) */
+.chess-piece.rook {
+  bottom: 200px;
+  left: 200px;
+  background: linear-gradient(145deg, #ffffff, #d4af37);
+  color: #000000;
+  animation: floatRook 4.2s ease-in-out infinite 0.3s;
+  width: 75px;
+  height: 75px;
+  font-size: 2.8rem;
+}
+
+.chess-piece.rook::before {
+  content: '♖';
+  position: absolute;
+}
+
+.hero-wave {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  overflow: hidden;
+}
+
+/* Chess Piece Hover Effects */
+.chess-piece:hover {
+  transform: scale(1.1);
+  box-shadow: 
+    0 12px 35px rgba(255, 215, 0, 0.5),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.3),
+    inset 0 2px 5px rgba(255, 255, 255, 0.6);
+  z-index: 10;
+}
+
+.chess-piece.queen:hover {
+  box-shadow: 
+    0 12px 35px rgba(255, 215, 0, 0.6),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.5),
+    inset 0 2px 5px rgba(255, 215, 0, 0.2);
+}
+
+/* Chess Piece Animations */
+@keyframes rotateBoard {
+  0% {
+    transform: perspective(1000px) rotateX(10deg) rotateY(0deg);
+  }
+  100% {
+    transform: perspective(1000px) rotateX(10deg) rotateY(360deg);
+  }
+}
+
+@keyframes floatKing {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+  25% {
+    transform: translateY(-15px) rotate(2deg) scale(1.05);
+  }
+  50% {
+    transform: translateY(5px) rotate(-1deg) scale(0.95);
+  }
+  75% {
+    transform: translateY(-10px) rotate(-2deg) scale(1.03);
+  }
+}
+
+@keyframes floatQueen {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+  25% {
+    transform: translateY(-18px) rotate(-3deg) scale(1.06);
+  }
+  50% {
+    transform: translateY(4px) rotate(2deg) scale(0.94);
+  }
+  75% {
+    transform: translateY(-12px) rotate(1deg) scale(1.04);
+  }
+}
+
+@keyframes floatKnight {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  33% {
+    transform: translate(10px, -10px) rotate(5deg);
+  }
+  66% {
+    transform: translate(-5px, 5px) rotate(-3deg);
+  }
+}
+
+@keyframes floatBishop {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  33% {
+    transform: translate(-8px, -8px) rotate(-4deg);
+  }
+  66% {
+    transform: translate(6px, 6px) rotate(2deg);
+  }
+}
+
+@keyframes floatPawnWhite {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-12px) scale(1.1);
+  }
+}
+
+@keyframes floatPawnBlack {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-10px) scale(1.08);
+  }
+}
+
+@keyframes floatRook {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(5px, -7px) rotate(2deg);
+  }
+  50% {
+    transform: translate(-3px, 4px) rotate(-1deg);
+  }
+  75% {
+    transform: translate(7px, -5px) rotate(-2deg);
+  }
+}
+
+/* Chess Piece Movement Trails */
+.chess-piece::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: inherit;
+  opacity: 0.3;
+  z-index: -1;
+  animation: trailEffect 2s ease-out infinite;
+}
+
+@keyframes trailEffect {
+  0% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .hero-container {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: 3rem;
+  }
+
+  .hero-content {
+    max-width: 100%;
+  }
+
+  .hero-actions {
+    justify-content: center;
+  }
+
+  .chessboard-animation {
+    width: 350px;
+    height: 350px;
+    margin: 0 auto;
+  }
+  
+  .chess-piece {
+    width: 70px;
+    height: 70px;
+    font-size: 2.5rem;
+  }
+  
+  .chess-piece.knight,
+  .chess-piece.bishop,
+  .chess-piece.rook,
+  .chess-piece.pawn-white,
+  .chess-piece.pawn-black {
+    transform: scale(0.9);
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 3rem;
+  }
+
+  .hero-stats {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .chessboard-animation {
+    width: 300px;
+    height: 300px;
+  }
+  
+  .chess-piece {
+    width: 60px;
+    height: 60px;
+    font-size: 2rem;
+  }
+  
+  .chess-piece.king {
+    top: 30px;
+    left: 30px;
+  }
+  
+  .chess-piece.queen {
+    bottom: 30px;
+    right: 30px;
+  }
+  
+  .chess-piece.knight,
+  .chess-piece.bishop,
+  .chess-piece.rook,
+  .chess-piece.pawn-white,
+  .chess-piece.pawn-black {
+    transform: scale(0.8);
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-title {
+    font-size: 2.5rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+  }
+
+  .hero-btn {
+    width: 100%;
+  }
+  
+  .chessboard-animation {
+    width: 250px;
+    height: 250px;
+  }
+  
+  .chess-piece {
+    width: 50px;
+    height: 50px;
+    font-size: 1.8rem;
+  }
+  
+  .chess-piece.king {
+    top: 20px;
+    left: 20px;
+  }
+  
+  .chess-piece.queen {
+    bottom: 20px;
+    right: 20px;
+  }
+}

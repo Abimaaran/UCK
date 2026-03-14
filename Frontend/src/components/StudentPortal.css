@@ -1,0 +1,261 @@
+/* StudentPortal.css — Royal dark theme */
+
+.student-portal {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0a0a0a 0%, #111827 60%, #0d1117 100%);
+  font-family: 'Outfit', 'Inter', sans-serif;
+  color: #e8e8e8;
+}
+
+/* ── HEADER ─────────────────────────────────────────────────── */
+.portal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.portal-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #d4af37;
+}
+
+.portal-crown {
+  font-size: 1.5rem;
+  filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.6));
+}
+
+.portal-logout-btn {
+  background: rgba(220, 53, 69, 0.15);
+  border: 1px solid rgba(220, 53, 69, 0.4);
+  color: #ff6b6b;
+  padding: 0.45rem 1.1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.portal-logout-btn:hover {
+  background: rgba(220, 53, 69, 0.3);
+  border-color: rgba(220, 53, 69, 0.7);
+}
+
+/* ── MAIN ───────────────────────────────────────────────────── */
+.portal-main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem;
+}
+
+/* ── WELCOME CARD ───────────────────────────────────────────── */
+.portal-welcome-card {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  background: linear-gradient(135deg, rgba(212,175,55,0.12), rgba(212,175,55,0.04));
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 16px;
+  padding: 2rem 2.5rem;
+  margin-bottom: 2rem;
+  animation: fadeSlideIn 0.5s ease;
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(-16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.portal-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #d4af37, #b8960c);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #0a0a0a;
+  flex-shrink: 0;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+}
+
+.portal-welcome-text h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #d4af37;
+  margin: 0 0 0.3rem;
+}
+
+.portal-welcome-text p {
+  color: #aaa;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+/* ── INFO GRID ──────────────────────────────────────────────── */
+.portal-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.portal-info-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+  animation: fadeSlideIn 0.4s ease;
+}
+
+.portal-info-card:hover {
+  border-color: rgba(212, 175, 55, 0.35);
+  transform: translateY(-2px);
+}
+
+.info-card-icon {
+  font-size: 1.4rem;
+  margin-bottom: 0.4rem;
+}
+
+.info-card-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #888;
+  margin-bottom: 0.3rem;
+}
+
+.info-card-value {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #e8e8e8;
+}
+
+.approved-badge {
+  color: #4caf50 !important;
+  background: rgba(76, 175, 80, 0.12);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+}
+
+/* ── NOTICE ─────────────────────────────────────────────────── */
+.portal-notice {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  background: rgba(212, 175, 55, 0.07);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+}
+
+.notice-icon {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.portal-notice strong {
+  color: #d4af37;
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+.portal-notice p {
+  margin: 0 0 0.3rem;
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+.portal-notice code {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 0.1rem 0.4rem;
+  font-family: monospace;
+  color: #a0e4a0;
+}
+
+.portal-notice small {
+  color: #777;
+  font-size: 0.78rem;
+}
+
+/* ── RESPONSIVE ─────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .portal-welcome-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.5rem;
+  }
+
+  .portal-header {
+    padding: 0.85rem 1rem;
+  }
+
+  .portal-brand span:last-child {
+    display: none;
+  }
+}
+
+/* ── LIGHT MODE OVERRIDES ── */
+[data-theme='light'] .student-portal {
+  background: #f1f5f9;
+  color: #000000;
+}
+
+[data-theme='light'] .portal-header {
+  background: rgba(255, 255, 255, 0.8);
+  border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='light'] .portal-welcome-card {
+  background: rgba(194, 65, 12, 0.05);
+  border-color: rgba(194, 65, 12, 0.2);
+}
+
+[data-theme='light'] .portal-welcome-text h1 {
+  color: #c2410c;
+}
+
+[data-theme='light'] .portal-welcome-text p,
+[data-theme='light'] .info-card-label,
+[data-theme='light'] .portal-notice p {
+  color: #334155;
+}
+
+[data-theme='light'] .portal-info-card {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='light'] .info-card-value,
+[data-theme='light'] .portal-notice strong {
+  color: #000000;
+}
+
+[data-theme='light'] .portal-avatar {
+  background: linear-gradient(135deg, #c2410c, #9a3412);
+  color: #ffffff;
+}
+
+[data-theme='light'] .portal-notice {
+  background: rgba(194, 65, 12, 0.05);
+  border-color: rgba(194, 65, 12, 0.2);
+}
