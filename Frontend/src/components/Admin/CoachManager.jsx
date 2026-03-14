@@ -1,20 +1,25 @@
 import React, { useState } from 'react';
+import { createItem, updateItem, deleteItem } from '../../services/api';
 
 const CoachManager = ({ coaches, setCoaches }) => {
   const [editingCoach, setEditingCoach] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this coach?')) {
-      setCoaches(coaches.filter(c => c.id !== id));
+      try {
+        await deleteItem('coaches', id);
+        setCoaches(coaches.filter(c => c.id !== id && c._id !== id));
+      } catch (err) {
+        alert("Failed to delete coach.");
+      }
     }
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const coachData = {
-      id: editingCoach ? editingCoach.id : Date.now(),
       name: formData.get('name'),
       title: formData.get('title'),
       experience: formData.get('experience'),
@@ -27,13 +32,19 @@ const CoachManager = ({ coaches, setCoaches }) => {
       colorGradient: editingCoach ? editingCoach.colorGradient : 'linear-gradient(135deg, #00BFFF, #0A74DA)'
     };
 
-    if (editingCoach) {
-      setCoaches(coaches.map(c => c.id === editingCoach.id ? coachData : c));
-    } else {
-      setCoaches([...coaches, coachData]);
+    try {
+      if (editingCoach) {
+        const updated = await updateItem('coaches', editingCoach.id || editingCoach._id, coachData);
+        setCoaches(coaches.map(c => (c.id === editingCoach.id || c._id === editingCoach._id) ? updated : c));
+      } else {
+        const created = await createItem('coaches', coachData);
+        setCoaches([...coaches, created]);
+      }
+      setEditingCoach(null);
+      setIsAdding(false);
+    } catch (err) {
+      alert("Failed to save coach.");
     }
-    setEditingCoach(null);
-    setIsAdding(false);
   };
 
   if (isAdding || editingCoach) {
@@ -111,7 +122,7 @@ const CoachManager = ({ coaches, setCoaches }) => {
                 <td>{coach.rating}</td>
                 <td className="action-btns">
                   <button className="edit-btn" onClick={() => setEditingCoach(coach)}>Edit</button>
-                  <button className="delete-btn" onClick={() => handleDelete(coach.id)}>Delete</button>
+                  <button className="delete-btn" onClick={() => handleDelete(coach.id || coach._id)}>Delete</button>
                 </td>
               </tr>
             ))}

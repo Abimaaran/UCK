@@ -1,16 +1,55 @@
-import React, { useState } from 'react';
-import useLocalStorage from '../../hooks/useLocalStorage';
+import React, { useState, useEffect } from 'react';
+import { getCollection, updateItem } from '../../services/api';
 
 const FeesManager = () => {
-  const [approvedStudents] = useLocalStorage('chess_academy_approved_students', []);
-  const [fees, setFees] = useLocalStorage('uck_fees', {});
+  const [approvedStudents, setApprovedStudents] = useState([]);
+  const [fees, setFees] = useState({});
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
 
-  const handleFeeChange = (studentId, status) => {
-    const newFees = { ...fees };
-    if (!newFees[studentId]) newFees[studentId] = {};
-    newFees[studentId][selectedMonth] = status;
-    setFees(newFees);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [students, allFees] = await Promise.all([
+          getCollection('students'),
+          getCollection('fees')
+        ]);
+        
+        setApprovedStudents(Array.isArray(students) ? students.filter(s => s.status === 'Approved') : []);
+        
+        // Transform array to { studentId: { month: status } }
+        const feesMap = {};
+        if (Array.isArray(allFees)) {
+          allFees.forEach(record => {
+            if (!feesMap[record.studentId]) {
+              feesMap[record.studentId] = {};
+            }
+            feesMap[record.studentId][record.month] = record.status;
+          });
+        }
+        setFees(feesMap);
+      } catch (err) {
+        console.error("Failed to fetch students or fees", err);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const handleFeeChange = async (studentId, status) => {
+    try {
+      const payload = {
+          month: selectedMonth,
+          status: status
+      };
+      await updateItem('fees', studentId, payload);
+      
+      const newFees = { ...fees };
+      if (!newFees[studentId]) newFees[studentId] = {};
+      newFees[studentId][selectedMonth] = status;
+      setFees(newFees);
+    } catch (err) {
+      console.error("Failed to update fees", err);
+      alert("Could not update fees.");
+    }
   };
 
   const getMonthName = (monthStr) => {

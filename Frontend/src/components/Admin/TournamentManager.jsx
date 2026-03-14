@@ -1,20 +1,25 @@
 import React, { useState } from 'react';
+import { createItem, updateItem, deleteItem } from '../../services/api';
 
 const TournamentManager = ({ tournaments, setTournaments }) => {
   const [editingTournament, setEditingTournament] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this tournament?')) {
-      setTournaments(tournaments.filter(t => t.id !== id));
+      try {
+        await deleteItem('tournaments', id);
+        setTournaments(tournaments.filter(t => t.id !== id && t._id !== id));
+      } catch (err) {
+        alert("Failed to delete tournament.");
+      }
     }
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const tournamentData = {
-      id: editingTournament ? editingTournament.id : Date.now(),
       name: formData.get('name'),
       status: formData.get('status'),
       date: formData.get('date'),
@@ -23,13 +28,19 @@ const TournamentManager = ({ tournaments, setTournaments }) => {
       gradient: editingTournament ? editingTournament.gradient : 'linear-gradient(135deg, #FF6B6B, #FF5252)'
     };
 
-    if (editingTournament) {
-      setTournaments(tournaments.map(t => t.id === editingTournament.id ? tournamentData : t));
-    } else {
-      setTournaments([...tournaments, tournamentData]);
+    try {
+      if (editingTournament) {
+        const updated = await updateItem('tournaments', editingTournament.id || editingTournament._id, tournamentData);
+        setTournaments(tournaments.map(t => (t.id === editingTournament.id || t._id === editingTournament._id) ? updated : t));
+      } else {
+        const created = await createItem('tournaments', tournamentData);
+        setTournaments([...tournaments, created]);
+      }
+      setEditingTournament(null);
+      setIsAdding(false);
+    } catch (err) {
+      alert("Failed to save tournament.");
     }
-    setEditingTournament(null);
-    setIsAdding(false);
   };
 
   if (isAdding || editingTournament) {
@@ -105,7 +116,7 @@ const TournamentManager = ({ tournaments, setTournaments }) => {
                 <td>{tournament.participants}</td>
                 <td className="action-btns">
                   <button className="edit-btn" onClick={() => setEditingTournament(tournament)}>Edit</button>
-                  <button className="delete-btn" onClick={() => handleDelete(tournament.id)}>Delete</button>
+                  <button className="delete-btn" onClick={() => handleDelete(tournament.id || tournament._id)}>Delete</button>
                 </td>
               </tr>
             ))}

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import useLocalStorage from '../../hooks/useLocalStorage';
+import { getCollection, updateItem, createItem } from '../../services/api';
 
 const AttendanceManager = () => {
-  const [approvedStudents] = useLocalStorage('chess_academy_approved_students', []);
-  const [attendance, setAttendance] = useLocalStorage('uck_attendance', {});
+  const [approvedStudents, setApprovedStudents] = useState([]);
+  const [attendance, setAttendance] = useState({});
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
@@ -12,11 +12,54 @@ const AttendanceManager = () => {
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
-  const handleAttendanceChange = (studentId, status) => {
-    const newAttendance = { ...attendance };
-    if (!newAttendance[studentId]) newAttendance[studentId] = {};
-    newAttendance[studentId][selectedDate] = status;
-    setAttendance(newAttendance);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [students, allAttendance] = await Promise.all([
+          getCollection('students'),
+          getCollection('attendance')
+        ]);
+        
+        setApprovedStudents(Array.isArray(students) ? students.filter(s => s.status === 'Approved') : []);
+        
+        // Transform array to { studentId: { date: status } }
+        const attendanceMap = {};
+        if (Array.isArray(allAttendance)) {
+          allAttendance.forEach(record => {
+            if (!attendanceMap[record.studentId]) {
+              attendanceMap[record.studentId] = {};
+            }
+            attendanceMap[record.studentId][record.date] = record.status;
+          });
+        }
+        setAttendance(attendanceMap);
+      } catch (err) {
+        console.error("Failed to fetch students or attendance", err);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const handleAttendanceChange = async (studentId, status) => {
+    try {
+      // Typically you'd send { studentId, date: selectedDate, status } to the backend
+      // Here we assume a PUT/POST to `/attendance/${studentId}` with the date and status
+      const payload = {
+          date: selectedDate,
+          status: status
+      };
+      // Note: this depends heavily on how your backend expects attendance data.
+      // E.g., a generic update or a specific attendance mark endpoint
+      await updateItem('attendance', studentId, payload); 
+      
+      const newAttendance = { ...attendance };
+      if (!newAttendance[studentId]) newAttendance[studentId] = {};
+      newAttendance[studentId][selectedDate] = status;
+      setAttendance(newAttendance);
+    } catch (err) {
+        console.error("Failed to update attendance", err);
+        alert("Could not update attendance.");
+    }
   };
 
   const calculateStats = (studentId) => {

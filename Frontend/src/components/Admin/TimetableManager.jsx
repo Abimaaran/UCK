@@ -1,33 +1,44 @@
 import React, { useState } from 'react';
+import { createItem, updateItem, deleteItem } from '../../services/api';
 
 const TimetableManager = ({ timetable, setTimetable }) => {
   const [editingEntry, setEditingEntry] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this class?')) {
-      setTimetable(timetable.filter(t => t.id !== id));
+      try {
+        await deleteItem('timetable', id);
+        setTimetable(timetable.filter(t => t.id !== id && t._id !== id));
+      } catch (err) {
+        alert("Failed to delete timetable entry.");
+      }
     }
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const entryData = {
-      id: editingEntry ? editingEntry.id : Date.now(),
       day: formData.get('day'),
       time: formData.get('time'),
       level: formData.get('level'),
       coach: formData.get('coach')
     };
 
-    if (editingEntry) {
-      setTimetable(timetable.map(t => t.id === editingEntry.id ? entryData : t));
-    } else {
-      setTimetable([...timetable, entryData]);
+    try {
+      if (editingEntry) {
+        const updated = await updateItem('timetable', editingEntry.id || editingEntry._id, entryData);
+        setTimetable(timetable.map(t => (t.id === editingEntry.id || t._id === editingEntry._id) ? updated : t));
+      } else {
+        const created = await createItem('timetable', entryData);
+        setTimetable([...timetable, created]);
+      }
+      setEditingEntry(null);
+      setIsAdding(false);
+    } catch (err) {
+      alert("Failed to save timetable entry.");
     }
-    setEditingEntry(null);
-    setIsAdding(false);
   };
 
   if (isAdding || editingEntry) {
@@ -97,7 +108,7 @@ const TimetableManager = ({ timetable, setTimetable }) => {
                 <td>{entry.coach}</td>
                 <td className="action-btns">
                   <button className="edit-btn" onClick={() => setEditingEntry(entry)}>Edit</button>
-                  <button className="delete-btn" onClick={() => handleDelete(entry.id)}>Delete</button>
+                  <button className="delete-btn" onClick={() => handleDelete(entry.id || entry._id)}>Delete</button>
                 </td>
               </tr>
             ))}

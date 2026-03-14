@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
-import useLocalStorage from '../../hooks/useLocalStorage';
-import { initialCoaches, initialTournaments, initialAchievements, initialTimetable, initialPendingStudents, initialAboutFeatures } from '../../data/mockData';
+import React, { useState, useEffect } from 'react';
+import { getCollection } from '../../services/api';
 import CoachManager from './CoachManager';
 import TournamentManager from './TournamentManager';
 import AchievementManager from './AchievementManager';
@@ -16,15 +15,41 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('students');
   
   // State for all manageable entities
-  const [coaches, setCoaches] = useLocalStorage('uck_coaches', initialCoaches);
-  const [tournaments, setTournaments] = useLocalStorage('uck_tournaments', initialTournaments);
-  const [achievements, setAchievements] = useLocalStorage('uck_achievements', initialAchievements);
-  const [timetable, setTimetable] = useLocalStorage('uck_timetable', initialTimetable);
-  const [pendingStudents, setPendingStudents] = useLocalStorage('uck_pending_students', initialPendingStudents);
-  const [aboutFeatures, setAboutFeatures] = useLocalStorage('uck_about_features', initialAboutFeatures);
-  const [attendance, setAttendance] = useLocalStorage('uck_attendance', {});
-  const [fees, setFees] = useLocalStorage('uck_fees', {});
-  const [reviews, setReviews] = useLocalStorage('uck_reviews', {});
+  const [coaches, setCoaches] = useState([]);
+  const [tournaments, setTournaments] = useState([]);
+  const [achievements, setAchievements] = useState([]);
+  const [timetable, setTimetable] = useState([]);
+  const [pendingStudents, setPendingStudents] = useState([]);
+  const [aboutFeatures, setAboutFeatures] = useState([]);
+  
+  // Dynamic API loading
+  useEffect(() => {
+    const loadAll = async () => {
+      try {
+        const [c, t, a, time, ab] = await Promise.all([
+          getCollection('coaches'),
+          getCollection('tournaments'),
+          getCollection('achievements'),
+          getCollection('timetable'),
+          getCollection('about')
+        ]);
+        setCoaches(c || []);
+        setTournaments(t || []);
+        setAchievements(a || []);
+        setTimetable(time || []);
+        setAboutFeatures(ab || []);
+        
+        // pending students might be a subset of a generic students endpoint or its own endpoint
+        // Assuming a specific endpoint or derived from all students where status != approved
+        const allStudents = await getCollection('students');
+        setPendingStudents(Array.isArray(allStudents) ? allStudents.filter(s => s.status === 'Pending') : []);
+        
+      } catch (error) {
+        console.error("Failed to load admin data", error);
+      }
+    };
+    loadAll();
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('isAdminLoggedIn');

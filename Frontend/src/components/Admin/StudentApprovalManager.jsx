@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getCollection, createItem, updateItem, deleteItem } from '../../services/api';
 
-const APPROVED_KEY = 'chess_academy_approved_students';
-const DECLINED_KEY = 'chess_academy_declined_students';
+/* ═══════════════════════════════════════════════════════════
+   API Helpers 
+   ═══════════════════════════════════════════════════════════ */
+const approveStudentApi = async (studentId, studentData) => {
+  // we could move a student from pending to approved by updating their status via API
+  return await updateItem('students', studentData.id, { ...studentData, studentId, status: 'Approved', approvedDate: new Date().toISOString().split('T')[0] });
+};
 
-/* ── Helpers ─────────────────────────────────────────────── */
-const getApproved = () => JSON.parse(localStorage.getItem(APPROVED_KEY) || '[]');
-const saveApproved = (list) => localStorage.setItem(APPROVED_KEY, JSON.stringify(list));
-
-const getDeclined = () => JSON.parse(localStorage.getItem(DECLINED_KEY) || '[]');
-const saveDeclined = (list) => localStorage.setItem(DECLINED_KEY, JSON.stringify(list));
-
-const isIdTaken = (id) => getApproved().some(s => String(s.studentId) === String(id));
+const declineStudentApi = async (studentId) => {
+  return await updateItem('students', studentId, { status: 'Declined', declinedDate: new Date().toISOString().split('T')[0] });
+};
 
 /* ═══════════════════════════════════════════════════════════
    MAIN COMPONENT
@@ -65,57 +66,42 @@ const StudentApprovalManager = ({ students, setStudents }) => {
 const PendingTab = ({ students, setStudents, onRefresh }) => {
   const [customIds, setCustomIds] = useState({});
 
-  const handleApprove = (student) => {
-    const rawId = customIds[student.id];
-    if (!rawId || !rawId.trim()) {
+  const handleApprove = async (student) => {
+    const rawId = customIds[student.id] || student.id; // fallback to original id if no custom ID
+    if (!rawId || !String(rawId).trim()) {
       alert('Please enter a Student ID before approving.');
       return;
     }
-    const studentId = rawId.trim();
+    const studentId = String(rawId).trim();
 
-    if (isIdTaken(studentId)) {
-      alert(`Student ID "${studentId}" is already taken. Please use a different ID.`);
-      return;
-    }
-
-    const approved = getApproved();
-    approved.push({
-      studentId,
-      name: student.name,
-      email: student.email,
-      dob: student.dob || '',
-      level: student.level,
-      appliedDate: student.appliedDate || '',
-      approvedDate: new Date().toISOString().split('T')[0],
-      status: 'Approved',
-      addedBy: 'admin-approval',
-    });
-    saveApproved(approved);
-    setStudents(students.filter(s => s.id !== student.id));
-    onRefresh();
-
-    alert(
-      `✅ Student Approved!\n\n` +
-      `Name : ${student.name}\n` +
-      `──────────────────────────────\n` +
-      `🪪  USERNAME (Student ID) : ${studentId}\n` +
-      `🔑  PASSWORD (Date of Birth) : ${student.dob || 'N/A'}\n` +
-      `──────────────────────────────\n` +
-      `Share these credentials with the student.`
-    );
-  };
-
-  const handleDecline = (student) => {
-    if (window.confirm(`Decline registration for ${student.name}?`)) {
-      const declined = getDeclined();
-      declined.push({
-        ...student,
-        declinedDate: new Date().toISOString().split('T')[0],
-        status: 'Declined'
-      });
-      saveDeclined(declined);
+    try {
+      await approveStudentApi(studentId, student);
       setStudents(students.filter(s => s.id !== student.id));
       onRefresh();
+
+      alert(
+        `✅ Student Approved!\n\n` +
+        `Name : ${student.name}\n` +
+        `──────────────────────────────\n` +
+        `🪪  USERNAME (Student ID) : ${studentId}\n` +
+        `🔑  PASSWORD (Date of Birth) : ${student.dob || 'N/A'}\n` +
+        `──────────────────────────────\n` +
+        `Share these credentials with the student.`
+      );
+    } catch (err) {
+      alert("Failed to approve student. The ID might be taken.");
+    }
+  };
+
+  const handleDecline = async (student) => {
+    if (window.confirm(`Decline registration for ${student.name}?`)) {
+      try {
+        await declineStudentApi(student.id);
+        setStudents(students.filter(s => s.id !== student.id));
+        onRefresh();
+      } catch (err) {
+        alert("Failed to decline student.");
+      }
     }
   };
 
@@ -202,7 +188,7 @@ const ManualAddTab = ({ onRefresh }) => {
 
   const handle = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
@@ -211,31 +197,23 @@ const ManualAddTab = ({ onRefresh }) => {
     if (!form.name.trim())      { setError('Name is required.'); return; }
     if (!form.dob)               { setError('Date of Birth is required (used as portal password).'); return; }
 
-    if (isIdTaken(form.studentId.trim())) {
-      setError(`Student ID "${form.studentId.trim()}" is already in use. Choose a different one.`);
-      return;
+    try {
+      await createItem('students', {
+        studentId: form.studentId.trim(),
+        name: form.name.trim(),
+        email: form.email.trim(),
+        dob: form.dob,
+        level: form.level,
+        phone: form.phone.trim(),
+        status: 'Approved',
+        approvedDate: new Date().toISOString().split('T')[0],
+      });
+      onRefresh();
+      setSuccess(`Student added! Credentials — Username: ${form.studentId.trim()} | Password: ${form.dob}`);
+      setForm({ studentId: '', name: '', email: '', dob: '', level: 'Beginner', phone: '' });
+    } catch (err) {
+      setError(`Failed to add student. The ID may already be in use.`);
     }
-
-    const approved = getApproved();
-    approved.push({
-      studentId: form.studentId.trim(),
-      name: form.name.trim(),
-      email: form.email.trim(),
-      dob: form.dob,
-      level: form.level,
-      phone: form.phone.trim(),
-      appliedDate: '',
-      approvedDate: new Date().toISOString().split('T')[0],
-      status: 'Approved',
-      addedBy: 'admin-manual',
-    });
-    saveApproved(approved);
-    onRefresh();
-
-    setSuccess(
-      `Student added! Credentials — Username: ${form.studentId.trim()} | Password: ${form.dob}`
-    );
-    setForm({ studentId: '', name: '', email: '', dob: '', level: 'Beginner', phone: '' });
   };
 
   const inputStyle = {
@@ -355,13 +333,32 @@ const ManualAddTab = ({ onRefresh }) => {
 const ApprovedTab = ({ onRefresh }) => {
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
-  const approved = getApproved();
+  const [approved, setApproved] = useState([]);
 
-  const handleDelete = (id) => {
+  useEffect(() => {
+    const fetchApproved = async () => {
+      try {
+        const allStudents = await getCollection('students');
+        setApproved(allStudents.filter(s => s.status === 'Approved'));
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchApproved();
+  }, [onRefresh]);
+
+  const handleDelete = async (id) => {
     if (window.confirm(`Are you sure you want to delete student #${id}? This action cannot be undone.`)) {
-      const list = approved.filter(s => String(s.studentId) !== String(id));
-      saveApproved(list);
-      onRefresh();
+      try {
+        // Here id might be db id or custom studentId depending on backend mapping.
+        // Assuming your backend uses the MongoDB ID for actual document deletion (`student.id` typically maps to `_id`).
+        // We will need the actual DB document _id, let's assume `id` here is the `_id`/`id` field of the user document.
+        const stud = approved.find(s => s.studentId === id || s.id === id);
+        if(stud) await deleteItem('students', stud.id || stud._id);
+        onRefresh();
+      } catch (err) {
+         console.error(err);
+      }
     }
   };
 
@@ -374,13 +371,15 @@ const ApprovedTab = ({ onRefresh }) => {
     setEditForm({ ...editForm, [e.target.name]: e.target.value });
   };
 
-  const saveEdit = () => {
-    const list = approved.map(s => 
-      String(s.studentId) === String(editingId) ? { ...editForm } : s
-    );
-    saveApproved(list);
-    setEditingId(null);
-    onRefresh();
+  const saveEdit = async () => {
+    try {
+      const stud = approved.find(s => s.studentId === editingId);
+      await updateItem('students', stud.id || stud._id, editForm);
+      setEditingId(null);
+      onRefresh();
+    } catch(err) {
+      console.error(err);
+    }
   };
 
   const cancelEdit = () => {
@@ -468,32 +467,35 @@ const ApprovedTab = ({ onRefresh }) => {
    DECLINED REGISTRATIONS TAB
 ═══════════════════════════════════════════════════════════ */
 const DeclinedTab = ({ students, setStudents, onRefresh }) => {
-  const declined = getDeclined();
+  const [declined, setDeclined] = useState([]);
 
-  const handleRestore = (student) => {
+  useEffect(() => {
+    const fetchDeclined = async () => {
+      try {
+        const allStudents = await getCollection('students');
+        setDeclined(allStudents.filter(s => s.status === 'Declined'));
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchDeclined();
+  }, [onRefresh]);
+
+  const handleRestore = async (student) => {
     if (window.confirm(`Restore registration for ${student.name} to Pending?`)) {
-      const list = declined.filter(s => s.id !== student.id);
-      saveDeclined(list);
-      
-      const newPending = {
-        id: student.id,
-        name: student.name,
-        email: student.email,
-        dob: student.dob,
-        level: student.level,
-        appliedDate: student.appliedDate
-      };
-      
-      setStudents([...students, newPending]);
-      onRefresh();
+      try {
+        await updateItem('students', student.id, { ...student, status: 'Pending' });
+        onRefresh();
+      } catch (err) { console.error(err); }
     }
   };
 
-  const handleDeletePermanent = (id) => {
+  const handleDeletePermanent = async (id) => {
     if (window.confirm('Permanently delete this declined registration history?')) {
-      const list = declined.filter(s => s.id !== id);
-      saveDeclined(list);
-      onRefresh();
+      try {
+        await deleteItem('students', id);
+        onRefresh();
+      } catch (err) { console.error(err); }
     }
   };
 

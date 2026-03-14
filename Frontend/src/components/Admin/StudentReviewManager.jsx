@@ -1,23 +1,57 @@
-import React, { useState } from 'react';
-import useLocalStorage from '../../hooks/useLocalStorage';
+import React, { useState, useEffect } from 'react';
+import { getCollection, updateItem } from '../../services/api';
 
 const StudentReviewManager = () => {
-  const [approvedStudents] = useLocalStorage('chess_academy_approved_students', []);
-  const [reviews, setReviews] = useLocalStorage('uck_reviews', {});
+  const [approvedStudents, setApprovedStudents] = useState([]);
+  const [reviews, setReviews] = useState({});
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [reviewText, setReviewText] = useState('');
 
-  const handleSaveReview = (e) => {
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [students, allReviews] = await Promise.all([
+          getCollection('students'),
+          getCollection('reviews')
+        ]);
+        
+        setApprovedStudents(Array.isArray(students) ? students.filter(s => s.status === 'Approved') : []);
+        
+        // Transform array to { studentId: reviewObject }
+        const reviewsMap = {};
+        if (Array.isArray(allReviews)) {
+          allReviews.forEach(record => {
+            // Store the most recent review for the studentId
+            reviewsMap[record.studentId] = record;
+          });
+        }
+        setReviews(reviewsMap);
+      } catch (err) {
+        console.error("Failed to fetch students or reviews", err);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const handleSaveReview = async (e) => {
     e.preventDefault();
     if (!selectedStudent) return;
 
-    const newReviews = { ...reviews };
-    newReviews[selectedStudent.studentId] = {
-      text: reviewText,
-      date: new Date().toISOString().split('T')[0]
-    };
-    setReviews(newReviews);
-    alert('Review saved successfully!');
+    try {
+      const payload = {
+          text: reviewText,
+          date: new Date().toISOString().split('T')[0]
+      };
+      await updateItem('reviews', selectedStudent.studentId, payload);
+      
+      const newReviews = { ...reviews };
+      newReviews[selectedStudent.studentId] = payload;
+      setReviews(newReviews);
+      alert('Review saved successfully!');
+    } catch (err) {
+      console.error("Failed to save review", err);
+      alert("Could not save review.");
+    }
   };
 
   const sendWhatsApp = (student) => {

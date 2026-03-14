@@ -1,10 +1,21 @@
-import React from 'react';
-import useLocalStorage from '../hooks/useLocalStorage';
-import { initialTournaments } from '../data/mockData';
+import React, { useState, useEffect } from 'react';
+import { getCollection } from '../services/api';
 import './TournamentsSection.css';
 
 const TournamentsSection = () => {
-  const [tournaments] = useLocalStorage('uck_tournaments', initialTournaments);
+  const [tournaments, setTournaments] = useState([]);
+
+  useEffect(() => {
+    const loadTournaments = async () => {
+      try {
+        const data = await getCollection('tournaments');
+        setTournaments(data);
+      } catch (error) {
+        console.error("Failed to load tournaments", error);
+      }
+    };
+    loadTournaments();
+  },[]);
 
   const getStatusColor = (status) => {
     switch(status.toLowerCase()) {

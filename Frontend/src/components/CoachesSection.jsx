@@ -1,11 +1,22 @@
-import React, { useState } from 'react';
-import useLocalStorage from '../hooks/useLocalStorage';
-import { initialCoaches } from '../data/mockData';
+import React, { useState, useEffect } from 'react';
+import { getCollection } from '../services/api';
 import './CoachesSection.css';
 
 const CoachesSection = () => {
   const [selectedCoach, setSelectedCoach] = useState(null);
-  const [coaches] = useLocalStorage('uck_coaches', initialCoaches);
+  const [coaches, setCoaches] = useState([]);
+
+  useEffect(() => {
+    const loadCoaches = async () => {
+      try {
+        const data = await getCollection('coaches');
+        setCoaches(data);
+      } catch (error) {
+        console.error("Failed to load coaches", error);
+      }
+    };
+    loadCoaches();
+  }, []);
 
   // Generate SVG placeholder images with chess pieces
   const generateChessAvatar = (name, piece = '♔') => {

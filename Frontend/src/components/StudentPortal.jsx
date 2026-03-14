@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getStudentProfile, getStudentAttendance, getStudentFees, getStudentReviews } from '../services/api';
 import './StudentPortal.css';
 
 const APPROVED_KEY = 'chess_academy_approved_students';
@@ -7,6 +8,11 @@ const APPROVED_KEY = 'chess_academy_approved_students';
 const StudentPortal = () => {
   const navigate = useNavigate();
   const [student, setStudent] = useState(null);
+
+  const [attendance, setAttendance] = useState({});
+  const [fees, setFees] = useState({});
+  const [reviews, setReviews] = useState({});
+  const [viewMonth, setViewMonth] = useState(new Date().toISOString().slice(0, 7));
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem('isStudentLoggedIn') === 'true';
@@ -17,13 +23,37 @@ const StudentPortal = () => {
       return;
     }
 
-    const approved = JSON.parse(localStorage.getItem(APPROVED_KEY) || '[]');
-    const found = approved.find(s => String(s.studentId) === studentId);
-    if (!found) {
-      navigate('/#login');
-      return;
-    }
-    setStudent(found);
+    const fetchPortalData = async () => {
+      try {
+        const profile = await getStudentProfile(studentId);
+        setStudent(profile);
+
+        // Fetch dependent data separately with individual error handling to prevent portal crash
+        const fetchDependentData = async (fetcher, setter, label) => {
+          try {
+            const data = await fetcher(studentId);
+            setter(data || []);
+          } catch (err) {
+            console.warn(`Failed to fetch ${label}:`, err.message);
+            setter([]); // Fallback to empty
+          }
+        };
+
+        await Promise.all([
+          fetchDependentData(getStudentAttendance, setAttendance, 'attendance'),
+          fetchDependentData(getStudentFees, setFees, 'fees'),
+          fetchDependentData(getStudentReviews, setReviews, 'reviews')
+        ]);
+
+      } catch (error) {
+        console.error("Failed to fetch student profile:", error);
+        if (error.response?.status === 404) {
+             navigate('/#login');
+        }
+      }
+    };
+
+    fetchPortalData();
   }, [navigate]);
 
   const handleLogout = () => {
@@ -32,25 +62,33 @@ const StudentPortal = () => {
     navigate('/');
   };
 
-  const [attendance] = useState(() => JSON.parse(localStorage.getItem('uck_attendance') || '{}'));
-  const [fees] = useState(() => JSON.parse(localStorage.getItem('uck_fees') || '{}'));
-  const [reviews] = useState(() => JSON.parse(localStorage.getItem('uck_reviews') || '{}'));
-  const [viewMonth, setViewMonth] = useState(new Date().toISOString().slice(0, 7));
-
   if (!student) return null;
 
   const calculateAttendance = () => {
-    const records = attendance[student.studentId] || {};
-    const dates = Object.keys(records).filter(d => d.startsWith(viewMonth));
-    const total = dates.length;
-    const present = dates.filter(d => records[d] === 'Present').length;
+    // Adapter for array-based attendance from API
+    // backend format [{date: '2023-10-01', status: 'Present'}, ...]
+    const monthRecords = Array.isArray(attendance) 
+        ? attendance.filter(r => r.date?.startsWith(viewMonth))
+        : [];
+        
+    const total = monthRecords.length;
+    const present = monthRecords.filter(r => r.status === 'Present').length;
     const percentage = total === 0 ? 0 : Math.round((present / total) * 100);
-    return { total, present, percentage, history: dates.sort().reverse().map(d => ({ date: d, status: records[d] })) };
+    return { total, present, percentage, history: monthRecords };
   };
 
   const attendanceStats = calculateAttendance();
-  const feeStatus = fees[student.studentId]?.[viewMonth] || 'Not Paid';
-  const personalReview = reviews[student.studentId];
+  
+  // Adapter for array-based fees from API
+  const feeRecord = Array.isArray(fees) 
+    ? fees.find(f => f.month === viewMonth) 
+    : null;
+  const feeStatus = feeRecord ? 'Paid' : 'Not Paid';
+  
+  // Adapter for review array
+  const personalReview = Array.isArray(reviews) && reviews.length > 0 
+    ? reviews[reviews.length - 1] 
+    : null;
 
   const initials = student.name
     .split(' ')

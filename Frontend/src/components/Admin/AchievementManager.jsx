@@ -1,20 +1,25 @@
 import React, { useState } from 'react';
+import { createItem, updateItem, deleteItem } from '../../services/api';
 
 const AchievementManager = ({ achievements, setAchievements }) => {
   const [editingAchievement, setEditingAchievement] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this achievement?')) {
-      setAchievements(achievements.filter(a => a.id !== id));
+      try {
+        await deleteItem('achievements', id);
+        setAchievements(achievements.filter(a => a.id !== id && a._id !== id));
+      } catch (err) {
+        alert("Failed to delete achievement.");
+      }
     }
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const achievementData = {
-      id: editingAchievement ? editingAchievement.id : Date.now(),
       studentName: formData.get('studentName'),
       title: formData.get('title'),
       position: formData.get('position'),
@@ -22,13 +27,19 @@ const AchievementManager = ({ achievements, setAchievements }) => {
       description: formData.get('description')
     };
 
-    if (editingAchievement) {
-      setAchievements(achievements.map(a => a.id === editingAchievement.id ? achievementData : a));
-    } else {
-      setAchievements([...achievements, achievementData]);
+    try {
+      if (editingAchievement) {
+        const updated = await updateItem('achievements', editingAchievement.id || editingAchievement._id, achievementData);
+        setAchievements(achievements.map(a => (a.id === editingAchievement.id || a._id === editingAchievement._id) ? updated : a));
+      } else {
+        const created = await createItem('achievements', achievementData);
+        setAchievements([...achievements, created]);
+      }
+      setEditingAchievement(null);
+      setIsAdding(false);
+    } catch (err) {
+      alert("Failed to save achievement.");
     }
-    setEditingAchievement(null);
-    setIsAdding(false);
   };
 
   if (isAdding || editingAchievement) {
@@ -94,7 +105,7 @@ const AchievementManager = ({ achievements, setAchievements }) => {
                 <td>{achievement.date}</td>
                 <td className="action-btns">
                   <button className="edit-btn" onClick={() => setEditingAchievement(achievement)}>Edit</button>
-                  <button className="delete-btn" onClick={() => handleDelete(achievement.id)}>Delete</button>
+                  <button className="delete-btn" onClick={() => handleDelete(achievement.id || achievement._id)}>Delete</button>
                 </td>
               </tr>
             ))}

@@ -1,11 +1,22 @@
 // src/components/StudentsSection.jsx
-import React from 'react';
-import useLocalStorage from '../hooks/useLocalStorage';
-import { initialAchievements } from '../data/mockData';
+import React, { useState, useEffect } from 'react';
+import { getCollection } from '../services/api';
 import './StudentsSection.css';
 
 const StudentsSection = () => {
-  const [dbAchievements] = useLocalStorage('uck_achievements', initialAchievements);
+  const [dbAchievements, setDbAchievements] = useState([]);
+
+  useEffect(() => {
+    const loadAchievements = async () => {
+      try {
+        const data = await getCollection('achievements');
+        setDbAchievements(data);
+      } catch (error) {
+        console.error("Failed to load achievements", error);
+      }
+    };
+    loadAchievements();
+  }, []);
 
   // Map the DB achievements to the display format if needed, or use them directly
   // For now, let's keep the core 3 summary stats but make them potentially dynamic if needed

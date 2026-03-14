@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import './LoginSection.css';
 import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
 
 const APPROVED_KEY = 'chess_academy_approved_students';
 
@@ -23,8 +24,10 @@ const LoginSection = () => {
     return () => window.removeEventListener('setPortalType', handleSetPortal);
   }, []);
 
+  const [isRegistered, setIsRegistered] = useState(false);
+
   // ── LOGIN ──────────────────────────────────────────────────────────────────
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setLoginError('');
 
@@ -36,6 +39,8 @@ const LoginSection = () => {
 
       if (isAdmin) {
         localStorage.setItem('isAdminLoggedIn', 'true');
+        // Admin token simulation, usually backend returns JWT here
+        localStorage.setItem('adminToken', 'simulated_admin_token'); 
         window.dispatchEvent(new Event('adminLogin'));
         navigate('/admin');
         return;
@@ -43,21 +48,21 @@ const LoginSection = () => {
         setLoginError('Invalid Admin credentials. Please try again.');
       }
     } else if (portalType === 'student') {
-      // Student login — Student ID (number) + DOB (YYYY-MM-DD)
-      const approved = JSON.parse(localStorage.getItem(APPROVED_KEY) || '[]');
-      const matched = approved.find(
-        s =>
-          String(s.studentId) === loginId.trim() &&
-          s.dob === password.trim()
-      );
-
-      if (matched) {
-        localStorage.setItem('isStudentLoggedIn', 'true');
-        localStorage.setItem('loggedInStudentId', String(matched.studentId));
-        window.dispatchEvent(new Event('studentLogin'));
-        navigate('/student-portal');
-      } else {
-        setLoginError('Invalid Student ID or Date of Birth. Please check your credentials.');
+      try {
+        const response = await api.post('/students/login', {
+          studentId: loginId.trim(),
+          dob: password.trim()
+        });
+        
+        if (response.data && response.data.student) {
+          const student = response.data.student;
+          localStorage.setItem('isStudentLoggedIn', 'true');
+          localStorage.setItem('loggedInStudentId', String(student.studentId));
+          window.dispatchEvent(new Event('studentLogin'));
+          navigate('/student-portal');
+        }
+      } catch (error) {
+         setLoginError('Invalid Student ID or Date of Birth. Please check your credentials.');
       }
     }
   };
@@ -81,7 +86,7 @@ const LoginSection = () => {
   };
 
   // ── REGISTER ───────────────────────────────────────────────────────────────
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
 
@@ -92,19 +97,21 @@ const LoginSection = () => {
     }
 
     const newStudent = {
-      id: Date.now(),
       name: `${formData.get('firstName')} ${formData.get('lastName')}`,
       email: formData.get('email'),
+      phone: formData.get('phone'),
       dob,
-      appliedDate: new Date().toISOString().split('T')[0],
       level: formData.get('course') || 'Beginner'
     };
 
-    const existing = JSON.parse(localStorage.getItem('uck_pending_students') || '[]');
-    localStorage.setItem('uck_pending_students', JSON.stringify([...existing, newStudent]));
-
-    setIsRegistered(true);
-    e.target.reset();
+    try {
+      await api.post('/students/register', newStudent);
+      setIsRegistered(true);
+      e.target.reset();
+    } catch (error) {
+      console.error("Failed to register:", error);
+      alert("Registration failed. Please try again.");
+    }
   };
 
   // ── RENDER ─────────────────────────────────────────────────────────────────

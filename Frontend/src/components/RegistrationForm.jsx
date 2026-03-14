@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './RegistrationForm.css';
 import BackButton from './BackButton';
+import api from '../services/api';
 
 
 const RegistrationForm = () => {
@@ -91,7 +92,7 @@ const RegistrationForm = () => {
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validateForm();
     
@@ -100,12 +101,14 @@ const RegistrationForm = () => {
       return;
     }
 
-    // Here you would typically send data to backend
-    console.log('Form submitted:', formData);
-    
-    // Show success message and redirect
-    alert('Registration successful! We will contact you soon.');
-    navigate('/');
+    try {
+      await api.post('/students/register', formData);
+      alert('Registration successful! Your application is pending admin approval.');
+      navigate('/');
+    } catch (error) {
+      console.error('Registration failed:', error);
+      alert('Error submitting registration. Please try again.');
+    }
   };
 
   const ageCategories = [

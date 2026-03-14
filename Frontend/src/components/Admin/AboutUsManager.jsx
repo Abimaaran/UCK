@@ -1,18 +1,27 @@
 import React, { useState } from 'react';
+import { createItem, updateItem, deleteItem } from '../../services/api';
 
 const AboutUsManager = ({ features, setFeatures }) => {
   const [editingFeature, setEditingFeature] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
 
-  const handleDelete = (index) => {
+  const handleDelete = async (index) => {
     if (window.confirm('Are you sure you want to delete this feature?')) {
-      const newFeatures = [...features];
-      newFeatures.splice(index, 1);
-      setFeatures(newFeatures);
+      const featureToDelete = features[index];
+      try {
+        if (featureToDelete.id || featureToDelete._id) {
+            await deleteItem('about', featureToDelete.id || featureToDelete._id);
+        }
+        const newFeatures = [...features];
+        newFeatures.splice(index, 1);
+        setFeatures(newFeatures);
+      } catch (err) {
+        alert("Failed to delete feature.");
+      }
     }
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const featureData = {
@@ -23,15 +32,27 @@ const AboutUsManager = ({ features, setFeatures }) => {
       gradient: `linear-gradient(135deg, ${formData.get('color')}, ${formData.get('color2') || formData.get('color')})`
     };
 
-    if (editingFeature !== null) {
-      const newFeatures = [...features];
-      newFeatures[editingFeature] = featureData;
-      setFeatures(newFeatures);
-    } else {
-      setFeatures([...features, featureData]);
+    try {
+      if (editingFeature !== null) {
+        const currentId = features[editingFeature].id || features[editingFeature]._id;
+        let updated = featureData;
+        
+        if (currentId) {
+            updated = await updateItem('about', currentId, featureData);
+        }
+
+        const newFeatures = [...features];
+        newFeatures[editingFeature] = updated || featureData;
+        setFeatures(newFeatures);
+      } else {
+        const created = await createItem('about', featureData);
+        setFeatures([...features, created]);
+      }
+      setEditingFeature(null);
+      setIsAdding(false);
+    } catch (err) {
+      alert("Failed to save feature.");
     }
-    setEditingFeature(null);
-    setIsAdding(false);
   };
 
   if (isAdding || editingFeature !== null) {
