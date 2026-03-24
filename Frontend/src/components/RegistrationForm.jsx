@@ -22,6 +22,8 @@ const RegistrationForm = () => {
     school: '',
     address: '',
     classType: 'online',
+    password: '',
+    confirmPassword: '',
     parentName: '',
     parentOccupation: '',
     emergencyContact: '',
@@ -86,6 +88,8 @@ const RegistrationForm = () => {
     if (!formData.phoneNumber) newErrors.phoneNumber = 'Phone number is required';
     if (!formData.school.trim()) newErrors.school = 'School name is required';
     if (!formData.address.trim()) newErrors.address = 'Address is required';
+    if (!formData.password) newErrors.password = 'Password is required';
+    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
     if (!formData.parentName.trim()) newErrors.parentName = "Parent's name is required";
     if (!formData.termsAccepted) newErrors.termsAccepted = 'You must accept the terms and conditions';
 
@@ -117,10 +121,9 @@ const RegistrationForm = () => {
   ];
 
   const chessExperienceOptions = [
-    'Beginner (0-6 months)',
-    'Intermediate (6 months - 2 years)',
-    'Advanced (2-5 years)',
-    'Tournament Player (5+ years)'
+    'Beginner level',
+    'Intermediate level',
+    'Advanced level'
   ];
 
   const timeSlots = [
@@ -135,10 +138,9 @@ const RegistrationForm = () => {
       <div className="registration-header">
         <h1>Student Registration Form</h1>
         <p>Join Uncrowned Kings Chess Academy - Fill in your details below</p>
-        <div className="registration-container">
-        <BackButton />
-  {/* ... rest of the code ... */}
-</div>
+        <div className="back-button-wrapper">
+          <BackButton />
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="registration-form">
@@ -153,7 +155,7 @@ const RegistrationForm = () => {
               name="studentName"
               value={formData.studentName}
               onChange={handleChange}
-              placeholder="Enter full name"
+              placeholder="First Name & Last Name"
               className={errors.studentName ? 'error' : ''}
             />
             {errors.studentName && <span className="error-message">{errors.studentName}</span>}
@@ -161,13 +163,14 @@ const RegistrationForm = () => {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="dateOfBirth">Date of Birth *</label>
+              <label htmlFor="dateOfBirth">Date of Birth (DD/MM/YYYY) *</label>
               <input
                 type="date"
                 id="dateOfBirth"
                 name="dateOfBirth"
                 value={formData.dateOfBirth}
                 onChange={handleChange}
+                placeholder="DD/MM/YYYY"
                 className={errors.dateOfBirth ? 'error' : ''}
               />
               {errors.dateOfBirth && <span className="error-message">{errors.dateOfBirth}</span>}
@@ -268,7 +271,7 @@ const RegistrationForm = () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="chessExperience">Chess Experience Level</label>
+            <label htmlFor="chessExperience">Select Level</label>
             <select
               id="chessExperience"
               name="chessExperience"
@@ -295,7 +298,7 @@ const RegistrationForm = () => {
                 name="whatsappNo"
                 value={formData.whatsappNo}
                 onChange={handleChange}
-                placeholder="+91 98765 43210"
+                placeholder="WhatsApp Number"
                 className={errors.whatsappNo ? 'error' : ''}
               />
               {errors.whatsappNo && <span className="error-message">{errors.whatsappNo}</span>}
@@ -309,7 +312,7 @@ const RegistrationForm = () => {
                 name="phoneNumber"
                 value={formData.phoneNumber}
                 onChange={handleChange}
-                placeholder="+91 98765 43210"
+                placeholder="Phone Number"
                 className={errors.phoneNumber ? 'error' : ''}
               />
               {errors.phoneNumber && <span className="error-message">{errors.phoneNumber}</span>}
@@ -436,6 +439,37 @@ const RegistrationForm = () => {
                   <option key={slot} value={slot}>{slot}</option>
                 ))}
               </select>
+            </div>
+          </div>
+        </div>
+        <div className="form-section">
+          <h2>Security</h2>
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="password">Password *</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Password"
+                className={errors.password ? 'error' : ''}
+              />
+              {errors.password && <span className="error-message">{errors.password}</span>}
+            </div>
+            <div className="form-group">
+              <label htmlFor="confirmPassword">Confirm Password *</label>
+              <input
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="Confirm Password"
+                className={errors.confirmPassword ? 'error' : ''}
+              />
+              {errors.confirmPassword && <span className="error-message">{errors.confirmPassword}</span>}
             </div>
           </div>
         </div>

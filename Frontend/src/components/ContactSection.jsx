@@ -1,5 +1,6 @@
 // src/components/ContactSection.jsx
 import React, { useState } from 'react';
+import { createItem } from '../services/api';
 import './ContactSection.css';
 
 const ContactSection = () => {
@@ -7,26 +8,35 @@ const ContactSection = () => {
   const [rating, setRating] = useState(0);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
 
-  const handleReviewSubmit = (e) => {
+  const handleReviewSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      console.log({
-        review,
+    try {
+      await createItem('user-reviews', {
+        name: name || 'Anonymous',
+        email: email || 'No Email',
         rating,
-        timestamp: new Date().toISOString()
+        review,
       });
+      
       setIsSubmitting(false);
       setReviewSubmitted(true);
       setReview('');
       setRating(0);
+      setName('');
+      setEmail('');
       
       // Reset after 3 seconds
       setTimeout(() => setReviewSubmitted(false), 3000);
-    }, 1000);
+    } catch (error) {
+      console.error("Failed to submit review", error);
+      setIsSubmitting(false);
+      alert("Failed to submit review. Please try again.");
+    }
   };
 
   const handleStarClick = (value) => {
@@ -241,19 +251,23 @@ Any suggestions for improvement?"
                       
                       <div className="form-fields">
                         <div className="form-group">
-                          <input
-                            type="text"
-                            className="name-input"
-                            placeholder="Your Name (Optional)"
-                          />
+                           <input
+                             type="text"
+                             className="name-input"
+                             placeholder="Your Name (Optional)"
+                             value={name}
+                             onChange={(e) => setName(e.target.value)}
+                           />
                         </div>
                         
                         <div className="form-group">
-                          <input
-                            type="email"
-                            className="email-input"
-                            placeholder="Your Email (Optional - for updates)"
-                          />
+                           <input
+                             type="email"
+                             className="email-input"
+                             placeholder="Your Email (Optional - for updates)"
+                             value={email}
+                             onChange={(e) => setEmail(e.target.value)}
+                           />
                         </div>
                       </div>
                       
@@ -261,7 +275,7 @@ Any suggestions for improvement?"
                         <button
                           type="submit"
                           className="submit-review-btn"
-                          disabled={isSubmitting || review.length < 50 || rating === 0}
+                          disabled={isSubmitting}
                         >
                           {isSubmitting ? (
                             <>

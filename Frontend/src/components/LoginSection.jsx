@@ -51,7 +51,7 @@ const LoginSection = () => {
       try {
         const response = await api.post('/students/login', {
           studentId: loginId.trim(),
-          dob: password.trim()
+          password: password.trim()
         });
         
         if (response.data && response.data.student) {
@@ -90,9 +90,11 @@ const LoginSection = () => {
     e.preventDefault();
     const formData = new FormData(e.target);
 
-    const dob = formData.get('dob');
-    if (!dob) {
-      alert('Please enter your Date of Birth. It will be used as your portal password.');
+    const password = formData.get('password');
+    const confirmPassword = formData.get('confirmPassword');
+    
+    if (password !== confirmPassword) {
+      alert('Passwords do not match!');
       return;
     }
 
@@ -100,8 +102,10 @@ const LoginSection = () => {
       name: `${formData.get('firstName')} ${formData.get('lastName')}`,
       email: formData.get('email'),
       phone: formData.get('phone'),
-      dob,
-      level: formData.get('course') || 'Beginner'
+      address: formData.get('address'),
+      dob: formData.get('dob'),
+      password: password,
+      level: formData.get('level') || 'Beginner'
     };
 
     try {
@@ -139,8 +143,8 @@ const LoginSection = () => {
             Login
           </button>
           <button
-            className={`toggle-btn ${!isLogin ? 'active' : ''}`}
-            onClick={() => { setIsLogin(false); resetForm(); }}
+            className="toggle-btn"
+            onClick={() => navigate('/register')}
           >
             Register
           </button>
@@ -185,12 +189,10 @@ const LoginSection = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label>
-                      {portalType === 'admin' ? 'Password' : 'Date of Birth'}
-                    </label>
+                    <label>Password</label>
                     <input
-                      type={portalType === 'admin' ? 'password' : 'text'}
-                      placeholder={portalType === 'admin' ? 'Enter password' : 'YYYY-MM-DD'}
+                      type="password"
+                      placeholder="Enter password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
@@ -227,7 +229,7 @@ const LoginSection = () => {
                   <p>Your enrollment application has been sent for <strong>Admin Approval</strong>.</p>
                   <p>Once approved, you will be assigned a <strong>Student ID</strong> for login.</p>
                   <div className="credential-reminder">
-                    <p><strong>Your Password:</strong> The Date of Birth provided during registration.</p>
+                    <p><strong>Your credentials:</strong> You can log in using your newly created password once approved.</p>
                   </div>
                 </div>
                 <button className="submit-btn" onClick={() => setIsLogin(true)}>
@@ -244,17 +246,17 @@ const LoginSection = () => {
                 </button>
                 <h3>Create New Account</h3>
                 <p style={{ fontSize: '0.82rem', color: '#888', marginBottom: '1.5rem' }}>
-                  Your <strong style={{ color: '#d4af37' }}>Date of Birth</strong> will be used as your portal password once approved.
+                  Please fill out the details below to request admission.
                 </p>
                 <form onSubmit={handleRegister}>
                   <div className="form-row">
                     <div className="form-group">
                       <label>First Name</label>
-                      <input name="firstName" type="text" placeholder="John" required />
+                      <input name="firstName" type="text" placeholder="First Name" required />
                     </div>
                     <div className="form-group">
                       <label>Last Name</label>
-                      <input name="lastName" type="text" placeholder="Doe" required />
+                      <input name="lastName" type="text" placeholder="Last Name" required />
                     </div>
                   </div>
                   <div className="form-group">
@@ -263,25 +265,33 @@ const LoginSection = () => {
                   </div>
                   <div className="form-group">
                     <label>Phone Number</label>
-                    <input name="phone" type="tel" placeholder="+91 98765 43210" />
+                    <input name="phone" type="tel" placeholder="Phone Number" />
                   </div>
                   <div className="form-group">
-                    <label>
-                      Date of Birth
-                      <span className="dob-hint">
-                        🔑 This will be your password
-                      </span>
-                    </label>
-                    <input name="dob" type="date" required />
+                    <label>Address</label>
+                    <input name="address" type="text" placeholder="Your full address" required />
                   </div>
                   <div className="form-group">
-                    <label>Select Course</label>
-                    <select name="course">
-                      <option value="">Choose a course</option>
+                    <label>Date of Birth (DD/MM/YYYY)</label>
+                    <input name="dob" type="date" placeholder="DD/MM/YYYY" required />
+                  </div>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Password</label>
+                      <input name="password" type="password" placeholder="Create a password" required />
+                    </div>
+                    <div className="form-group">
+                      <label>Confirm Password</label>
+                      <input name="confirmPassword" type="password" placeholder="Confirm password" required />
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Select Level</label>
+                    <select name="level" required>
+                      <option value="">Choose a level</option>
                       <option value="Beginner">Beginner Level</option>
                       <option value="Intermediate">Intermediate Level</option>
                       <option value="Advanced">Advanced Level</option>
-                      <option value="Tournament">Tournament Preparation</option>
                     </select>
                   </div>
                   <div className="form-checkbox">

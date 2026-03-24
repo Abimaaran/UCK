@@ -84,9 +84,9 @@ const PendingTab = ({ students, setStudents, onRefresh }) => {
         `Name : ${student.name}\n` +
         `──────────────────────────────\n` +
         `🪪  USERNAME (Student ID) : ${studentId}\n` +
-        `🔑  PASSWORD (Date of Birth) : ${student.dob || 'N/A'}\n` +
+        `🔑  PASSWORD : (Chosen during registration)\n` +
         `──────────────────────────────\n` +
-        `Share these credentials with the student.`
+        `The student can now log in with their custom Student ID.`
       );
     } catch (err) {
       alert("Failed to approve student. The ID might be taken.");
@@ -107,24 +107,25 @@ const PendingTab = ({ students, setStudents, onRefresh }) => {
 
   return (
     <>
-      <InfoBanner text="Enter a custom Student ID for each student before clicking Approve. Their Date of Birth will be their portal password." />
+      <InfoBanner text="Enter a custom Student ID for each student before clicking Approve. Ensure they have their chosen password ready for login." />
       <div className="data-table-container">
         <table>
           <thead>
             <tr>
               <th>Name</th>
               <th>Email</th>
-              <th>Date of Birth</th>
+              <th>Phone</th>
+              <th>Address</th>
               <th>Level</th>
               <th>Applied</th>
-              <th>Assign Student ID</th>
+              <th>Assign ID</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {students.length === 0 ? (
               <tr>
-                <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
+                <td colSpan="8" style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
                   No pending registrations
                 </td>
               </tr>
@@ -133,11 +134,8 @@ const PendingTab = ({ students, setStudents, onRefresh }) => {
                 <tr key={student.id}>
                   <td>{student.name}</td>
                   <td>{student.email}</td>
-                  <td>
-                    {student.dob
-                      ? <span style={{ color: '#d4af37', fontWeight: 600 }}>{student.dob}</span>
-                      : <span style={{ color: '#888', fontStyle: 'italic' }}>Not provided</span>}
-                  </td>
+                  <td>{student.phoneNumber || student.phone || 'N/A'}</td>
+                  <td>{student.address || 'N/A'}</td>
                   <td>{student.level}</td>
                   <td>{student.appliedDate}</td>
                   <td>
@@ -239,7 +237,7 @@ const ManualAddTab = ({ onRefresh }) => {
 
   return (
     <div style={{ maxWidth: '620px' }}>
-      <InfoBanner text="Manually add a student with a custom Student ID you define. Their Date of Birth becomes their portal password." />
+      <InfoBanner text="Manually add a student with a custom Student ID. They should use their provided password to log in once approved." />
 
       {error && (
         <div style={{ background: 'rgba(220,53,69,0.15)', border: '1px solid rgba(220,53,69,0.4)',
@@ -301,7 +299,6 @@ const ManualAddTab = ({ onRefresh }) => {
             <option value="Beginner">Beginner</option>
             <option value="Intermediate">Intermediate</option>
             <option value="Advanced">Advanced</option>
-            <option value="Tournament">Tournament Prep</option>
           </select>
         </div>
 
@@ -435,7 +432,6 @@ const ApprovedTab = ({ onRefresh }) => {
                         <option value="Beginner">Beginner</option>
                         <option value="Intermediate">Intermediate</option>
                         <option value="Advanced">Advanced</option>
-                        <option value="Tournament">Tournament Prep</option>
                       </select>
                     ) : s.level}
                   </td>

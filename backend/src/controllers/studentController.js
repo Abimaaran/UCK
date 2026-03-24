@@ -1,8 +1,17 @@
 const { db } = require('../config/firebaseAdmin');
+const bcrypt = require('bcryptjs');
 
 exports.register = async (req, res) => {
   try {
     const data = req.body;
+    
+    // Hash password if provided
+    if (data.password) {
+      const salt = await bcrypt.genSalt(10);
+      data.password = await bcrypt.hash(data.password, salt);
+      if (data.confirmPassword) delete data.confirmPassword; // Don't store confirmation
+    }
+
     // Add student to general collection with Pending status
     const docRef = await db.collection('students').add({
       ...data,
@@ -88,18 +97,19 @@ exports.delete = async (req, res) => {
 
 exports.login = async (req, res) => {
   try {
-    const { studentId, dob } = req.body;
+    const { studentId, password, dob } = req.body;
+    const loginSecret = password || dob;
+    
+    // 1. Find the student by studentId
     let snapshot = await db.collection('students')
       .where('studentId', '==', studentId)
-      .where('dob', '==', dob)
       .where('status', '==', 'Approved')
       .get();
       
     if (snapshot.empty) {
-      // Check legacy pendingStudents collection just in case they were approved but remain there
+      // Try legacy pendingStudents collection
       snapshot = await db.collection('pendingStudents')
         .where('studentId', '==', studentId)
-        .where('dob', '==', dob)
         .where('status', '==', 'Approved')
         .get();
         
@@ -108,7 +118,32 @@ exports.login = async (req, res) => {
       }
     }
     
-    const student = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+    const studentData = snapshot.docs[0].data();
+    const docId = snapshot.docs[0].id;
+
+    // 2. Verify password/dob
+    // Use bcrypt search for password field if it looks hashed or if specifically matched
+    let isMatch = false;
+    if (studentData.password) {
+      // If it's a hashed password, use bcrypt.compare
+      if (studentData.password.startsWith('$2')) {
+        isMatch = await bcrypt.compare(loginSecret, studentData.password);
+      } else {
+        // Fallback for plain text password
+        isMatch = (studentData.password === loginSecret);
+      }
+    }
+    
+    // 3. Fallback to DOB if password didn't match or doesn't exist
+    if (!isMatch && studentData.dob) {
+      isMatch = (studentData.dob === loginSecret);
+    }
+
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Invalid credentials.' });
+    }
+    
+    const student = { id: docId, ...studentData };
     res.status(200).json({ message: 'Login successful', student });
   } catch (error) {
     res.status(500).json({ error: error.message });

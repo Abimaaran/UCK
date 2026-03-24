@@ -101,6 +101,11 @@
   color: #666;
 }
 
+.form-group select option {
+  background-color: #1a1a1a;
+  color: #ffffff;
+}
+
 .form-group input[type="date"] {
   color-scheme: dark;
 }

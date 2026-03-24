@@ -1,9 +1,11 @@
 // src/components/StudentsSection.jsx
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getCollection } from '../services/api';
 import './StudentsSection.css';
 
 const StudentsSection = () => {
+  const navigate = useNavigate();
   const [dbAchievements, setDbAchievements] = useState([]);
 
   useEffect(() => {
@@ -96,7 +98,7 @@ const StudentsSection = () => {
         
         <div className="students-cta">
           <p className="cta-text">Join our winning team and start your journey to chess mastery</p>
-          <button className="cta-button">Start Your Journey</button>
+          <button className="cta-button" onClick={() => navigate('/register')}>Start Your Journey</button>
         </div>
       </div>
     </section>

@@ -1,31 +1,56 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Navigation.css';
 import { useTheme } from '../context/ThemeContext';
 
-
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState('home');
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(localStorage.getItem('isAdminLoggedIn') === 'true');
   const [isStudentLoggedIn, setIsStudentLoggedIn] = useState(localStorage.getItem('isStudentLoggedIn') === 'true');
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
 
-  // Listen for login/logout events
-  React.useEffect(() => {
+  // Listen for login/logout events and scroll
+  useEffect(() => {
     const syncState = () => {
       setIsAdminLoggedIn(localStorage.getItem('isAdminLoggedIn') === 'true');
       setIsStudentLoggedIn(localStorage.getItem('isStudentLoggedIn') === 'true');
     };
 
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+
+      // Determine active section based on scroll
+      const sections = ['home', 'about', 'students', 'tournaments', 'timetable', 'coaches', 'contact'];
+      let current = '';
+      
+      for (let i = 0; i < sections.length; i++) {
+        const section = document.getElementById(sections[i]);
+        if (section) {
+          const sectionTop = section.offsetTop;
+          // Subtracted offset so the active state changes right before the section hits top
+          if (window.scrollY >= sectionTop - 150) {
+            current = sections[i];
+          }
+        }
+      }
+      if (current) {
+        setActiveSection(current);
+      }
+    };
+
     window.addEventListener('adminLogin', syncState);
     window.addEventListener('studentLogin', syncState);
     window.addEventListener('storage', syncState);
+    window.addEventListener('scroll', handleScroll);
 
     return () => {
       window.removeEventListener('adminLogin', syncState);
       window.removeEventListener('studentLogin', syncState);
       window.removeEventListener('storage', syncState);
+      window.removeEventListener('scroll', handleScroll);
     };
   }, []);
 
@@ -42,10 +67,8 @@ const Navigation = () => {
     navigate('/');
   };
 
-  // Your logo image URL
   const logoImageUrl = "/image.png";
 
-  // Smooth scroll function
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
     if (element) {
@@ -62,52 +85,51 @@ const Navigation = () => {
     setIsOpen(false);
   };
 
-  /* ── Portal buttons (right side) rendered based on auth state ── */
   const renderPortalButtons = (mobile = false) => {
-    const base = mobile ? 'btn-login' : 'btn-login';
+    const baseClass = mobile ? 'mobile-btn' : 'nav-action-btn';
 
     if (isAdminLoggedIn) {
       return (
-        <>
+        <div className="nav-actions-group">
           <button
-            className={`${base} admin-btn`}
+            className={`${baseClass} admin-active-btn`}
             onClick={() => { navigate('/admin'); setIsOpen(false); }}
           >
-            Admin Login
+            Admin Panel
           </button>
           <button
-            className={`${base} logout-btn`}
+            className={`${baseClass} logout-btn`}
             onClick={() => { handleAdminLogout(); setIsOpen(false); }}
           >
             Logout
           </button>
-        </>
+        </div>
       );
     }
 
     if (isStudentLoggedIn) {
       return (
-        <>
+        <div className="nav-actions-group">
           <button
-            className={`${base} student-portal-btn`}
+            className={`${baseClass} student-portal-btn`}
             onClick={() => { navigate('/student-portal'); setIsOpen(false); }}
           >
             🎓 Student Portal
           </button>
           <button
-            className={`${base} logout-btn`}
+            className={`${baseClass} logout-btn`}
             onClick={() => { handleStudentLogout(); setIsOpen(false); }}
           >
             Logout
           </button>
-        </>
+        </div>
       );
     }
 
     return (
-      <div className="nav-actions">
+      <div className="nav-actions-group">
         <button 
-          className={base} 
+          className={`${baseClass} login-btn outline`} 
           onClick={() => { 
             scrollToSection('login'); 
             window.dispatchEvent(new CustomEvent('setPortalType', { detail: 'admin' }));
@@ -117,7 +139,7 @@ const Navigation = () => {
           Admin Login
         </button>
         <button 
-          className={base} 
+          className={`${baseClass} login-btn primary`} 
           onClick={() => { 
             scrollToSection('login'); 
             window.dispatchEvent(new CustomEvent('setPortalType', { detail: 'student' }));
@@ -126,53 +148,51 @@ const Navigation = () => {
         >
           Student Portal
         </button>
-        <div className="nav-separator-mini"></div>
-        <button className="theme-toggle-btn" onClick={toggleTheme} title="Toggle Dark/Light Mode">
-          {theme === 'dark' ? '☀️' : '🌙'}
-        </button>
       </div>
     );
   };
 
   return (
-    <nav className="navbar">
-      <div className="nav-container vertical-header">
-        {/* Top: Logo Section */}
-        <div className="header-top-section">
-          <button onClick={scrollToTop} className="logo-button">
-            <div className="vertical-logo-wrapper">
-              <img
-                src={logoImageUrl}
-                alt="Uncrowned Kings Chess Academy Logo"
-                className="centered-logo"
-              />
-              <div className="vertical-logo-text">
-                <h1 className="logo-title">Uncrowned Kings Chess Academy</h1>
-                <p className="logo-tagline">Think Strategically, Play Brilliantly</p>
-              </div>
-            </div>
-          </button>
+    <nav className={`navbar premium-nav ${scrolled ? 'nav-scrolled' : ''}`}>
+      <div className="nav-container">
+        {/* Left: Logo Section */}
+        <div className="nav-brand" onClick={scrollToTop}>
+          <img
+            src={logoImageUrl}
+            alt="UCK Logo"
+            className="brand-logo"
+          />
+          <div className="brand-text">
+            <h1 className="brand-title">Uncrowned Kings</h1>
+            <p className="brand-tagline">Chess Academy</p>
+          </div>
         </div>
 
-        {/* Bottom: Navigation Links & Actions Section */}
-        <div className="header-bottom-section">
-          <div className="centered-nav-links">
-            <button onClick={() => scrollToSection('home')} className="nav-link active">Home</button>
-            <button onClick={() => scrollToSection('about')} className="nav-link">About US</button>
-            <button onClick={() => scrollToSection('students')} className="nav-link">Students</button>
-            <button onClick={() => scrollToSection('tournaments')} className="nav-link">Tournaments</button>
-            <button onClick={() => scrollToSection('timetable')} className="nav-link">Timetable</button>
-            <button onClick={() => scrollToSection('coaches')} className="nav-link">Coaches</button>
-            <button onClick={() => scrollToSection('contact')} className="nav-link">Contact US</button>
-            <div className="nav-row-separator"></div>
-            {renderPortalButtons(false)}
-          </div>
+        {/* Center: Navigation Links */}
+        <div className="nav-links desktop-links">
+          <button onClick={() => scrollToSection('home')} className={`nav-link ${activeSection === 'home' ? 'active' : ''}`}>Home</button>
+          <button onClick={() => scrollToSection('about')} className={`nav-link ${activeSection === 'about' ? 'active' : ''}`}>About</button>
+          <button onClick={() => scrollToSection('students')} className={`nav-link ${activeSection === 'students' ? 'active' : ''}`}>Students</button>
+          <button onClick={() => scrollToSection('tournaments')} className={`nav-link ${activeSection === 'tournaments' ? 'active' : ''}`}>Tournaments</button>
+          <button onClick={() => scrollToSection('timetable')} className={`nav-link ${activeSection === 'timetable' ? 'active' : ''}`}>Timetable</button>
+          <button onClick={() => scrollToSection('coaches')} className={`nav-link ${activeSection === 'coaches' ? 'active' : ''}`}>Coaches</button>
+          <button onClick={() => scrollToSection('contact')} className={`nav-link ${activeSection === 'contact' ? 'active' : ''}`}>Contact</button>
+        </div>
+
+        {/* Right: Actions */}
+        <div className="nav-actions desktop-actions">
+          <button className="theme-toggle" onClick={toggleTheme} title="Toggle Theme">
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
+          <div className="divider"></div>
+          {renderPortalButtons(false)}
         </div>
 
         {/* Mobile Menu Button */}
         <button
           className="menu-toggle"
           onClick={() => setIsOpen(!isOpen)}
+          aria-label="Toggle Navigation"
         >
           <span className={`bar ${isOpen ? 'rotate-45' : ''}`}></span>
           <span className={`bar ${isOpen ? 'opacity-0' : ''}`}></span>
@@ -180,27 +200,27 @@ const Navigation = () => {
         </button>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu Dropdown */}
       <div className={`mobile-menu ${isOpen ? 'open' : ''}`}>
-        <div className="mobile-logo-center">
-          <img
-            src={logoImageUrl}
-            alt="Uncrowned Kings Chess Academy Logo"
-            className="mobile-centered-logo"
-          />
-          <div className="mobile-center-text">
-            <h3>Uncrowned Kings Chess Academy</h3>
-            <p>Think Strategically, Play Brilliantly</p>
-          </div>
+        <div className="mobile-links">
+          <button onClick={() => scrollToSection('home')} className={`mobile-link ${activeSection === 'home' ? 'active' : ''}`}>Home</button>
+          <button onClick={() => scrollToSection('about')} className={`mobile-link ${activeSection === 'about' ? 'active' : ''}`}>About Us</button>
+          <button onClick={() => scrollToSection('students')} className={`mobile-link ${activeSection === 'students' ? 'active' : ''}`}>Students</button>
+          <button onClick={() => scrollToSection('tournaments')} className={`mobile-link ${activeSection === 'tournaments' ? 'active' : ''}`}>Tournaments</button>
+          <button onClick={() => scrollToSection('timetable')} className={`mobile-link ${activeSection === 'timetable' ? 'active' : ''}`}>Timetable</button>
+          <button onClick={() => scrollToSection('coaches')} className={`mobile-link ${activeSection === 'coaches' ? 'active' : ''}`}>Coaches</button>
+          <button onClick={() => scrollToSection('contact')} className={`mobile-link ${activeSection === 'contact' ? 'active' : ''}`}>Contact Us</button>
         </div>
-        <button onClick={() => scrollToSection('home')} className="mobile-link">Home</button>
-        <button onClick={() => scrollToSection('about')} className="mobile-link">About US</button>
-        <button onClick={() => scrollToSection('students')} className="mobile-link">Students</button>
-        <button onClick={() => scrollToSection('tournaments')} className="mobile-link">Tournaments</button>
-        <button onClick={() => scrollToSection('timetable')} className="mobile-link">Timetable</button>
-        <button onClick={() => scrollToSection('coaches')} className="mobile-link">Coaches</button>
-        <button onClick={() => scrollToSection('contact')} className="mobile-link">Contact US</button>
-        <div className="mobile-actions">
+        
+        <div className="mobile-divider"></div>
+        
+        <div className="mobile-bottom-actions">
+          <div className="mobile-theme-wrapper">
+            <span>Theme: </span>
+            <button className="theme-toggle" onClick={toggleTheme}>
+              {theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode'}
+            </button>
+          </div>
           {renderPortalButtons(true)}
         </div>
       </div>

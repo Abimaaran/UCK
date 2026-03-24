@@ -7,6 +7,7 @@ import App from './App';
 import RegistrationForm from './components/RegistrationForm';
 import AdminDashboard from './components/Admin/AdminDashboard';
 import StudentPortal from './components/StudentPortal';
+import ScrollToTop from './components/ScrollToTop';
 
 import { ThemeProvider } from './context/ThemeContext';
 
@@ -15,6 +16,7 @@ root.render(
   <React.StrictMode>
     <ThemeProvider>
       <Router>
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<App />} />
           <Route path="/register" element={<RegistrationForm />} />

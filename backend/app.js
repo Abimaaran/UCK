@@ -20,6 +20,7 @@ const feeRoutes = require('./src/routes/feeRoutes');
 const reviewRoutes = require('./src/routes/reviewRoutes');
 const aboutRoutes = require('./src/routes/aboutRoutes');
 const userRoutes = require('./src/routes/userRoutes');
+const userReviewRoutes = require('./src/routes/userReviewRoutes');
 
 // Use Routes
 app.use('/api/auth', authRoutes);
@@ -34,6 +35,7 @@ app.use('/api/fees', feeRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/about', aboutRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/user-reviews', userReviewRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {

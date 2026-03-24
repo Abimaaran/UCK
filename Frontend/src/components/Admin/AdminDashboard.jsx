@@ -9,6 +9,7 @@ import AboutUsManager from './AboutUsManager';
 import AttendanceManager from './AttendanceManager';
 import FeesManager from './FeesManager';
 import StudentReviewManager from './StudentReviewManager';
+import UserReviewManager from './UserReviewManager';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
@@ -75,6 +76,8 @@ const AdminDashboard = () => {
         return <FeesManager />;
       case 'reviews':
         return <StudentReviewManager />;
+      case 'user-feedbacks':
+        return <UserReviewManager />;
       case 'students':
       default:
         return <StudentApprovalManager students={pendingStudents} setStudents={setPendingStudents} />;
@@ -151,6 +154,13 @@ const AdminDashboard = () => {
           >
             <span className="nav-icon">📝</span>
             Student Reviews
+          </button>
+          <button 
+            className={`nav-item ${activeTab === 'user-feedbacks' ? 'active' : ''}`}
+            onClick={() => setActiveTab('user-feedbacks')}
+          >
+            <span className="nav-icon">💬</span>
+            User Feedbacks
           </button>
         </nav>
         <div className="sidebar-footer">
