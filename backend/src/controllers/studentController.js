@@ -9,13 +9,13 @@ exports.register = async (req, res) => {
     if (data.password) {
       const salt = await bcrypt.genSalt(10);
       data.password = await bcrypt.hash(data.password, salt);
-      if (data.confirmPassword) delete data.confirmPassword; // Don't store confirmation
+      if (data.confirmPassword) delete data.confirmPassword;
     }
 
-    // Add student to general collection with Pending status
+    // Standardize status to 'Pending'
     const docRef = await db.collection('students').add({
       ...data,
-      status: data.status || 'Pending',
+      status: 'Pending',
       createdAt: new Date().toISOString()
     });
     res.status(201).json({ message: 'Registration successful', id: docRef.id, ...data });
@@ -100,26 +100,30 @@ exports.login = async (req, res) => {
     const { studentId, password, dob } = req.body;
     const loginSecret = password || dob;
     
-    // 1. Find the student by studentId
+    // 1. Find the student by studentId (UCK ID)
     let snapshot = await db.collection('students')
       .where('studentId', '==', studentId)
-      .where('status', '==', 'Approved')
       .get();
       
     if (snapshot.empty) {
-      // Try legacy pendingStudents collection
-      snapshot = await db.collection('pendingStudents')
-        .where('studentId', '==', studentId)
-        .where('status', '==', 'Approved')
-        .get();
-        
-      if (snapshot.empty) {
-        return res.status(401).json({ error: 'Invalid credentials or account not approved yet.' });
+      // Also try doc ID for direct login if necessary
+      const doc = await db.collection('students').doc(studentId).get();
+      if (doc.exists) {
+         // mock a snapshot
+         snapshot = { docs: [doc], empty: false };
+      } else {
+         return res.status(401).json({ error: 'Invalid Student ID or account does not exist.' });
       }
     }
     
     const studentData = snapshot.docs[0].data();
     const docId = snapshot.docs[0].id;
+
+    // Check status
+    const currentStatus = (studentData.status || 'Pending').toLowerCase();
+    if (currentStatus !== 'approved' && currentStatus !== 'active') {
+      return res.status(401).json({ error: 'Your account is pending approval from the admin.' });
+    }
 
     // 2. Verify password/dob
     // Use bcrypt search for password field if it looks hashed or if specifically matched

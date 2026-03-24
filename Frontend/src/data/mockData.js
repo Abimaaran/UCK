@@ -1,9 +1,9 @@
 export const initialCoaches = [
-  { 
+  {
     id: 1,
-    name: 'K. Sulaxan', 
-    title: 'Intermediate Coach', 
-    experience: '5+ years', 
+    name: 'K. Sulaxan',
+    title: 'Intermediate Coach',
+    experience: '5+ years',
     specialization: 'Strategy & Tactics',
     fideId: 'FIDE 450021',
     rating: '2100',
@@ -12,11 +12,11 @@ export const initialCoaches = [
     chessPiece: '♔',
     colorGradient: 'linear-gradient(135deg, #00BFFF, #0A74DA)'
   },
-  { 
+  {
     id: 2,
-    name: 'T. Sujinth', 
-    title: 'Beginner\'s Coach', 
-    experience: '5+ years', 
+    name: 'T. Sujinth',
+    title: 'Beginner\'s Coach',
+    experience: '5+ years',
     specialization: 'Opening Theory',
     fideId: 'FIDE 450022',
     rating: '1950',
@@ -28,18 +28,18 @@ export const initialCoaches = [
 ];
 
 export const initialTournaments = [
-  { 
+  {
     id: 1,
-    name: 'International Rated Tournaments', 
+    name: 'International Rated Tournaments',
     status: 'Upcoming',
     date: 'March 2025',
     participants: '100+ Players',
     icon: '🌍',
     gradient: 'linear-gradient(135deg, #FF6B6B, #FF5252)'
   },
-  { 
+  {
     id: 2,
-    name: 'Inter-School Chess Tournaments', 
+    name: 'Inter-School Chess Tournaments',
     status: 'Upcoming',
     date: 'February 2025',
     participants: '50+ Schools',
@@ -67,22 +67,7 @@ export const initialAchievements = [
   }
 ];
 
-export const initialTimetable = [
-  {
-    id: 1,
-    day: 'Monday',
-    time: '5:00 PM - 6:30 PM',
-    level: 'Beginner',
-    coach: 'T. Sujinth'
-  },
-  {
-    id: 2,
-    day: 'Tuesday',
-    time: '5:30 PM - 7:00 PM',
-    level: 'Intermediate',
-    coach: 'K. Sulaxan'
-  }
-];
+export const initialTimetable = [];
 
 export const initialPendingStudents = [
   {

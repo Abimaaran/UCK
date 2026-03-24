@@ -9,7 +9,7 @@ const CoachManager = ({ coaches, setCoaches }) => {
     if (window.confirm('Are you sure you want to delete this coach?')) {
       try {
         await deleteItem('coaches', id);
-        setCoaches(coaches.filter(c => c.id !== id && c._id !== id));
+        setCoaches(coaches.filter(c => (c.id !== id && c._id !== id)));
       } catch (err) {
         alert("Failed to delete coach.");
       }
@@ -34,8 +34,17 @@ const CoachManager = ({ coaches, setCoaches }) => {
 
     try {
       if (editingCoach) {
-        const updated = await updateItem('coaches', editingCoach.id || editingCoach._id, coachData);
-        setCoaches(coaches.map(c => (c.id === editingCoach.id || c._id === editingCoach._id) ? updated : c));
+        const coachId = editingCoach.id || editingCoach._id;
+        const response = await updateItem('coaches', coachId, coachData);
+        
+        const finalUpdated = { 
+          ...editingCoach, 
+          ...coachData, 
+          ...(typeof response === 'object' ? response : {}), 
+          id: coachId 
+        };
+        
+        setCoaches(coaches.map(c => (c.id === coachId || c._id === coachId) ? finalUpdated : c));
       } else {
         const created = await createItem('coaches', coachData);
         setCoaches([...coaches, created]);
@@ -115,7 +124,7 @@ const CoachManager = ({ coaches, setCoaches }) => {
           </thead>
           <tbody>
             {coaches.map(coach => (
-              <tr key={coach.id}>
+              <tr key={coach.id || coach._id}>
                 <td>{coach.name}</td>
                 <td>{coach.title}</td>
                 <td>{coach.specialization}</td>

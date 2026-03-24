@@ -40,7 +40,7 @@ const RegistrationForm = () => {
       ...formData,
       [name]: type === 'checkbox' ? checked : value
     });
-    
+
     // Clear error for this field
     if (errors[name]) {
       setErrors({
@@ -78,7 +78,7 @@ const RegistrationForm = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.studentName.trim()) newErrors.studentName = 'Student name is required';
     if (!formData.dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required';
     if (!formData.email) newErrors.email = 'Email is required';
@@ -99,7 +99,7 @@ const RegistrationForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validateForm();
-    
+
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
@@ -116,7 +116,7 @@ const RegistrationForm = () => {
   };
 
   const ageCategories = [
-    'Under 8', 'Under 10', 'Under 12', 'Under 14', 
+    'Under 8', 'Under 10', 'Under 12', 'Under 14',
     'Under 16', 'Under 18', 'Above 18'
   ];
 
@@ -146,7 +146,7 @@ const RegistrationForm = () => {
       <form onSubmit={handleSubmit} className="registration-form">
         <div className="form-section">
           <h2>Personal Information</h2>
-          
+
           <div className="form-group">
             <label htmlFor="studentName">Student Name *</label>
             <input
@@ -241,7 +241,7 @@ const RegistrationForm = () => {
 
         <div className="form-section">
           <h2>Chess Background</h2>
-          
+
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="fideRating">FIDE Rating (if any)</label>
@@ -288,7 +288,7 @@ const RegistrationForm = () => {
 
         <div className="form-section">
           <h2>Contact Information</h2>
-          
+
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="whatsappNo">WhatsApp Number *</label>
@@ -334,7 +334,7 @@ const RegistrationForm = () => {
 
         <div className="form-section">
           <h2>Educational & Residential Details</h2>
-          
+
           <div className="form-group">
             <label htmlFor="school">School/College Name *</label>
             <input
@@ -366,7 +366,7 @@ const RegistrationForm = () => {
 
         <div className="form-section">
           <h2>Parent/Guardian Information</h2>
-          
+
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="parentName">Parent/Guardian Name *</label>
@@ -398,7 +398,7 @@ const RegistrationForm = () => {
 
         <div className="form-section">
           <h2>Class Preferences</h2>
-          
+
           <div className="form-row">
             <div className="form-group">
               <label>Class Type *</label>
@@ -421,7 +421,7 @@ const RegistrationForm = () => {
                     checked={formData.classType === 'physical'}
                     onChange={handleChange}
                   />
-                  <span>Physical Class (Mumbai)</span>
+                  <span>Physical Class</span>
                 </label>
               </div>
             </div>
@@ -500,7 +500,7 @@ const RegistrationForm = () => {
         </div>
       </form>
     </div>
-    
+
   );
 };
 

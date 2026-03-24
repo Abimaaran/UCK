@@ -9,7 +9,7 @@ const AchievementManager = ({ achievements, setAchievements }) => {
     if (window.confirm('Are you sure you want to delete this achievement?')) {
       try {
         await deleteItem('achievements', id);
-        setAchievements(achievements.filter(a => a.id !== id && a._id !== id));
+        setAchievements(achievements.filter(a => (a.id !== id && a._id !== id)));
       } catch (err) {
         alert("Failed to delete achievement.");
       }
@@ -29,8 +29,17 @@ const AchievementManager = ({ achievements, setAchievements }) => {
 
     try {
       if (editingAchievement) {
-        const updated = await updateItem('achievements', editingAchievement.id || editingAchievement._id, achievementData);
-        setAchievements(achievements.map(a => (a.id === editingAchievement.id || a._id === editingAchievement._id) ? updated : a));
+        const achievementId = editingAchievement.id || editingAchievement._id;
+        const response = await updateItem('achievements', achievementId, achievementData);
+        
+        const finalUpdated = { 
+          ...editingAchievement, 
+          ...achievementData, 
+          ...(typeof response === 'object' ? response : {}), 
+          id: achievementId 
+        };
+        
+        setAchievements(achievements.map(a => (a.id === achievementId || a._id === achievementId) ? finalUpdated : a));
       } else {
         const created = await createItem('achievements', achievementData);
         setAchievements([...achievements, created]);
@@ -98,7 +107,7 @@ const AchievementManager = ({ achievements, setAchievements }) => {
           </thead>
           <tbody>
             {achievements.map(achievement => (
-              <tr key={achievement.id}>
+              <tr key={achievement.id || achievement._id}>
                 <td>{achievement.studentName}</td>
                 <td>{achievement.title}</td>
                 <td>{achievement.position}</td>

@@ -2,26 +2,20 @@ const { db } = require('../config/firebaseAdmin');
 
 exports.approveStudent = async (req, res) => {
   try {
-    const pendingRef = db.collection('pendingStudents').doc(req.params.id);
-    const doc = await pendingRef.get();
+    const studentRef = db.collection('students').doc(req.params.id);
+    const doc = await studentRef.get();
     
     if (!doc.exists) {
-      return res.status(404).json({ error: 'Pending student not found' });
+      return res.status(404).json({ error: 'Student registration not found' });
     }
     
-    const studentData = doc.data();
-    
-    // Move to confirmed students collection
-    const newStudentRef = await db.collection('students').add({
-      ...studentData,
-      status: 'approved',
+    // Update status in the same collection
+    await studentRef.update({
+      status: 'Approved',
       approvedAt: new Date().toISOString()
     });
     
-    // Remove from pending
-    await pendingRef.delete();
-    
-    res.status(200).json({ message: 'Student approved successfully', studentId: newStudentRef.id });
+    res.status(200).json({ message: 'Student approved successfully', studentId: req.params.id });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

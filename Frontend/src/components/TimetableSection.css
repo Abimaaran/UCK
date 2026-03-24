@@ -31,27 +31,30 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
-.day-badge {
-  position: absolute;
-  top: 0;
-  left: 0;
-  background: linear-gradient(135deg, #d4af37, #f1c40f);
-  color: #000;
-  padding: 0.5rem 1.5rem;
-  font-weight: 700;
-  font-size: 0.9rem;
+.day-group {
+  margin-bottom: 4rem;
+}
+
+.day-header {
+  font-size: 2rem;
+  color: #d4af37;
+  border-bottom: 2px solid rgba(212, 175, 55, 0.2);
+  padding-bottom: 0.5rem;
+  margin-bottom: 2rem;
   text-transform: uppercase;
-  border-bottom-right-radius: 15px;
+  letter-spacing: 2px;
+  font-weight: 800;
 }
 
 .card-inner {
-  margin-top: 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
 }
 
-.session-time, .session-level, .session-coach {
+.session-time,
+.session-level,
+.session-coach {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -59,7 +62,9 @@
   font-size: 1.1rem;
 }
 
-.session-time .icon, .session-level .icon, .session-coach .icon {
+.session-time .icon,
+.session-level .icon,
+.session-coach .icon {
   font-size: 1.2rem;
   opacity: 0.8;
 }
@@ -99,6 +104,29 @@
   background: rgba(255, 255, 255, 0.02);
   border-radius: 15px;
   color: #888;
+}
+
+.loading-spinner {
+  text-align: center;
+  padding: 4rem;
+  color: #d4af37;
+  font-size: 1.2rem;
+  font-weight: 600;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.6;
+  }
 }
 
 @media (max-width: 768px) {

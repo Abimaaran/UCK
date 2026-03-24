@@ -1,10 +1,12 @@
 // src/components/HeroSection.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import introVideo from '../assets/intro_UCK.mp4';
 import './HeroSection.css';
 
 const HeroSection = () => {
   const navigate = useNavigate();
+  const [showVideo, setShowVideo] = useState(false);
 
   return (
     <section className="hero-section" id="home">
@@ -21,10 +23,27 @@ Build strategic thinking, improve consistently, and take your game to the next l
             <button className="hero-btn primary" onClick={() => navigate('/register')}>
               Register Now..
             </button>
-            <button className="hero-btn secondary">
+            <button className="hero-btn secondary" onClick={() => setShowVideo(true)}>
               Watch Demo Class
             </button>
           </div>
+          
+          {showVideo && (
+            <div className="video-overlay">
+                <button className="skip-btn-fixed" onClick={() => setShowVideo(false)}>
+                  Skip ✕
+                </button>
+              <div className="video-container">
+                <video 
+                  src={introVideo} 
+                  autoPlay 
+                  controls 
+                  className="demo-video"
+                  onEnded={() => setShowVideo(false)}
+                />
+              </div>
+            </div>
+          )}
           <div className="hero-stats">
             <div className="stat">
               <h3>5+</h3>

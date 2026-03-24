@@ -9,7 +9,7 @@ const TimetableManager = ({ timetable, setTimetable }) => {
     if (window.confirm('Are you sure you want to delete this class?')) {
       try {
         await deleteItem('timetable', id);
-        setTimetable(timetable.filter(t => t.id !== id && t._id !== id));
+        setTimetable(timetable.filter(t => (t.id !== id && t._id !== id)));
       } catch (err) {
         alert("Failed to delete timetable entry.");
       }
@@ -28,8 +28,20 @@ const TimetableManager = ({ timetable, setTimetable }) => {
 
     try {
       if (editingEntry) {
-        const updated = await updateItem('timetable', editingEntry.id || editingEntry._id, entryData);
-        setTimetable(timetable.map(t => (t.id === editingEntry.id || t._id === editingEntry._id) ? updated : t));
+        const entryId = editingEntry.id || editingEntry._id;
+        console.log("Updating entry:", entryId, entryData);
+        const response = await updateItem('timetable', entryId, entryData);
+        
+        // Defensive merge: prioritize backend response, but fallback to local entryData and keep ID
+        const finalUpdated = { 
+          ...editingEntry, 
+          ...entryData, 
+          ...(typeof response === 'object' ? response : {}), 
+          id: entryId 
+        };
+        
+        console.log("Final updated state object:", finalUpdated);
+        setTimetable(timetable.map(t => (t.id === entryId || t._id === entryId) ? finalUpdated : t));
       } else {
         const created = await createItem('timetable', entryData);
         setTimetable([...timetable, created]);
@@ -37,6 +49,7 @@ const TimetableManager = ({ timetable, setTimetable }) => {
       setEditingEntry(null);
       setIsAdding(false);
     } catch (err) {
+      console.error("Save error:", err);
       alert("Failed to save timetable entry.");
     }
   };
@@ -81,6 +94,19 @@ const TimetableManager = ({ timetable, setTimetable }) => {
     );
   }
 
+  const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+  const groupedTimetable = timetable.reduce((acc, entry) => {
+    const day = entry.day || 'Other';
+    if (!acc[day]) acc[day] = [];
+    acc[day].push(entry);
+    return acc;
+  }, {});
+
+  const sortedDays = Object.keys(groupedTimetable).sort((a, b) => {
+    return dayOrder.indexOf(a) - dayOrder.indexOf(b);
+  });
+
   return (
     <div className="manager-container">
       <div className="manager-actions">
@@ -88,33 +114,50 @@ const TimetableManager = ({ timetable, setTimetable }) => {
           <span>+</span> Add Class
         </button>
       </div>
-      <div className="data-table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Day</th>
-              <th>Time</th>
-              <th>Level</th>
-              <th>Coach</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {timetable.map(entry => (
-              <tr key={entry.id}>
-                <td>{entry.day}</td>
-                <td>{entry.time}</td>
-                <td>{entry.level}</td>
-                <td>{entry.coach}</td>
-                <td className="action-btns">
-                  <button className="edit-btn" onClick={() => setEditingEntry(entry)}>Edit</button>
-                  <button className="delete-btn" onClick={() => handleDelete(entry.id || entry._id)}>Delete</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      
+      {sortedDays.length > 0 ? (
+        sortedDays.map(day => (
+          <div key={day} className="day-management-section" style={{ marginBottom: '3rem' }}>
+            <h3 style={{ 
+              color: '#d4af37', 
+              borderBottom: '1px solid rgba(212, 175, 55, 0.3)', 
+              paddingBottom: '0.5rem',
+              marginBottom: '1rem',
+              textTransform: 'uppercase',
+              fontSize: '1.2rem'
+            }}>{day}</h3>
+            <div className="data-table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Level</th>
+                    <th>Coach</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {groupedTimetable[day].map((entry, idx) => (
+                    <tr key={entry.id || entry._id || `entry-${day}-${idx}`}>
+                      <td>{entry.time}</td>
+                      <td>{entry.level}</td>
+                      <td>{entry.coach}</td>
+                      <td className="action-btns">
+                        <button className="edit-btn" onClick={() => setEditingEntry(entry)}>Edit</button>
+                        <button className="delete-btn" onClick={() => handleDelete(entry.id || entry._id)}>Delete</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ))
+      ) : (
+        <div className="empty-state" style={{ textAlign: 'center', padding: '3rem', color: '#888' }}>
+          No classes scheduled yet.
+        </div>
+      )}
     </div>
   );
 };

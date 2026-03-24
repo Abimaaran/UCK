@@ -172,6 +172,10 @@ const AdminDashboard = () => {
       <main className="admin-content">
         <header className="content-header">
           <h1>{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Management</h1>
+          <button className="header-logout-btn" onClick={handleLogout}>
+            <span className="nav-icon">🚪</span>
+            Logout
+          </button>
         </header>
         <div className="content-body">
           {renderContent()}

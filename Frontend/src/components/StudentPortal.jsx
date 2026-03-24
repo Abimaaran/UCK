@@ -90,8 +90,10 @@ const StudentPortal = () => {
     ? reviews[reviews.length - 1] 
     : null;
 
-  const initials = student.name
+  const displayName = student.studentName || student.name || 'Student';
+  const initials = displayName
     .split(' ')
+    .filter(n => n.length > 0)
     .map(n => n[0])
     .join('')
     .toUpperCase()
@@ -115,7 +117,7 @@ const StudentPortal = () => {
         <div className="portal-welcome-card">
           <div className="portal-avatar">{initials}</div>
           <div className="portal-welcome-text">
-            <h1>Welcome back, {student.name.split(' ')[0]}! ♟️</h1>
+            <h1>Welcome back, {displayName}! ♟️</h1>
             <p>Your chess journey continues at Uncrowned Kings.</p>
           </div>
         </div>
@@ -182,12 +184,12 @@ const StudentPortal = () => {
           <div className="portal-info-card">
             <div className="info-card-icon">♟️</div>
             <div className="info-card-label">Level</div>
-            <div className="info-card-value">{student.level}</div>
+            <div className="info-card-value">{student.chessExperience || student.level || 'N/A'}</div>
           </div>
           <div className="portal-info-card">
             <div className="info-card-icon">📅</div>
             <div className="info-card-label">Date of Birth</div>
-            <div className="info-card-value">{student.dob}</div>
+            <div className="info-card-value">{student.dateOfBirth || student.dob || 'N/A'}</div>
           </div>
           <div className="portal-info-card">
             <div className="info-card-icon">✅</div>
@@ -202,19 +204,11 @@ const StudentPortal = () => {
           <div className="portal-info-card">
             <div className="info-card-icon">🏛️</div>
             <div className="info-card-label">Approved On</div>
-            <div className="info-card-value">{student.approvedDate}</div>
+            <div className="info-card-value">{student.approvedDate || (student.createdAt ? new Date(student.createdAt).toLocaleDateString() : 'N/A')}</div>
           </div>
         </div>
 
-        {/* Notice */}
-        <div className="portal-notice">
-          <span className="notice-icon">💡</span>
-          <div>
-            <strong>Your Portal Credentials</strong>
-            <p>Username: <code>#{student.studentId}</code> &nbsp;|&nbsp; Password: <code>{student.dob}</code> (your date of birth)</p>
-            <small>Keep these safe. Contact admin to reset your password.</small>
-          </div>
-        </div>
+
 
         {/* Detailed History */}
         {attendanceStats.history.length > 0 && (

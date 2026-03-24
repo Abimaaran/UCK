@@ -165,14 +165,14 @@ const ContactSection = () => {
                     <span><svg width="36" height="36" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="ig" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#f58529"/>
-      <stop offset="50%" stop-color="#dd2a7b"/>
-      <stop offset="100%" stop-color="#8134af"/>
+      <stop offset="0%" stopColor="#f58529"/>
+      <stop offset="50%" stopColor="#dd2a7b"/>
+      <stop offset="100%" stopColor="#8134af"/>
     </linearGradient>
   </defs>
   <circle cx="12" cy="12" r="12" fill="url(#ig)"/>
-  <rect x="7" y="7" width="10" height="10" rx="3" ry="3" fill="none" stroke="#fff" stroke-width="1.8"/>
-  <circle cx="12" cy="12" r="2.5" fill="none" stroke="#fff" stroke-width="1.8"/>
+  <rect x="7" y="7" width="10" height="10" rx="3" ry="3" fill="none" stroke="#fff" strokeWidth="1.8"/>
+  <circle cx="12" cy="12" r="2.5" fill="none" stroke="#fff" strokeWidth="1.8"/>
   <circle cx="15.5" cy="8.5" r="1" fill="#fff"/>
 </svg>
 </span>

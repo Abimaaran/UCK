@@ -182,7 +182,7 @@ const LoginSection = () => {
                     </label>
                     <input
                       type={portalType === 'admin' ? 'email' : 'text'}
-                      placeholder={portalType === 'admin' ? 'admin@uck.com' : 'e.g. 1005'}
+                      placeholder={portalType === 'admin' ? 'admin@uck.com' : 'uck01'}
                       value={loginId}
                       onChange={(e) => setLoginId(e.target.value)}
                       required

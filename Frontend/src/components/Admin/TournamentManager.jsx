@@ -9,7 +9,7 @@ const TournamentManager = ({ tournaments, setTournaments }) => {
     if (window.confirm('Are you sure you want to delete this tournament?')) {
       try {
         await deleteItem('tournaments', id);
-        setTournaments(tournaments.filter(t => t.id !== id && t._id !== id));
+        setTournaments(tournaments.filter(t => (t.id !== id && t._id !== id)));
       } catch (err) {
         alert("Failed to delete tournament.");
       }
@@ -30,8 +30,17 @@ const TournamentManager = ({ tournaments, setTournaments }) => {
 
     try {
       if (editingTournament) {
-        const updated = await updateItem('tournaments', editingTournament.id || editingTournament._id, tournamentData);
-        setTournaments(tournaments.map(t => (t.id === editingTournament.id || t._id === editingTournament._id) ? updated : t));
+        const tournamentId = editingTournament.id || editingTournament._id;
+        const response = await updateItem('tournaments', tournamentId, tournamentData);
+        
+        const finalUpdated = { 
+          ...editingTournament, 
+          ...tournamentData, 
+          ...(typeof response === 'object' ? response : {}), 
+          id: tournamentId 
+        };
+        
+        setTournaments(tournaments.map(t => (t.id === tournamentId || t._id === tournamentId) ? finalUpdated : t));
       } else {
         const created = await createItem('tournaments', tournamentData);
         setTournaments([...tournaments, created]);
@@ -104,7 +113,7 @@ const TournamentManager = ({ tournaments, setTournaments }) => {
           </thead>
           <tbody>
             {tournaments.map(tournament => (
-              <tr key={tournament.id}>
+              <tr key={tournament.id || tournament._id}>
                 <td style={{ fontSize: '1.2rem' }}>{tournament.icon}</td>
                 <td>{tournament.name}</td>
                 <td>

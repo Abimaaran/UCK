@@ -102,16 +102,39 @@
   overflow-y: auto;
 }
 
-.content-header {
-  margin-bottom: 2.5rem;
-  border-bottom: 1px solid rgba(212, 175, 55, 0.1);
-  padding-bottom: 1rem;
-}
-
 .content-header h1 {
   font-size: 2rem;
   margin: 0;
   color: #d4af37;
+}
+
+.header-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 82, 82, 0.1);
+  border: 1px solid rgba(255, 82, 82, 0.3);
+  color: #ff5252;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.header-logout-btn:hover {
+  background: rgba(255, 82, 82, 0.2);
+  border-color: #ff5252;
+  transform: translateY(-2px);
+}
+
+.content-header {
+  margin-bottom: 2.5rem;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+  padding-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 /* Common manager styles */
@@ -144,12 +167,14 @@
   background: rgba(20, 20, 20, 0.6);
   border: 1px solid rgba(212, 175, 55, 0.2);
   border-radius: 8px;
-  overflow: hidden;
+  overflow-x: auto;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 1200px;
+  table-layout: auto;
 }
 
 th, td {

@@ -21,7 +21,7 @@ exports.create = async (req, res) => {
 exports.update = async (req, res) => {
   try {
     await db.collection('coaches').doc(req.params.id).update(req.body);
-    res.status(200).json({ message: 'Updated successfully' });
+    res.status(200).json({ id: req.params.id, ...req.body });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

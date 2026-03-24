@@ -69,7 +69,7 @@ const PendingTab = ({ students, setStudents, onRefresh }) => {
   const handleApprove = async (student) => {
     const rawId = customIds[student.id] || student.id; // fallback to original id if no custom ID
     if (!rawId || !String(rawId).trim()) {
-      alert('Please enter a Student ID before approving.');
+      alert('⚠️ Required: Please assign a UCK Student ID (e.g. uck01) before approving the registration.');
       return;
     }
     const studentId = String(rawId).trim();
@@ -81,7 +81,7 @@ const PendingTab = ({ students, setStudents, onRefresh }) => {
 
       alert(
         `✅ Student Approved!\n\n` +
-        `Name : ${student.name}\n` +
+        `Name : ${student.studentName || student.name || 'N/A'}\n` +
         `──────────────────────────────\n` +
         `🪪  USERNAME (Student ID) : ${studentId}\n` +
         `🔑  PASSWORD : (Chosen during registration)\n` +
@@ -132,26 +132,28 @@ const PendingTab = ({ students, setStudents, onRefresh }) => {
             ) : (
               students.map(student => (
                 <tr key={student.id}>
-                  <td>{student.name}</td>
-                  <td>{student.email}</td>
-                  <td>{student.phoneNumber || student.phone || 'N/A'}</td>
-                  <td>{student.address || 'N/A'}</td>
-                  <td>{student.level}</td>
-                  <td>{student.appliedDate}</td>
+                  <td style={{ fontWeight: '600', minWidth: '140px' }}>{student.studentName || student.name || 'N/A'}</td>
+                  <td style={{ minWidth: '180px' }}>{student.email}</td>
+                  <td style={{ minWidth: '110px' }}>{student.phoneNumber || student.whatsappNo || student.phone || 'N/A'}</td>
+                  <td style={{ fontSize: '0.85rem', minWidth: '220px', whiteSpace: 'normal', lineHeight: '1.4' }}>{student.address || 'N/A'}</td>
+                  <td style={{ minWidth: '110px' }}>{student.chessExperience || student.level || 'N/A'}</td>
+                  <td style={{ fontSize: '0.85rem', minWidth: '100px' }}>{student.createdAt ? new Date(student.createdAt).toLocaleDateString() : (student.appliedDate || 'N/A')}</td>
                   <td>
                     <input
                       type="text"
-                      placeholder="e.g. 1005"
+                      placeholder="uck01"
                       value={customIds[student.id] || ''}
                       onChange={e => setCustomIds({ ...customIds, [student.id]: e.target.value })}
                       style={{
-                        width: '90px',
-                        padding: '0.3rem 0.5rem',
+                        width: '100px',
+                        padding: '0.4rem 0.6rem',
                         borderRadius: '5px',
-                        border: '1px solid rgba(212,175,55,0.4)',
-                        background: 'rgba(0,0,0,0.3)',
+                        border: '2px solid rgba(212,175,55,0.6)',
+                        background: 'rgba(212,175,55,0.05)',
                         color: '#fff',
-                        fontSize: '0.85rem',
+                        fontWeight: '700',
+                        fontSize: '0.9rem',
+                        textAlign: 'center'
                       }}
                     />
                   </td>
@@ -360,7 +362,7 @@ const ApprovedTab = ({ onRefresh }) => {
   };
 
   const startEdit = (student) => {
-    setEditingId(student.studentId);
+    setEditingId(student.id || student._id);
     setEditForm({ ...student });
   };
 
@@ -370,8 +372,8 @@ const ApprovedTab = ({ onRefresh }) => {
 
   const saveEdit = async () => {
     try {
-      const stud = approved.find(s => s.studentId === editingId);
-      await updateItem('students', stud.id || stud._id, editForm);
+      const id = editingId;
+      await updateItem('students', id, editForm);
       setEditingId(null);
       onRefresh();
     } catch(err) {
@@ -409,35 +411,41 @@ const ApprovedTab = ({ onRefresh }) => {
               </tr>
             ) : (
               approved.map(s => (
-                <tr key={s.studentId}>
-                  <td><strong style={{ color: '#d4af37' }}>#{s.studentId}</strong></td>
+                <tr key={s.id || s._id || s.studentId}>
                   <td>
-                    {editingId === s.studentId ? (
-                      <input name="name" value={editForm.name} onChange={handleEditChange} style={miniInput} />
-                    ) : s.name}
+                    {editingId === (s.id || s._id) ? (
+                      <input name="studentId" value={editForm.studentId} onChange={handleEditChange} style={{ ...miniInput, fontWeight: '700', color: '#d4af37' }} />
+                    ) : (
+                      <strong style={{ color: '#d4af37' }}>#{s.studentId}</strong>
+                    )}
                   </td>
                   <td>
-                    {editingId === s.studentId ? (
+                    {editingId === (s.id || s._id) ? (
+                      <input name="studentName" value={editForm.studentName || editForm.name} onChange={handleEditChange} style={miniInput} />
+                    ) : (s.studentName || s.name || 'N/A')}
+                  </td>
+                  <td>
+                    {editingId === (s.id || s._id) ? (
                       <input name="email" value={editForm.email} onChange={handleEditChange} style={miniInput} />
                     ) : s.email}
                   </td>
                   <td>
-                    {editingId === s.studentId ? (
-                      <input name="dob" value={editForm.dob} onChange={handleEditChange} style={miniInput} />
-                    ) : <span style={{ fontFamily: 'monospace', color: '#a0e4a0' }}>{s.dob}</span>}
+                    {editingId === (s.id || s._id) ? (
+                      <input name="dob" value={editForm.dateOfBirth || editForm.dob} onChange={handleEditChange} style={miniInput} />
+                    ) : <span style={{ fontFamily: 'monospace', color: '#a0e4a0' }}>{s.dateOfBirth || s.dob || 'N/A'}</span>}
                   </td>
                   <td>
-                    {editingId === s.studentId ? (
-                      <select name="level" value={editForm.level} onChange={handleEditChange} style={miniInput}>
-                        <option value="Beginner">Beginner</option>
-                        <option value="Intermediate">Intermediate</option>
-                        <option value="Advanced">Advanced</option>
+                    {editingId === (s.id || s._id) ? (
+                      <select name="chessExperience" value={editForm.chessExperience || editForm.level} onChange={handleEditChange} style={miniInput}>
+                        <option value="Beginner level">Beginner</option>
+                        <option value="Intermediate level">Intermediate</option>
+                        <option value="Advanced level">Advanced</option>
                       </select>
-                    ) : s.level}
+                    ) : (s.chessExperience || s.level || 'N/A')}
                   </td>
-                  <td>{s.approvedDate}</td>
+                  <td>{s.approvedDate || (s.updatedAt ? new Date(s.updatedAt).toLocaleDateString() : 'N/A')}</td>
                   <td className="action-btns">
-                    {editingId === s.studentId ? (
+                    {editingId === (s.id || s._id) ? (
                       <>
                         <button className="approve-btn" onClick={saveEdit}>Save</button>
                         <button className="delete-btn" onClick={cancelEdit}>Cancel</button>
@@ -445,7 +453,7 @@ const ApprovedTab = ({ onRefresh }) => {
                     ) : (
                       <>
                         <button className="edit-btn" onClick={() => startEdit(s)}>Edit</button>
-                        <button className="delete-btn" onClick={() => handleDelete(s.studentId)}>Delete</button>
+                        <button className="delete-btn" onClick={() => handleDelete(s.id || s._id || s.studentId)}>Delete</button>
                       </>
                     )}
                   </td>
@@ -520,11 +528,11 @@ const DeclinedTab = ({ students, setStudents, onRefresh }) => {
             ) : (
               declined.map(student => (
                 <tr key={student.id}>
-                  <td>{student.name}</td>
+                  <td>{student.studentName || student.name || 'N/A'}</td>
                   <td>{student.email}</td>
-                  <td>{student.dob}</td>
-                  <td>{student.level}</td>
-                  <td>{student.declinedDate}</td>
+                  <td>{student.dateOfBirth || student.dob || 'N/A'}</td>
+                  <td>{student.chessExperience || student.level || 'N/A'}</td>
+                  <td>{student.declinedDate || (student.updatedAt ? new Date(student.updatedAt).toLocaleDateString() : 'N/A')}</td>
                   <td className="action-btns">
                     <button className="edit-btn" onClick={() => handleRestore(student)}>Restore</button>
                     <button className="delete-btn" onClick={() => handleDeletePermanent(student.id)}>Purge</button>
