@@ -161,6 +161,28 @@ const StudentPortal = () => {
               {feeStatus === 'Paid' ? 'Payment verified by admin' : 'Pending payment for this month'}
             </small>
           </div>
+
+          <div className="portal-info-card highlighted" style={{ cursor: 'pointer', border: '1px solid var(--accent-gold)' }} onClick={() => navigate('/analyze-game')}>
+            <div className="info-card-icon">♟️</div>
+            <div className="info-card-label">Analyze Game</div>
+            <div className="info-card-value" style={{ color: 'var(--accent-gold)' }}>Launch Board</div>
+            <small style={{ color: '#888', marginTop: '5px', display: 'block' }}>
+              Review your matches with Stockfish analysis and board editor
+            </small>
+            <button className="portal-action-btn" style={{ 
+              marginTop: '15px', 
+              width: '100%', 
+              padding: '8px', 
+              background: 'var(--accent-gold)', 
+              color: '#000', 
+              border: 'none', 
+              borderRadius: '6px',
+              fontWeight: '700',
+              cursor: 'pointer'
+            }}>
+              Open Analyzer
+            </button>
+          </div>
         </div>
 
         {/* Feedback Section */}
@@ -211,33 +233,60 @@ const StudentPortal = () => {
 
 
         {/* Detailed History */}
-        {attendanceStats.history.length > 0 && (
-          <div className="portal-section" style={{ marginTop: '2rem' }}>
-            <h3 style={{ marginBottom: '1rem', color: 'var(--accent-gold)' }}>Attendance Log ({viewMonth})</h3>
-            <div className="history-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-              {attendanceStats.history.map(record => (
+        <div className="portal-section" style={{ marginTop: '3rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <h3 style={{ margin: 0, color: 'var(--accent-gold)', fontSize: '1.5rem' }}>Daily Attendance Log</h3>
+            <span style={{ fontSize: '0.9rem', color: '#888' }}>Month: {new Date(viewMonth + '-01').toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
+          </div>
+          
+          {attendanceStats.history.length > 0 ? (
+            <div className="history-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.25rem' }}>
+              {attendanceStats.history.sort((a,b) => new Date(b.date) - new Date(a.date)).map(record => (
                 <div key={record.date} style={{ 
-                  padding: '1rem', 
-                  background: 'var(--card-bg)', 
-                  borderRadius: '10px', 
+                  padding: '1.25rem', 
+                  background: 'rgba(255, 255, 255, 0.03)', 
+                  borderRadius: '12px', 
                   border: '1px solid var(--border-color)',
                   display: 'flex',
                   justifyContent: 'space-between',
-                  alignItems: 'center'
+                  alignItems: 'center',
+                  boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
                 }}>
-                  <span style={{ fontWeight: '500' }}>{record.date}</span>
+                  <div>
+                    <div style={{ fontWeight: '600', fontSize: '1.05rem', color: '#fff' }}>
+                      {new Date(record.date).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                    </div>
+                    <small style={{ color: '#666' }}>{record.date}</small>
+                  </div>
                   <span style={{ 
-                    padding: '2px 8px', 
-                    borderRadius: '4px', 
-                    fontSize: '0.75rem',
-                    background: record.status === 'Present' ? 'rgba(32, 201, 151, 0.1)' : 'rgba(255, 107, 107, 0.1)',
-                    color: record.status === 'Present' ? '#20C997' : '#FF6B6B'
+                    padding: '6px 14px', 
+                    borderRadius: '20px', 
+                    fontSize: '0.8rem',
+                    fontWeight: '700',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    background: record.status === 'Present' ? 'rgba(32, 201, 151, 0.15)' : 'rgba(255, 107, 107, 0.15)',
+                    color: record.status === 'Present' ? '#20C997' : '#FF6B6B',
+                    border: `1px solid ${record.status === 'Present' ? 'rgba(32, 201, 151, 0.3)' : 'rgba(255, 107, 107, 0.3)'}`
                   }}>{record.status}</span>
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <div style={{ 
+              padding: '3rem', 
+              textAlign: 'center', 
+              background: 'rgba(255, 255, 255, 0.02)', 
+              borderRadius: '15px', 
+              border: '1px dashed var(--border-color)',
+              color: '#666'
+            }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>📅</div>
+              <p>No attendance records found for this month.</p>
+              <small>Records will appear here once your coach marks your attendance.</small>
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );

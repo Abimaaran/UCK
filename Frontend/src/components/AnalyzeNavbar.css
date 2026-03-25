@@ -1,0 +1,110 @@
+.analyze-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  background: rgba(15, 15, 18, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  font-family: 'Outfit', sans-serif;
+}
+
+.analyze-nav-container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.analyze-nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+}
+
+.analyze-nav-crown {
+  font-size: 1.8rem;
+  color: #d4af37;
+  filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.4));
+}
+
+.analyze-nav-title {
+  font-weight: 700;
+  font-size: 1.2rem;
+  background: linear-gradient(135deg, #fff 0%, #d4af37 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 0.5px;
+}
+
+.analyze-nav-links {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.analyze-nav-link {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.analyze-nav-link i {
+  font-size: 1rem;
+}
+
+.analyze-nav-link:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.analyze-nav-link.active {
+  color: #d4af37;
+  background: rgba(212, 175, 55, 0.1);
+}
+
+.analyze-nav-logout {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #ff6b6b;
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.analyze-nav-logout:hover {
+  background: #ef4444;
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+}
+
+@media (max-width: 768px) {
+  .analyze-nav-title { display: none; }
+  .analyze-nav-container { padding: 0 1rem; }
+  .analyze-nav-links { gap: 0.5rem; }
+  .analyze-nav-link span { display: none; }
+}

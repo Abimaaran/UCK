@@ -26,28 +26,35 @@ const AdminDashboard = () => {
   // Dynamic API loading
   useEffect(() => {
     const loadAll = async () => {
-      try {
-        const [c, t, a, time, ab] = await Promise.all([
-          getCollection('coaches'),
-          getCollection('tournaments'),
-          getCollection('achievements'),
-          getCollection('timetable'),
-          getCollection('about')
-        ]);
-        setCoaches(c || []);
-        setTournaments(t || []);
-        setAchievements(a || []);
-        setTimetable(time || []);
-        setAboutFeatures(ab || []);
-        
-        // pending students might be a subset of a generic students endpoint or its own endpoint
-        // Assuming a specific endpoint or derived from all students where status != approved
-        const allStudents = await getCollection('students');
-        setPendingStudents(Array.isArray(allStudents) ? allStudents.filter(s => s.status === 'Pending') : []);
-        
-      } catch (error) {
-        console.error("Failed to load admin data", error);
-      }
+      // Helper for resilient fetching
+      const fetchSection = async (key, setter, endpoint) => {
+        try {
+          const data = await getCollection(endpoint || key);
+          setter(Array.isArray(data) ? data : []);
+        } catch (err) {
+          console.warn(`Failed to load ${key}:`, err.message);
+          setter([]);
+        }
+      };
+
+      await Promise.all([
+        fetchSection('coaches', setCoaches),
+        fetchSection('tournaments', setTournaments),
+        fetchSection('achievements', setAchievements),
+        fetchSection('timetable', setTimetable),
+        fetchSection('about', setAboutFeatures),
+        // Fetch students and filter pending
+        (async () => {
+          try {
+            const all = await getCollection('students');
+            const list = Array.isArray(all) ? all : [];
+            setPendingStudents(list.filter(s => s.status === 'Pending'));
+          } catch (err) {
+            console.warn('Failed to load students:', err.message);
+            setPendingStudents([]);
+          }
+        })()
+      ]);
     };
     loadAll();
   }, []);

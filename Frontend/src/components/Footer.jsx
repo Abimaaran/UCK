@@ -2,7 +2,7 @@
 import React from 'react';
 import './Footer.css';
 
-const Footer = () => {
+const Footer = ({ hideQuickLinks = false }) => {
   const currentYear = new Date().getFullYear();
   
   return (
@@ -28,7 +28,8 @@ const Footer = () => {
           </div>
           
           {/* Quick Links Section */}
-          <div className="footer-section quick-links">
+          {!hideQuickLinks && (
+            <div className="footer-section quick-links">
             <h4 className="section-title">Quick Links</h4>
             <ul className="links-list">
               <li><a href="#home" className="footer-link">Home</a></li>
@@ -39,6 +40,7 @@ const Footer = () => {
               <li><a href="#contact" className="footer-link">Contact</a></li>
             </ul>
           </div>
+          )}
           
           {/* Contact Info Section */}
           <div className="footer-section contact-info">

@@ -8,15 +8,18 @@ const FeesManager = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      // 1. Fetch Students
       try {
-        const [students, allFees] = await Promise.all([
-          getCollection('students'),
-          getCollection('fees')
-        ]);
-        
-        setApprovedStudents(Array.isArray(students) ? students.filter(s => s.status === 'Approved') : []);
-        
-        // Transform array to { studentId: { month: status } }
+        const studentData = await getCollection('students');
+        setApprovedStudents(Array.isArray(studentData) ? studentData.filter(s => s.status === 'Approved') : []);
+      } catch (err) {
+        console.warn("Failed to fetch students:", err.message);
+        setApprovedStudents([]);
+      }
+
+      // 2. Fetch Fees
+      try {
+        const allFees = await getCollection('fees');
         const feesMap = {};
         if (Array.isArray(allFees)) {
           allFees.forEach(record => {
@@ -28,7 +31,8 @@ const FeesManager = () => {
         }
         setFees(feesMap);
       } catch (err) {
-        console.error("Failed to fetch students or fees", err);
+        console.warn("Failed to fetch fees:", err.message);
+        setFees({});
       }
     };
     fetchData();
@@ -90,7 +94,7 @@ const FeesManager = () => {
                 return (
                   <tr key={student.studentId}>
                     <td>#{student.studentId}</td>
-                    <td>{student.name}</td>
+                    <td>{student.studentName || student.name || 'N/A'}</td>
                     <td>
                       <span className={`status-badge ${status === 'Paid' ? 'approved' : 'pending'}`} style={{
                         padding: '4px 12px',

@@ -7,6 +7,7 @@ import App from './App';
 import RegistrationForm from './components/RegistrationForm';
 import AdminDashboard from './components/Admin/AdminDashboard';
 import StudentPortal from './components/StudentPortal';
+import AnalyzeGame from './components/AnalyzeGame';
 import ScrollToTop from './components/ScrollToTop';
 
 import { ThemeProvider } from './context/ThemeContext';
@@ -22,6 +23,7 @@ root.render(
           <Route path="/register" element={<RegistrationForm />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/student-portal" element={<StudentPortal />} />
+          <Route path="/analyze-game" element={<AnalyzeGame />} />
         </Routes>
       </Router>
     </ThemeProvider>

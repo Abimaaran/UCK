@@ -9,25 +9,28 @@ const StudentReviewManager = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      // 1. Fetch Students
       try {
-        const [students, allReviews] = await Promise.all([
-          getCollection('students'),
-          getCollection('reviews')
-        ]);
-        
-        setApprovedStudents(Array.isArray(students) ? students.filter(s => s.status === 'Approved') : []);
-        
-        // Transform array to { studentId: reviewObject }
+        const studentData = await getCollection('students');
+        setApprovedStudents(Array.isArray(studentData) ? studentData.filter(s => s.status === 'Approved') : []);
+      } catch (err) {
+        console.warn("Failed to fetch students:", err.message);
+        setApprovedStudents([]);
+      }
+
+      // 2. Fetch Reviews
+      try {
+        const allReviews = await getCollection('reviews');
         const reviewsMap = {};
         if (Array.isArray(allReviews)) {
           allReviews.forEach(record => {
-            // Store the most recent review for the studentId
             reviewsMap[record.studentId] = record;
           });
         }
         setReviews(reviewsMap);
       } catch (err) {
-        console.error("Failed to fetch students or reviews", err);
+        console.warn("Failed to fetch reviews:", err.message);
+        setReviews({});
       }
     };
     fetchData();

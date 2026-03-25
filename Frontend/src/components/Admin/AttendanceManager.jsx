@@ -14,15 +14,18 @@ const AttendanceManager = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      // 1. Fetch Students
       try {
-        const [students, allAttendance] = await Promise.all([
-          getCollection('students'),
-          getCollection('attendance')
-        ]);
-        
-        setApprovedStudents(Array.isArray(students) ? students.filter(s => s.status === 'Approved') : []);
-        
-        // Transform array to { studentId: { date: status } }
+        const studentData = await getCollection('students');
+        setApprovedStudents(Array.isArray(studentData) ? studentData.filter(s => s.status === 'Approved') : []);
+      } catch (err) {
+        console.warn("Failed to fetch students:", err.message);
+        setApprovedStudents([]);
+      }
+
+      // 2. Fetch Attendance
+      try {
+        const allAttendance = await getCollection('attendance');
         const attendanceMap = {};
         if (Array.isArray(allAttendance)) {
           allAttendance.forEach(record => {
@@ -34,7 +37,8 @@ const AttendanceManager = () => {
         }
         setAttendance(attendanceMap);
       } catch (err) {
-        console.error("Failed to fetch students or attendance", err);
+        console.warn("Failed to fetch attendance:", err.message);
+        setAttendance({});
       }
     };
     fetchData();
@@ -113,7 +117,7 @@ const AttendanceManager = () => {
                 return (
                   <tr key={student.studentId}>
                     <td>#{student.studentId}</td>
-                    <td>{student.name}</td>
+                    <td>{student.studentName || student.name || 'N/A'}</td>
                     <td>
                       <div className="action-btns" style={{ gap: '0.5rem' }}>
                         <button 

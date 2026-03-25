@@ -1,0 +1,498 @@
+/* AnalyzeGame.css */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+.AnalyzeGame-page {
+  min-height: 100vh;
+  background-color: #0a0a0c;
+  color: #e2e8f0;
+  font-family: 'Outfit', sans-serif;
+  padding-top: 90px;
+  background-image: 
+    radial-gradient(circle at 20% 20%, rgba(212, 175, 55, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(212, 175, 55, 0.05) 0%, transparent 40%);
+}
+
+.analyze-dashboard-main {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 2rem 4rem;
+}
+
+.analyze-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.analyze-section-header {
+  margin-bottom: 1rem;
+}
+
+.analyze-section-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.5px;
+}
+
+.analyze-analysis-grid {
+  display: grid;
+  grid-template-columns: 1fr 0.7fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .analyze-analysis-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Common Chess Card Style */
+.analyze-chess-card {
+  background: rgba(25, 25, 30, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.analyze-chess-card--elevated {
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+}
+
+.analyze-card-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.analyze-card-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #d4af37;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.analyze-card-content {
+  padding: 1.5rem;
+}
+
+/* Board Styles */
+.analyze-board-container {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding-bottom: min(100%, 520px); /* 1:1 Aspect Ratio with cap */
+  background: #111;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 4px solid rgba(212, 175, 55, 0.2);
+}
+
+.analyze-board-container iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* Controls Styles */
+.analyze-controls-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.analyze-control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.analyze-control-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.analyze-form-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+.analyze-form-select, .analyze-form-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  outline: none;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.analyze-form-select:focus, .analyze-form-input:focus {
+  border-color: #d4af37;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.analyze-form-select option {
+  background-color: #1a1a20;
+  color: #fff;
+  padding: 10px;
+}
+
+/* Stats Panel */
+.analyze-stats-panel {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(0, 0, 0, 0));
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  border-radius: 15px;
+  padding: 1.25rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.analyze-stats-title {
+  font-weight: 600;
+  color: #d4af37;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.1rem;
+}
+
+.analyze-stats-grid {
+  display: flex;
+  gap: 3rem;
+}
+
+.analyze-stat-item {
+  text-align: center;
+}
+
+.analyze-stat-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.analyze-stat-label {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Editor Section */
+.analyze-editor-container {
+  display: grid;
+  grid-template-columns: 1fr 0.8fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .analyze-editor-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+.analyze-editor-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: rgba(0,0,0,0.2);
+  border-radius: 12px;
+  margin-bottom: 0.5rem;
+}
+
+.analyze-palette-sidebar {
+  margin-bottom: 1rem;
+}
+
+.analyze-board-column {
+  background: rgba(25, 25, 30, 0.4);
+  padding: 1rem;
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.analyze-action-buttons--top {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  margin-top: 0 !important;
+}
+
+.analyze-action-buttons--top .analyze-chess-btn {
+  padding: 0.6rem 0.4rem;
+  font-size: 0.85rem;
+}
+
+.analyze-tool-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.analyze-group-title {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: #666;
+  width: 100%;
+  margin-bottom: 0.25rem;
+}
+
+.analyze-tool {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #fff;
+}
+
+.analyze-tool:hover {
+  background: rgba(212, 175, 55, 0.1);
+  border-color: #d4af37;
+}
+
+.analyze-tool--active {
+  background: #d4af37 !important;
+  color: #000 !important;
+  border-color: #d4af37 !important;
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+}
+
+/* White piece buttons — light background, dark piece color */
+.analyze-tool--white {
+  background: #f0ede0;
+  border: 1px solid #ccc;
+  color: #111;
+}
+
+.analyze-tool--white:hover {
+  background: #fff;
+  border-color: #d4af37;
+}
+
+/* Black piece buttons — dark background, light piece color */
+.analyze-tool--black {
+  background: #2a2a2a;
+  border: 1px solid #555;
+  color: #eee;
+}
+
+.analyze-tool--black:hover {
+  background: #3d3d3d;
+  border-color: #d4af37;
+}
+
+/* Group label colors */
+.analyze-group-title--white {
+  color: #e8dfc0;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.analyze-group-title--black {
+  color: #888;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.analyze-palette-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.analyze-board-with-coords {
+  position: relative;
+  padding: 25px;
+  background: #111;
+  border-radius: 8px;
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+  max-width: 450px;
+  margin: 0 auto;
+}
+
+.analyze-chess-grid-board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  width: 100%;
+  aspect-ratio: 1/1;
+  border: 2px solid #333;
+}
+
+.analyze-square {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  font-size: 32px;
+}
+
+.analyze-square--light { background-color: #ebecd0; color: #779556; }
+.analyze-square--dark { background-color: #779556; color: #ebecd0; }
+
+.analyze-square--selected {
+  outline: 4px solid #d4af37;
+  outline-offset: -4px;
+  z-index: 2;
+}
+
+.analyze-piece {
+  user-select: none;
+  transition: transform 0.15s ease;
+  color: #000;
+  text-shadow: 1px 1px 0 rgba(255,255,255,0.2);
+}
+
+.analyze-square:hover .analyze-piece {
+  transform: scale(1.1);
+}
+
+.analyze-coord-files {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 5px;
+  color: #666;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.analyze-coord-ranks {
+  position: absolute;
+  left: 5px;
+  top: 30px;
+  bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  color: #666;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.analyze-editor-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.analyze-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.analyze-field-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.analyze-checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+}
+
+.analyze-checkbox-group input {
+  accent-color: #d4af37;
+}
+
+.analyze-action-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.analyze-chess-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.8rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.analyze-chess-btn--secondary {
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.analyze-chess-btn--secondary:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.2);
+}
+
+.analyze-chess-btn--danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ff6b6b;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.analyze-chess-btn--danger:hover {
+  background: #ef4444;
+  color: #fff;
+}
+
+.analyze-chess-btn--accent {
+  background: linear-gradient(135deg, #d4af37, #b8860b);
+  color: #000;
+  grid-column: 1 / -1;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+}
+
+.analyze-chess-btn--accent:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(212, 175, 55, 0.4);
+}
+
+.analyze-hint-text {
+  margin-top: 1.5rem;
+  font-size: 0.85rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}

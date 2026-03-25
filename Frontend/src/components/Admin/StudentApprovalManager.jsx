@@ -28,7 +28,7 @@ const StudentApprovalManager = ({ students, setStudents }) => {
       <div style={{ display: 'flex', gap: '0.6rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
         {[
           { key: 'pending', label: '⏳ Pending Approvals', count: students.length },
-          { key: 'add',     label: '➕ Add Student Manually' },
+          { key: 'add', label: '➕ Add Student Manually' },
           { key: 'approved', label: '✅ Approved Students' },
           { key: 'declined', label: '❌ Declined Registrations' },
         ].map(({ key, label, count }) => (
@@ -52,8 +52,8 @@ const StudentApprovalManager = ({ students, setStudents }) => {
         ))}
       </div>
 
-      {view === 'pending'  && <PendingTab students={students} setStudents={setStudents} onRefresh={refresh_} />}
-      {view === 'add'      && <ManualAddTab onRefresh={refresh_} />}
+      {view === 'pending' && <PendingTab students={students} setStudents={setStudents} onRefresh={refresh_} />}
+      {view === 'add' && <ManualAddTab onRefresh={refresh_} />}
       {view === 'approved' && <ApprovedTab key={refresh} onRefresh={refresh_} />}
       {view === 'declined' && <DeclinedTab students={students} setStudents={setStudents} onRefresh={refresh_} />}
     </div>
@@ -194,8 +194,8 @@ const ManualAddTab = ({ onRefresh }) => {
     setSuccess('');
 
     if (!form.studentId.trim()) { setError('Student ID is required.'); return; }
-    if (!form.name.trim())      { setError('Name is required.'); return; }
-    if (!form.dob)               { setError('Date of Birth is required (used as portal password).'); return; }
+    if (!form.name.trim()) { setError('Name is required.'); return; }
+    if (!form.dob) { setError('Date of Birth is required (used as portal password).'); return; }
 
     try {
       await createItem('students', {
@@ -242,14 +242,18 @@ const ManualAddTab = ({ onRefresh }) => {
       <InfoBanner text="Manually add a student with a custom Student ID. They should use their provided password to log in once approved." />
 
       {error && (
-        <div style={{ background: 'rgba(220,53,69,0.15)', border: '1px solid rgba(220,53,69,0.4)',
-          borderRadius: '7px', padding: '0.7rem 1rem', color: '#ff6b6b', marginBottom: '1rem', fontSize: '0.85rem' }}>
+        <div style={{
+          background: 'rgba(220,53,69,0.15)', border: '1px solid rgba(220,53,69,0.4)',
+          borderRadius: '7px', padding: '0.7rem 1rem', color: '#ff6b6b', marginBottom: '1rem', fontSize: '0.85rem'
+        }}>
           ❌ {error}
         </div>
       )}
       {success && (
-        <div style={{ background: 'rgba(76,175,80,0.15)', border: '1px solid rgba(76,175,80,0.4)',
-          borderRadius: '7px', padding: '0.7rem 1rem', color: '#a0e4a0', marginBottom: '1rem', fontSize: '0.85rem' }}>
+        <div style={{
+          background: 'rgba(76,175,80,0.15)', border: '1px solid rgba(76,175,80,0.4)',
+          borderRadius: '7px', padding: '0.7rem 1rem', color: '#a0e4a0', marginBottom: '1rem', fontSize: '0.85rem'
+        }}>
           ✅ {success}
         </div>
       )}
@@ -353,10 +357,10 @@ const ApprovedTab = ({ onRefresh }) => {
         // Assuming your backend uses the MongoDB ID for actual document deletion (`student.id` typically maps to `_id`).
         // We will need the actual DB document _id, let's assume `id` here is the `_id`/`id` field of the user document.
         const stud = approved.find(s => s.studentId === id || s.id === id);
-        if(stud) await deleteItem('students', stud.id || stud._id);
+        if (stud) await deleteItem('students', stud.id || stud._id);
         onRefresh();
       } catch (err) {
-         console.error(err);
+        console.error(err);
       }
     }
   };
@@ -376,7 +380,7 @@ const ApprovedTab = ({ onRefresh }) => {
       await updateItem('students', id, editForm);
       setEditingId(null);
       onRefresh();
-    } catch(err) {
+    } catch (err) {
       console.error(err);
     }
   };
@@ -396,7 +400,7 @@ const ApprovedTab = ({ onRefresh }) => {
               <th>Student ID</th>
               <th>Name</th>
               <th>Email</th>
-              <th>Password (DOB)</th>
+              <th>DOB</th>
               <th>Level</th>
               <th>Approved</th>
               <th>Actions</th>

@@ -17,7 +17,7 @@ const HeroSection = () => {
           </h1>
           <p className="hero-subtitle">
             At Uncrowned Kings, learn chess from passionate FIDE-rated coaches committed to your growth.
-Build strategic thinking, improve consistently, and take your game to the next level.
+            Build strategic thinking, improve consistently, and take your game to the next level.
           </p>
           <div className="hero-actions">
             <button className="hero-btn primary" onClick={() => navigate('/register')}>
@@ -27,17 +27,17 @@ Build strategic thinking, improve consistently, and take your game to the next l
               Watch Demo Class
             </button>
           </div>
-          
+
           {showVideo && (
             <div className="video-overlay">
-                <button className="skip-btn-fixed" onClick={() => setShowVideo(false)}>
-                  Skip ✕
-                </button>
+              <button className="skip-btn-fixed" onClick={() => setShowVideo(false)}>
+                Skip ✕
+              </button>
               <div className="video-container">
-                <video 
-                  src={introVideo} 
-                  autoPlay 
-                  controls 
+                <video
+                  src={introVideo}
+                  autoPlay
+                  controls
                   className="demo-video"
                   onEnded={() => setShowVideo(false)}
                 />
@@ -66,7 +66,7 @@ Build strategic thinking, improve consistently, and take your game to the next l
             <div className="chess-piece knight">♘</div>
             <div className="chess-piece pawn-white">♙</div>
             <div className="chess-piece rook">♖</div>
-            
+
             {/* Black Pieces */}
             <div className="chess-piece queen">♕</div>
             <div className="chess-piece bishop">♗</div>
@@ -76,7 +76,7 @@ Build strategic thinking, improve consistently, and take your game to the next l
       </div>
       <div className="hero-wave">
         <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M0 60L60 50C120 40 240 20 360 20C480 20 600 40 720 53.3C840 66.7 960 73.3 1080 70C1200 66.7 1320 53.3 1380 46.7L1440 40V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0V60Z" fill="var(--bg-primary)"/>
+          <path d="M0 60L60 50C120 40 240 20 360 20C480 20 600 40 720 53.3C840 66.7 960 73.3 1080 70C1200 66.7 1320 53.3 1380 46.7L1440 40V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0V60Z" fill="var(--bg-primary)" />
         </svg>
       </div>
     </section>
