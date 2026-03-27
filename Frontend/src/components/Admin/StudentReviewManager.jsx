@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getCollection, updateItem } from '../../services/api';
+import { getCollection, createItem } from '../../services/api';
 
 const StudentReviewManager = () => {
   const [approvedStudents, setApprovedStudents] = useState([]);
@@ -36,48 +36,30 @@ const StudentReviewManager = () => {
     fetchData();
   }, []);
 
+
   const handleSaveReview = async (e) => {
     e.preventDefault();
     if (!selectedStudent) return;
 
     try {
+      const now = new Date();
       const payload = {
-          text: reviewText,
-          date: new Date().toISOString().split('T')[0]
+        studentId: selectedStudent.studentId,
+        text: reviewText,
+        date: now.toISOString().split('T')[0],
+        time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        createdAt: now.toISOString()
       };
-      await updateItem('reviews', selectedStudent.studentId, payload);
-      
+      await createItem('reviews', payload);
+
       const newReviews = { ...reviews };
       newReviews[selectedStudent.studentId] = payload;
       setReviews(newReviews);
-      alert('Review saved successfully!');
+      alert('Review sent successfully to Student History!');
     } catch (err) {
-      console.error("Failed to save review", err);
-      alert("Could not save review.");
+      console.error("Failed to send review", err);
+      alert("Could not send review.");
     }
-  };
-
-  const sendWhatsApp = (student) => {
-    const review = reviews[student.studentId]?.text || '';
-    if (!review) {
-      alert('Please write a review first!');
-      return;
-    }
-    const message = encodeURIComponent(`Royal Chess Academy Feedback for ${student.name}:\n\n${review}`);
-    // Using a placeholder phone since we might not have it in approval data, 
-    // or we can add it if available.
-    window.open(`https://wa.me/?text=${message}`, '_blank');
-  };
-
-  const sendEmail = (student) => {
-    const review = reviews[student.studentId]?.text || '';
-    if (!review) {
-      alert('Please write a review first!');
-      return;
-    }
-    const subject = encodeURIComponent(`Performance Review - Uncrowned Kings Chess Academy`);
-    const body = encodeURIComponent(`Dear ${student.name},\n\nHere is your performance feedback:\n\n${review}\n\nBest regards,\nAdmin`);
-    window.location.href = `mailto:${student.email}?subject=${subject}&body=${body}`;
   };
 
   return (
@@ -88,24 +70,41 @@ const StudentReviewManager = () => {
           <h3 style={{ marginBottom: '1.5rem', color: 'var(--accent-gold)' }}>Select Student</h3>
           <div className="student-items" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '500px', overflowY: 'auto' }}>
             {approvedStudents.map(student => (
-              <div 
+              <div
                 key={student.studentId}
                 className={`student-item ${selectedStudent?.studentId === student.studentId ? 'active' : ''}`}
                 style={{
                   padding: '1rem',
                   borderRadius: '10px',
-                  background: selectedStudent?.studentId === student.studentId ? 'rgba(212, 175, 55, 0.1)' : 'var(--bg-primary)',
-                  border: `1px solid ${selectedStudent?.studentId === student.studentId ? 'var(--accent-gold)' : 'var(--border-color)'}`,
+                  background: selectedStudent?.studentId === student.studentId ? 'rgba(212, 175, 55, 0.15)' : 'rgba(255, 255, 255, 0.03)',
+                  border: `1px solid ${selectedStudent?.studentId === student.studentId ? 'var(--accent-gold)' : 'rgba(255, 255, 255, 0.1)'}`,
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease'
+                  transition: 'all 0.2s ease',
+                  marginBottom: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px'
                 }}
                 onClick={() => {
                   setSelectedStudent(student);
                   setReviewText(reviews[student.studentId]?.text || '');
                 }}
               >
-                <div style={{ fontWeight: '600' }}>{student.name}</div>
-                <div style={{ fontSize: '0.85rem', color: '#888' }}>ID: #{student.studentId}</div>
+                <span style={{ 
+                  background: 'rgba(212, 175, 55, 0.1)', 
+                  color: 'var(--accent-gold)', 
+                  padding: '4px 8px', 
+                  borderRadius: '6px', 
+                  fontSize: '0.8rem', 
+                  fontWeight: '700',
+                  minWidth: '65px',
+                  textAlign: 'center'
+                }}>
+                  #{student.studentId || 'ID?'}
+                </span>
+                <div style={{ fontWeight: '600', color: '#fff' }}>
+                  {student.studentName || student.name || student.fullName || 'Unnamed Student'}
+                </div>
               </div>
             ))}
           </div>
@@ -115,43 +114,32 @@ const StudentReviewManager = () => {
         <div className="review-editor-card" style={{ background: 'var(--card-bg)', borderRadius: '15px', padding: '1.5rem', border: '1px solid var(--border-color)' }}>
           {selectedStudent ? (
             <>
-              <h3 style={{ marginBottom: '1rem', color: 'var(--accent-gold)' }}>Review for {selectedStudent.name}</h3>
+              <h3 style={{ marginBottom: '1rem', color: 'var(--accent-gold)' }}>
+                Review for: <span style={{ color: '#fff' }}>{selectedStudent.studentName || selectedStudent.name || 'Student'}</span> 
+                <span style={{ marginLeft: '10px', fontSize: '0.9rem', opacity: 0.8 }}>(#{selectedStudent.studentId})</span>
+              </h3>
               <form onSubmit={handleSaveReview}>
                 <div className="form-group">
-                  <label>Personal Feedback</label>
-                  <textarea 
-                    style={{ minHeight: '200px', width: '100%' }}
-                    placeholder="Write your feedback here..."
+                  <label>Type Review / Performance Feedback</label>
+                  <textarea
+                    style={{ minHeight: '250px', width: '100%' }}
+                    placeholder="Enter the performance review for the student here..."
                     value={reviewText}
                     onChange={(e) => setReviewText(e.target.value)}
                     required
                   ></textarea>
                 </div>
-                
-                <div className="form-actions" style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                  <button type="submit" className="add-btn">Save Review</button>
-                  <button 
-                    type="button" 
-                    className="edit-btn" 
-                    style={{ background: '#25D366', color: 'white' }}
-                    onClick={() => sendWhatsApp(selectedStudent)}
-                  >
-                    Send to WhatsApp
-                  </button>
-                  <button 
-                    type="button" 
-                    className="edit-btn" 
-                    style={{ background: '#EA4335', color: 'white' }}
-                    onClick={() => sendEmail(selectedStudent)}
-                  >
-                    Send to Email
+
+                <div className="form-actions" style={{ marginTop: '1.5rem' }}>
+                  <button type="submit" className="add-btn" style={{ width: '100%', padding: '1rem', fontSize: '1.1rem' }}>
+                    Send Review to Student Portal
                   </button>
                 </div>
               </form>
             </>
           ) : (
             <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666' }}>
-              <p>Please select a student from the left to write a review.</p>
+              <p>Please select a student from the left to write and send a review.</p>
             </div>
           )}
         </div>

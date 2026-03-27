@@ -73,9 +73,9 @@ const UserReviewManager = () => {
                     </div>
                   </td>
                   <td>
-                    <div style={{ 
-                      maxHeight: '100px', 
-                      overflowY: 'auto', 
+                    <div style={{
+                      maxHeight: '100px',
+                      overflowY: 'auto',
                       fontSize: '0.9rem',
                       lineHeight: '1.4',
                       color: '#ccc',
@@ -87,8 +87,8 @@ const UserReviewManager = () => {
                     </div>
                   </td>
                   <td className="action-btns">
-                    <button 
-                      className="delete-btn" 
+                    <button
+                      className="delete-btn"
                       onClick={() => handleDelete(review.id)}
                     >
                       Delete

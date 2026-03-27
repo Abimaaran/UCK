@@ -62,7 +62,7 @@ const LoginSection = () => {
           navigate('/student-portal');
         }
       } catch (error) {
-         setLoginError('Invalid Student ID or Date of Birth. Please check your credentials.');
+         setLoginError('Invalid Student ID or Password. Please check your credentials.');
       }
     }
   };
@@ -182,7 +182,7 @@ const LoginSection = () => {
                     </label>
                     <input
                       type={portalType === 'admin' ? 'email' : 'text'}
-                      placeholder={portalType === 'admin' ? 'admin@uck.com' : 'uck01'}
+                      placeholder={portalType === 'admin' ? 'admin@uck.com' : 'Student ID'}
                       value={loginId}
                       onChange={(e) => setLoginId(e.target.value)}
                       required

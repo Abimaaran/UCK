@@ -45,24 +45,21 @@ const CoachesSection = () => {
             <div
               className="coach-profile-plate"
               key={coach.id}
-              onClick={() => openCoachProfile(coach)}
             >
               <div className="profile-wrapper">
                 <div className="coach-image-container" style={{ background: coach.colorGradient }}>
                   <div className="image-wrapper">
                     <img
-                      src={generateChessAvatar(coach.name, coach.chessPiece)}
+                      src={coach.photo || generateChessAvatar(coach.name, coach.chessPiece)}
                       alt={coach.name}
                       className="coach-image"
+                      style={coach.photo ? { objectFit: 'contain', backgroundColor: 'rgba(0,0,0,0.2)' } : {}}
                     />
-                    <div className="image-overlay">
-                      <span className="view-profile-text">View Profile</span>
-                    </div>
                   </div>
 
                   <div className="fide-badge">
                     <span className="fide-icon">♛</span>
-                    <span className="fide-text">{coach.fideId}</span>
+                    <span className="fide-text">FIDE ID: {coach.fideId}</span>
                   </div>
                 </div>
 
@@ -71,7 +68,7 @@ const CoachesSection = () => {
                     <h3 className="coach-name">{coach.name}</h3>
                     <div className="rating-badge">
                       <span className="rating-star">★</span>
-                      <span className="rating-text">{coach.rating}</span>
+                      <span className="rating-text">Rated: {coach.rating}</span>
                     </div>
                   </div>
 
@@ -110,13 +107,6 @@ const CoachesSection = () => {
           ))}
         </div>
 
-        <div className="coaches-cta">
-          <p className="cta-text">Ready to learn from our FIDE-rated experts?</p>
-          <button className="book-session-btn">
-            Book a Trial Session
-            <span className="btn-crown">♛</span>
-          </button>
-        </div>
       </div>
 
       {/* Coach Profile Modal */}
@@ -131,10 +121,11 @@ const CoachesSection = () => {
                   className="modal-image-wrapper"
                   style={{ background: selectedCoach.colorGradient }}
                 >
-                  <img
-                    src={generateChessAvatar(selectedCoach.name, selectedCoach.chessPiece)}
+                   <img
+                    src={selectedCoach.photo || generateChessAvatar(selectedCoach.name, selectedCoach.chessPiece)}
                     alt={selectedCoach.name}
                     className="modal-coach-image"
+                    style={selectedCoach.photo ? { objectFit: 'contain', backgroundColor: 'rgba(0,0,0,0.2)' } : {}}
                   />
                 </div>
 

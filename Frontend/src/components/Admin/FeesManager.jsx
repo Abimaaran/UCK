@@ -5,6 +5,8 @@ const FeesManager = () => {
   const [approvedStudents, setApprovedStudents] = useState([]);
   const [fees, setFees] = useState({});
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -61,16 +63,53 @@ const FeesManager = () => {
     return date.toLocaleString('default', { month: 'long', year: 'numeric' });
   };
 
+  const filteredStudents = approvedStudents.filter(student => {
+    const studentName = (student.studentName || student.name || '').toLowerCase();
+    const studentIdStr = (student.studentId || '').toString().toLowerCase();
+    
+    const matchesSearch = studentName.includes(searchTerm.toLowerCase()) || 
+                          studentIdStr.includes(searchTerm.toLowerCase());
+    
+    const status = fees[student.studentId]?.[selectedMonth] || 'Not Paid';
+    const matchesFilter = statusFilter === 'All' || 
+                         (statusFilter === 'Paid' && status === 'Paid') ||
+                         (statusFilter === 'Unpaid' && status === 'Not Paid');
+    
+    return matchesSearch && matchesFilter;
+  });
+
   return (
     <div className="manager-container">
-      <div className="manager-header" style={{ marginBottom: '2rem' }}>
-        <div className="form-group" style={{ maxWidth: '300px' }}>
-          <label>Select Month to Manage Fees</label>
+      <div className="manager-header" style={{ marginBottom: '2rem', display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+        <div className="form-group" style={{ minWidth: '200px' }}>
+          <label>Select Month</label>
           <input 
             type="month" 
             value={selectedMonth} 
             onChange={(e) => setSelectedMonth(e.target.value)}
           />
+        </div>
+
+        <div className="form-group" style={{ minWidth: '250px', flex: '1' }}>
+          <label>Search Student Name or ID</label>
+          <input 
+            type="text" 
+            placeholder="Search students..."
+            value={searchTerm} 
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        <div className="form-group" style={{ minWidth: '150px' }}>
+          <label>Status Filter</label>
+          <select 
+            value={statusFilter} 
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="All">All Students</option>
+            <option value="Paid">Paid</option>
+            <option value="Unpaid">Unpaid</option>
+          </select>
         </div>
       </div>
 
@@ -87,8 +126,10 @@ const FeesManager = () => {
           <tbody>
             {approvedStudents.length === 0 ? (
               <tr><td colSpan="4" style={{ textAlign: 'center' }}>No approved students found.</td></tr>
+            ) : filteredStudents.length === 0 ? (
+              <tr><td colSpan="4" style={{ textAlign: 'center' }}>No students found matching your search or filter.</td></tr>
             ) : (
-              approvedStudents.map(student => {
+              filteredStudents.map(student => {
                 const status = fees[student.studentId]?.[selectedMonth] || 'Not Paid';
                 
                 return (

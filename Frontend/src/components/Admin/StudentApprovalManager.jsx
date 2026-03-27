@@ -19,6 +19,7 @@ const declineStudentApi = async (studentId) => {
 const StudentApprovalManager = ({ students, setStudents }) => {
   const [view, setView] = useState('pending'); // 'pending' | 'add' | 'approved' | 'declined'
   const [refresh, setRefresh] = useState(0);
+  const [viewingStudent, setViewingStudent] = useState(null);
 
   const refresh_ = () => setRefresh(r => r + 1);
 
@@ -52,10 +53,17 @@ const StudentApprovalManager = ({ students, setStudents }) => {
         ))}
       </div>
 
-      {view === 'pending' && <PendingTab students={students} setStudents={setStudents} onRefresh={refresh_} />}
+      {view === 'pending' && <PendingTab students={students} setStudents={setStudents} onRefresh={refresh_} setViewingStudent={setViewingStudent} />}
       {view === 'add' && <ManualAddTab onRefresh={refresh_} />}
-      {view === 'approved' && <ApprovedTab key={refresh} onRefresh={refresh_} />}
-      {view === 'declined' && <DeclinedTab students={students} setStudents={setStudents} onRefresh={refresh_} />}
+      {view === 'approved' && <ApprovedTab key={refresh} onRefresh={refresh_} setViewingStudent={setViewingStudent} />}
+      {view === 'declined' && <DeclinedTab students={students} setStudents={setStudents} onRefresh={refresh_} setViewingStudent={setViewingStudent} />}
+
+      {viewingStudent && (
+        <StudentDetailsModal
+          student={viewingStudent}
+          onClose={() => setViewingStudent(null)}
+        />
+      )}
     </div>
   );
 };
@@ -63,7 +71,7 @@ const StudentApprovalManager = ({ students, setStudents }) => {
 /* ═══════════════════════════════════════════════════════════
    PENDING APPROVALS TAB
 ═══════════════════════════════════════════════════════════ */
-const PendingTab = ({ students, setStudents, onRefresh }) => {
+const PendingTab = ({ students, setStudents, onRefresh, setViewingStudent }) => {
   const [customIds, setCustomIds] = useState({});
 
   const handleApprove = async (student) => {
@@ -141,7 +149,7 @@ const PendingTab = ({ students, setStudents, onRefresh }) => {
                   <td>
                     <input
                       type="text"
-                      placeholder="uck01"
+                      placeholder="SID"
                       value={customIds[student.id] || ''}
                       onChange={e => setCustomIds({ ...customIds, [student.id]: e.target.value })}
                       style={{
@@ -158,6 +166,7 @@ const PendingTab = ({ students, setStudents, onRefresh }) => {
                     />
                   </td>
                   <td className="action-btns">
+                    <button className="view-btn" onClick={() => setViewingStudent(student)}>View</button>
                     <button className="approve-btn" onClick={() => handleApprove(student)}>Approve</button>
                     <button className="delete-btn" onClick={() => handleDecline(student)}>Decline</button>
                   </td>
@@ -286,7 +295,7 @@ const ManualAddTab = ({ onRefresh }) => {
         <div>
           <label style={labelStyle}>Phone Number</label>
           <input name="phone" value={form.phone} onChange={handle}
-            placeholder="+91 98765 43210" style={inputStyle} />
+            placeholder="+94" style={inputStyle} />
         </div>
 
         {/* DOB — password */}
@@ -333,7 +342,7 @@ const ManualAddTab = ({ onRefresh }) => {
 /* ═══════════════════════════════════════════════════════════
    APPROVED STUDENTS TABLE
 ═══════════════════════════════════════════════════════════ */
-const ApprovedTab = ({ onRefresh }) => {
+const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [approved, setApproved] = useState([]);
@@ -456,6 +465,7 @@ const ApprovedTab = ({ onRefresh }) => {
                       </>
                     ) : (
                       <>
+                        <button className="view-btn" onClick={() => setViewingStudent(s)}>View</button>
                         <button className="edit-btn" onClick={() => startEdit(s)}>Edit</button>
                         <button className="delete-btn" onClick={() => handleDelete(s.id || s._id || s.studentId)}>Delete</button>
                       </>
@@ -474,7 +484,7 @@ const ApprovedTab = ({ onRefresh }) => {
 /* ═══════════════════════════════════════════════════════════
    DECLINED REGISTRATIONS TAB
 ═══════════════════════════════════════════════════════════ */
-const DeclinedTab = ({ students, setStudents, onRefresh }) => {
+const DeclinedTab = ({ students, setStudents, onRefresh, setViewingStudent }) => {
   const [declined, setDeclined] = useState([]);
 
   useEffect(() => {
@@ -538,6 +548,7 @@ const DeclinedTab = ({ students, setStudents, onRefresh }) => {
                   <td>{student.chessExperience || student.level || 'N/A'}</td>
                   <td>{student.declinedDate || (student.updatedAt ? new Date(student.updatedAt).toLocaleDateString() : 'N/A')}</td>
                   <td className="action-btns">
+                    <button className="view-btn" onClick={() => setViewingStudent(student)}>View</button>
                     <button className="edit-btn" onClick={() => handleRestore(student)}>Restore</button>
                     <button className="delete-btn" onClick={() => handleDeletePermanent(student.id)}>Purge</button>
                   </td>
@@ -576,5 +587,72 @@ const InfoBanner = ({ text }) => (
     ℹ️ {text}
   </div>
 );
+
+/* ── Student Details Modal ── */
+const StudentDetailsModal = ({ student, onClose }) => {
+  const detailRow = (label, value) => (
+    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+      <span style={{ color: '#aaa', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>
+      <span style={{ color: '#fff', fontWeight: '600' }}>{value || 'N/A'}</span>
+    </div>
+  );
+
+  return (
+    <div style={{
+      position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+      background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)',
+      display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 10000,
+      padding: '1rem'
+    }} onClick={onClose}>
+      <div style={{
+        background: '#15151a', width: '100%', maxWidth: '500px',
+        borderRadius: '15px', border: '1px solid rgba(212,175,55,0.3)',
+        boxShadow: '0 25px 50px rgba(0,0,0,0.5)', overflow: 'hidden'
+      }} onClick={e => e.stopPropagation()}>
+        <div style={{
+          padding: '1.25rem 1.5rem', background: 'rgba(212,175,55,0.1)',
+          borderBottom: '1px solid rgba(212,175,55,0.2)',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+        }}>
+          <h3 style={{ margin: 0, color: '#d4af37', fontSize: '1.25rem' }}>Student Profile Details</h3>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+        </div>
+        <div style={{ padding: '1.5rem', maxHeight: '70vh', overflowY: 'auto' }}>
+          <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🎓</div>
+            <h2 style={{ margin: 0, color: '#fff' }}>{student.studentName || student.name}</h2>
+            <span style={{ color: '#d4af37', fontWeight: '700' }}>#{student.studentId}</span>
+          </div>
+          
+          {detailRow('Full Name', student.studentName || student.name)}
+          {detailRow('Email Address', student.email)}
+          {detailRow('Phone Number', student.phoneNumber || student.phone || student.whatsappNo)}
+          {detailRow('Date of Birth', student.dateOfBirth || student.dob)}
+          {detailRow('Chess Level', student.chessExperience || student.level)}
+          {detailRow('Registration Date', student.approvedDate || (student.createdAt ? new Date(student.createdAt).toLocaleDateString() : 'N/A'))}
+          {detailRow('School / College', student.school)}
+          {detailRow('Gender', student.gender)}
+          {detailRow('FIDE ID', student.fideId && String(student.fideId).trim() ? student.fideId : 'N/A')}
+          {detailRow('FIDE Rating', student.fideRating && String(student.fideRating).trim() ? student.fideRating : 'N/A')}
+          {detailRow('Parent Name', student.parentName)}
+          {detailRow('Parent Occupation', student.parentOccupation)}
+          
+          <div style={{ marginTop: '1.5rem' }}>
+             <span style={{ color: '#aaa', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '0.5rem' }}>Address</span>
+             <p style={{ color: '#fff', fontSize: '0.95rem', background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', lineHeight: '1.6', border: '1px solid rgba(255,255,255,0.05)' }}>
+               {student.address || 'No address provided.'}
+             </p>
+          </div>
+        </div>
+        <div style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
+          <button onClick={onClose} style={{
+            padding: '0.6rem 2rem', background: '#d4af37', color: '#000',
+            border: 'none', borderRadius: '6px', fontWeight: '700', cursor: 'pointer'
+          }}>Close Details</button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default StudentApprovalManager;

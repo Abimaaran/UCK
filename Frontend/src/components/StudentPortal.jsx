@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getStudentProfile, getStudentAttendance, getStudentFees, getStudentReviews } from '../services/api';
 import './StudentPortal.css';
@@ -13,6 +13,22 @@ const StudentPortal = () => {
   const [fees, setFees] = useState({});
   const [reviews, setReviews] = useState({});
   const [viewMonth, setViewMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [hasNewNotification, setHasNewNotification] = useState(false);
+  const [lastReadId, setLastReadId] = useState(localStorage.getItem(`lastReadReview_${localStorage.getItem('loggedInStudentId')}`));
+  const [isFeedbackHistoryVisible, setIsFeedbackHistoryVisible] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Click outside handler for notifications
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowNotifications(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem('isStudentLoggedIn') === 'true';
@@ -42,13 +58,27 @@ const StudentPortal = () => {
         await Promise.all([
           fetchDependentData(getStudentAttendance, setAttendance, 'attendance'),
           fetchDependentData(getStudentFees, setFees, 'fees'),
-          fetchDependentData(getStudentReviews, setReviews, 'reviews')
+          fetchDependentData(getStudentReviews, (data) => {
+            const sortedData = Array.isArray(data) ? [...data].sort((a, b) => new Date(a.createdAt || a.date) - new Date(b.createdAt || b.date)) : [];
+            setReviews(sortedData);
+            if (sortedData.length > 0) {
+              const latest = sortedData[sortedData.length - 1];
+              const savedReadId = localStorage.getItem(`lastReadReview_${studentId}`);
+              if (latest.id !== savedReadId) {
+                setHasNewNotification(true);
+              } else {
+                setHasNewNotification(false);
+              }
+            } else {
+              setHasNewNotification(false);
+            }
+          }, 'reviews')
         ]);
 
       } catch (error) {
         console.error("Failed to fetch student profile:", error);
         if (error.response?.status === 404) {
-             navigate('/#login');
+          navigate('/#login');
         }
       }
     };
@@ -67,10 +97,10 @@ const StudentPortal = () => {
   const calculateAttendance = () => {
     // Adapter for array-based attendance from API
     // backend format [{date: '2023-10-01', status: 'Present'}, ...]
-    const monthRecords = Array.isArray(attendance) 
-        ? attendance.filter(r => r.date?.startsWith(viewMonth))
-        : [];
-        
+    const monthRecords = Array.isArray(attendance)
+      ? attendance.filter(r => r.date?.startsWith(viewMonth))
+      : [];
+
     const total = monthRecords.length;
     const present = monthRecords.filter(r => r.status === 'Present').length;
     const percentage = total === 0 ? 0 : Math.round((present / total) * 100);
@@ -78,16 +108,16 @@ const StudentPortal = () => {
   };
 
   const attendanceStats = calculateAttendance();
-  
+
   // Adapter for array-based fees from API
-  const feeRecord = Array.isArray(fees) 
-    ? fees.find(f => f.month === viewMonth) 
+  const feeRecord = Array.isArray(fees)
+    ? fees.find(f => f.month === viewMonth)
     : null;
   const feeStatus = feeRecord ? 'Paid' : 'Not Paid';
-  
+
   // Adapter for review array
-  const personalReview = Array.isArray(reviews) && reviews.length > 0 
-    ? reviews[reviews.length - 1] 
+  const personalReview = Array.isArray(reviews) && reviews.length > 0
+    ? reviews[reviews.length - 1]
     : null;
 
   const displayName = student.studentName || student.name || 'Student';
@@ -107,9 +137,81 @@ const StudentPortal = () => {
           <span className="portal-crown">♔</span>
           <span>Uncrowned Kings Chess Academy</span>
         </div>
-        <button className="portal-logout-btn" onClick={handleLogout}>
-          Logout
-        </button>
+        <div className="portal-header-right">
+          {/* Notification Bell */}
+          <div className="notification-wrapper" ref={dropdownRef}>
+            <button 
+              className={`notification-bell ${hasNewNotification ? 'has-new' : ''}`}
+              onClick={() => {
+                setShowNotifications(!showNotifications);
+                if (hasNewNotification && !showNotifications) {
+                   setHasNewNotification(false);
+                }
+              }}
+              title="Notifications"
+            >
+              <span className="bell-icon">🔔</span>
+              {hasNewNotification && <span className="notification-dot"></span>}
+            </button>
+
+            {showNotifications && (
+              <div className="notification-dropdown">
+                <div className="dropdown-header">
+                  <h3>Notifications</h3>
+                </div>
+                <div className="dropdown-content">
+                  {personalReview && personalReview.id !== localStorage.getItem(`lastReadReview_${localStorage.getItem('loggedInStudentId')}`) ? (
+                    <div className="notification-item unread">
+                      <span className="item-icon">📝</span>
+                      <div className="item-body">
+                        <strong>NEW MESSAGE</strong>
+                        <p>{personalReview.text.substring(0, 45)}...</p>
+                        <div className="notification-actions" style={{ marginTop: '5px' }}>
+                          <button 
+                            className="view-notification-btn"
+                            onClick={() => {
+                              const sId = localStorage.getItem('loggedInStudentId');
+                              setHasNewNotification(false);
+                              localStorage.setItem(`lastReadReview_${sId}`, personalReview.id);
+                              window.dispatchEvent(new Event('storage'));
+                              setShowNotifications(false);
+                              setIsFeedbackHistoryVisible(true);
+                              // Short delay to allow state update before scrolling
+                              setTimeout(() => {
+                                document.getElementById('feedback-section')?.scrollIntoView({ behavior: 'smooth' });
+                              }, 100);
+                            }}
+                            style={{
+                              background: 'var(--accent-gold)',
+                              color: '#000',
+                              border: 'none',
+                              padding: '4px 12px',
+                              borderRadius: '4px',
+                              fontSize: '0.75rem',
+                              fontWeight: '700',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            View Full Message
+                          </button>
+                        </div>
+                        <small style={{ color: '#d4af37', fontSize: '0.65rem' }}>{personalReview.date} at {personalReview.time || 'N/A'}</small>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="no-notifications">
+                      <p>No new messages</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <button className="portal-logout-btn" onClick={handleLogout}>
+            Logout
+          </button>
+        </div>
       </header>
 
       <main className="portal-main">
@@ -125,14 +227,14 @@ const StudentPortal = () => {
         {/* Dashboard Controls */}
         <div className="portal-controls" style={{ marginBottom: '2rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <label style={{ fontWeight: '600' }}>Select Month to View Stats:</label>
-          <input 
-            type="month" 
-            value={viewMonth} 
+          <input
+            type="month"
+            value={viewMonth}
             onChange={(e) => setViewMonth(e.target.value)}
-            style={{ 
-              padding: '8px 15px', 
-              borderRadius: '8px', 
-              background: 'var(--card-bg)', 
+            style={{
+              padding: '8px 15px',
+              borderRadius: '8px',
+              background: 'var(--card-bg)',
               color: 'var(--text-primary)',
               border: '1px solid var(--border-color)'
             }}
@@ -169,13 +271,13 @@ const StudentPortal = () => {
             <small style={{ color: '#888', marginTop: '5px', display: 'block' }}>
               Review your matches with Stockfish analysis and board editor
             </small>
-            <button className="portal-action-btn" style={{ 
-              marginTop: '15px', 
-              width: '100%', 
-              padding: '8px', 
-              background: 'var(--accent-gold)', 
-              color: '#000', 
-              border: 'none', 
+            <button className="portal-action-btn" style={{
+              marginTop: '15px',
+              width: '100%',
+              padding: '8px',
+              background: 'var(--accent-gold)',
+              color: '#000',
+              border: 'none',
               borderRadius: '6px',
               fontWeight: '700',
               cursor: 'pointer'
@@ -185,16 +287,53 @@ const StudentPortal = () => {
           </div>
         </div>
 
-        {/* Feedback Section */}
-        {personalReview && (
-          <div className="portal-notice review-notice" style={{ marginBottom: '2rem', borderLeftColor: 'var(--accent-gold)' }}>
-            <span className="notice-icon">📝</span>
-            <div>
-              <strong>Latest Performance Feedback ({personalReview.date})</strong>
-              <p style={{ marginTop: '0.5rem', fontStyle: 'italic', lineHeight: '1.6' }}>"{personalReview.text}"</p>
-            </div>
+        {/* Detailed Feedbacks History */}
+        <div id="feedback-section" className="portal-section" style={{ marginTop: '2.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <h3 style={{ color: 'var(--accent-gold)', margin: 0, fontSize: '1.5rem' }}>Performance Feedbacks & Reviews</h3>
+            <button 
+              onClick={() => setIsFeedbackHistoryVisible(!isFeedbackHistoryVisible)}
+              style={{
+                background: isFeedbackHistoryVisible ? 'rgba(255, 255, 255, 0.05)' : 'rgba(212, 175, 55, 0.1)',
+                color: isFeedbackHistoryVisible ? '#fff' : 'var(--accent-gold)',
+                border: `1px solid ${isFeedbackHistoryVisible ? 'var(--border-color)' : 'var(--accent-gold)'}`,
+                padding: '6px 15px',
+                borderRadius: '6px',
+                fontSize: '0.85rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
+              }}
+            >
+              {isFeedbackHistoryVisible ? 'Hide History' : 'View All Feedbacks'}
+            </button>
           </div>
-        )}
+
+          {isFeedbackHistoryVisible ? (
+            Array.isArray(reviews) && reviews.length > 0 ? (
+              <div className="feedback-history-list" style={{ display: 'grid', gap: '1.5rem' }}>
+                {[...reviews].sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date)).map((review, idx) => (
+                  <div key={review.id || idx} className="portal-notice review-notice" style={{ borderLeftColor: idx === 0 ? 'var(--accent-gold)' : 'rgba(212, 175, 55, 0.3)' }}>
+                    <span className="notice-icon">{idx === 0 ? '🏆' : '📝'}</span>
+                    <div>
+                      <strong>{idx === 0 ? 'Latest Feedback' : 'Previous Feedback'} ({review.date} at {review.time || 'N/A'})</strong>
+                      <p style={{ marginTop: '0.5rem', fontStyle: 'italic', lineHeight: '1.6' }}>"{review.text}"</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="portal-notice" style={{ opacity: 0.6, borderStyle: 'dashed' }}>
+                <span className="notice-icon">📭</span>
+                <p>No feedback recorded yet. Your instructor will provide reviews here.</p>
+              </div>
+            )
+          ) : (
+            <div style={{ padding: '2rem', textAlign: 'center', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '12px', border: '1px dashed rgba(255,255,255,0.05)' }}>
+              <p style={{ color: '#666', fontSize: '0.9rem' }}>Click the button above or use the notification icon to view your feedbacks.</p>
+            </div>
+          )}
+        </div>
 
         {/* Info grid */}
         <div className="portal-info-grid">
@@ -238,14 +377,14 @@ const StudentPortal = () => {
             <h3 style={{ margin: 0, color: 'var(--accent-gold)', fontSize: '1.5rem' }}>Daily Attendance Log</h3>
             <span style={{ fontSize: '0.9rem', color: '#888' }}>Month: {new Date(viewMonth + '-01').toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
           </div>
-          
+
           {attendanceStats.history.length > 0 ? (
             <div className="history-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.25rem' }}>
-              {attendanceStats.history.sort((a,b) => new Date(b.date) - new Date(a.date)).map(record => (
-                <div key={record.date} style={{ 
-                  padding: '1.25rem', 
-                  background: 'rgba(255, 255, 255, 0.03)', 
-                  borderRadius: '12px', 
+              {attendanceStats.history.sort((a, b) => new Date(b.date) - new Date(a.date)).map(record => (
+                <div key={record.date} style={{
+                  padding: '1.25rem',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  borderRadius: '12px',
                   border: '1px solid var(--border-color)',
                   display: 'flex',
                   justifyContent: 'space-between',
@@ -258,9 +397,9 @@ const StudentPortal = () => {
                     </div>
                     <small style={{ color: '#666' }}>{record.date}</small>
                   </div>
-                  <span style={{ 
-                    padding: '6px 14px', 
-                    borderRadius: '20px', 
+                  <span style={{
+                    padding: '6px 14px',
+                    borderRadius: '20px',
                     fontSize: '0.8rem',
                     fontWeight: '700',
                     textTransform: 'uppercase',
@@ -273,11 +412,11 @@ const StudentPortal = () => {
               ))}
             </div>
           ) : (
-            <div style={{ 
-              padding: '3rem', 
-              textAlign: 'center', 
-              background: 'rgba(255, 255, 255, 0.02)', 
-              borderRadius: '15px', 
+            <div style={{
+              padding: '3rem',
+              textAlign: 'center',
+              background: 'rgba(255, 255, 255, 0.02)',
+              borderRadius: '15px',
               border: '1px dashed var(--border-color)',
               color: '#666'
             }}>

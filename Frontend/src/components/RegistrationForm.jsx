@@ -298,7 +298,7 @@ const RegistrationForm = () => {
                 name="whatsappNo"
                 value={formData.whatsappNo}
                 onChange={handleChange}
-                placeholder="WhatsApp Number"
+                placeholder="+94"
                 className={errors.whatsappNo ? 'error' : ''}
               />
               {errors.whatsappNo && <span className="error-message">{errors.whatsappNo}</span>}
@@ -312,7 +312,7 @@ const RegistrationForm = () => {
                 name="phoneNumber"
                 value={formData.phoneNumber}
                 onChange={handleChange}
-                placeholder="Phone Number"
+                placeholder="+94"
                 className={errors.phoneNumber ? 'error' : ''}
               />
               {errors.phoneNumber && <span className="error-message">{errors.phoneNumber}</span>}
@@ -327,7 +327,7 @@ const RegistrationForm = () => {
               name="emergencyContact"
               value={formData.emergencyContact}
               onChange={handleChange}
-              placeholder="Emergency contact number"
+              placeholder="+94"
             />
           </div>
         </div>

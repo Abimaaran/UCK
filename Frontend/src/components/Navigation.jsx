@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Navigation.css';
 import { useTheme } from '../context/ThemeContext';
+import { getStudentReviews } from '../services/api';
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -9,14 +10,40 @@ const Navigation = () => {
   const [activeSection, setActiveSection] = useState('home');
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(localStorage.getItem('isAdminLoggedIn') === 'true');
   const [isStudentLoggedIn, setIsStudentLoggedIn] = useState(localStorage.getItem('isStudentLoggedIn') === 'true');
+  const [hasNewReview, setHasNewReview] = useState(false);
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
 
   // Listen for login/logout events and scroll
   useEffect(() => {
-    const syncState = () => {
-      setIsAdminLoggedIn(localStorage.getItem('isAdminLoggedIn') === 'true');
-      setIsStudentLoggedIn(localStorage.getItem('isStudentLoggedIn') === 'true');
+    const syncState = async () => {
+      const adminStatus = localStorage.getItem('isAdminLoggedIn') === 'true';
+      const studentStatus = localStorage.getItem('isStudentLoggedIn') === 'true';
+      setIsAdminLoggedIn(adminStatus);
+      setIsStudentLoggedIn(studentStatus);
+
+      if (studentStatus) {
+        const studentId = localStorage.getItem('loggedInStudentId');
+        if (studentId) {
+          try {
+            const data = await getStudentReviews(studentId);
+            if (Array.isArray(data) && data.length > 0) {
+              const sorted = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
+              const latest = sorted[sorted.length - 1];
+              const savedReadId = localStorage.getItem(`lastReadReview_${studentId}`);
+              if (latest.id !== savedReadId) {
+                setHasNewReview(true);
+              } else {
+                setHasNewReview(false);
+              }
+            } else {
+              setHasNewReview(false);
+            }
+          } catch (err) {
+            console.warn("Failed to check notifications in navbar");
+          }
+        }
+      }
     };
 
     const handleScroll = () => {
@@ -110,12 +137,15 @@ const Navigation = () => {
     if (isStudentLoggedIn) {
       return (
         <div className="nav-actions-group">
-          <button
-            className={`${baseClass} student-portal-btn`}
-            onClick={() => { navigate('/student-portal'); setIsOpen(false); }}
-          >
-            🎓 Student Portal
-          </button>
+          <div className="nav-notification-container">
+            <button
+              className={`${baseClass} student-portal-btn`}
+              onClick={() => { navigate('/student-portal'); setIsOpen(false); }}
+            >
+              🎓 Student Portal
+            </button>
+            {hasNewReview && <span className="nav-notification-dot"></span>}
+          </div>
           <button
             className={`${baseClass} logout-btn`}
             onClick={() => { handleStudentLogout(); setIsOpen(false); }}

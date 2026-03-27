@@ -95,7 +95,6 @@
 
 .coach-profile-plate {
   position: relative;
-  cursor: pointer;
   transition: transform 0.3s ease;
 }
 
@@ -369,6 +368,8 @@
 .cta-text {
   font-size: 1.3rem;
   color: var(--text-primary);
+  margin-bottom: 2rem;
+}
 
 .book-session-btn {
   background: linear-gradient(135deg, #FFD700, #FFED4E);
@@ -779,9 +780,10 @@
   
   .modal-actions {
     flex-direction: column;
+  }
 }
 
-/* Add these to your CoachesSection.css file */
+/* Base styles for images */
 
 .coach-image-container {
   position: relative;

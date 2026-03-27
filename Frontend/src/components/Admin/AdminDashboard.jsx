@@ -5,7 +5,6 @@ import TournamentManager from './TournamentManager';
 import AchievementManager from './AchievementManager';
 import TimetableManager from './TimetableManager';
 import StudentApprovalManager from './StudentApprovalManager';
-import AboutUsManager from './AboutUsManager';
 import AttendanceManager from './AttendanceManager';
 import FeesManager from './FeesManager';
 import StudentReviewManager from './StudentReviewManager';
@@ -14,15 +13,14 @@ import './AdminDashboard.css';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('students');
-  
+
   // State for all manageable entities
   const [coaches, setCoaches] = useState([]);
   const [tournaments, setTournaments] = useState([]);
   const [achievements, setAchievements] = useState([]);
   const [timetable, setTimetable] = useState([]);
   const [pendingStudents, setPendingStudents] = useState([]);
-  const [aboutFeatures, setAboutFeatures] = useState([]);
-  
+
   // Dynamic API loading
   useEffect(() => {
     const loadAll = async () => {
@@ -42,7 +40,6 @@ const AdminDashboard = () => {
         fetchSection('tournaments', setTournaments),
         fetchSection('achievements', setAchievements),
         fetchSection('timetable', setTimetable),
-        fetchSection('about', setAboutFeatures),
         // Fetch students and filter pending
         (async () => {
           try {
@@ -75,8 +72,6 @@ const AdminDashboard = () => {
         return <AchievementManager achievements={achievements} setAchievements={setAchievements} />;
       case 'timetable':
         return <TimetableManager timetable={timetable} setTimetable={setTimetable} />;
-      case 'about':
-        return <AboutUsManager features={aboutFeatures} setFeatures={setAboutFeatures} />;
       case 'attendance':
         return <AttendanceManager />;
       case 'fees':
@@ -99,70 +94,63 @@ const AdminDashboard = () => {
           <h2>Admin Panel</h2>
         </div>
         <nav className="sidebar-nav">
-          <button 
+          <button
             className={`nav-item ${activeTab === 'students' ? 'active' : ''}`}
             onClick={() => setActiveTab('students')}
           >
             <span className="nav-icon">👥</span>
             Student Management
           </button>
-          <button 
+          <button
             className={`nav-item ${activeTab === 'coaches' ? 'active' : ''}`}
             onClick={() => setActiveTab('coaches')}
           >
             <span className="nav-icon">👤</span>
             Coaches
           </button>
-          <button 
+          <button
             className={`nav-item ${activeTab === 'tournaments' ? 'active' : ''}`}
             onClick={() => setActiveTab('tournaments')}
           >
             <span className="nav-icon">🏆</span>
             Tournaments
           </button>
-          <button 
+          <button
             className={`nav-item ${activeTab === 'achievements' ? 'active' : ''}`}
             onClick={() => setActiveTab('achievements')}
           >
             <span className="nav-icon">🎖️</span>
             Achievements
           </button>
-          <button 
+          <button
             className={`nav-item ${activeTab === 'timetable' ? 'active' : ''}`}
             onClick={() => setActiveTab('timetable')}
           >
             <span className="nav-icon">📅</span>
             Timetable
           </button>
-          <button 
-            className={`nav-item ${activeTab === 'about' ? 'active' : ''}`}
-            onClick={() => setActiveTab('about')}
-          >
-            <span className="nav-icon">👑</span>
-            Why Choose Us
-          </button>
-          <button 
+          <button
             className={`nav-item ${activeTab === 'attendance' ? 'active' : ''}`}
             onClick={() => setActiveTab('attendance')}
           >
             <span className="nav-icon">📅</span>
             Attendance
           </button>
-          <button 
+          <button
             className={`nav-item ${activeTab === 'fees' ? 'active' : ''}`}
             onClick={() => setActiveTab('fees')}
           >
             <span className="nav-icon">💰</span>
             Fees System
           </button>
-          <button 
+          <button
             className={`nav-item ${activeTab === 'reviews' ? 'active' : ''}`}
             onClick={() => setActiveTab('reviews')}
           >
             <span className="nav-icon">📝</span>
-            Student Reviews
+            Reviews Management
           </button>
-          <button 
+          <button
             className={`nav-item ${activeTab === 'user-feedbacks' ? 'active' : ''}`}
             onClick={() => setActiveTab('user-feedbacks')}
           >

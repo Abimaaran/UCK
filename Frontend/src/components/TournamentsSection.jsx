@@ -4,6 +4,8 @@ import './TournamentsSection.css';
 
 const TournamentsSection = () => {
   const [tournaments, setTournaments] = useState([]);
+  const [selectedTournament, setSelectedTournament] = useState(null);
+  const [showDescription, setShowDescription] = useState(false);
 
   useEffect(() => {
     const loadTournaments = async () => {
@@ -15,15 +17,66 @@ const TournamentsSection = () => {
       }
     };
     loadTournaments();
-  },[]);
+  }, []);
 
-  const getStatusColor = (status) => {
-    switch(status.toLowerCase()) {
-      case 'upcoming': return '#FF6B6B';
-      case 'ongoing': return '#FFD700';
-      case 'completed': return '#20C997';
-      default: return '#4A90E2';
+  useEffect(() => {
+    if (selectedTournament) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
     }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [selectedTournament]);
+
+  const renderDescription = (text) => {
+    if (!text) return null;
+
+    // First, split by Markdown link pattern: [text](url)
+    const markdownRegex = /(\[[^\]]+\]\([^)]+\))/g;
+    const parts = text.split(markdownRegex);
+
+    return parts.map((part, index) => {
+      // Check if this part is a markdown link [abc](xyz)
+      const markdownMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+      if (markdownMatch) {
+         const [_, linkText, url] = markdownMatch;
+         return (
+          <a key={index} href={url} target="_blank" rel="noopener noreferrer" className="tournament-link">
+            {linkText}
+          </a>
+         );
+      }
+
+      // For normal text parts, auto-detect plain URLs
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      const subParts = part.split(urlRegex);
+
+      return subParts.map((subPart, subIndex) => {
+        const urlMatch = subPart.match(/^https?:\/\/[^\s]+$/);
+        if (urlMatch) {
+          return (
+            <a key={`${index}-${subIndex}`} href={subPart} target="_blank" rel="noopener noreferrer" className="tournament-link">
+              {subPart}
+            </a>
+          );
+        }
+        return <span key={`${index}-${subIndex}`}>{subPart}</span>;
+      });
+    });
+  };
+
+  const handleDownload = (pdfUrl, name) => {
+    if (!pdfUrl) return;
+    const link = document.createElement('a');
+    link.href = pdfUrl;
+    link.download = `${name.replace(/\s+/g, '_')}_details.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -37,58 +90,54 @@ const TournamentsSection = () => {
           </div>
           <p className="section-subtitle">Compete, Learn, and Grow with Uncrowned Kings</p>
         </div>
-        
+
         <div className="tournaments-container">
           {tournaments.map((tournament, index) => (
-            <div 
-              className={`tournament-plate ${tournament.status.toLowerCase()}`}
+            <div
+              className="tournament-plate"
               key={index}
-              style={{ 
-                '--tournament-color': getStatusColor(tournament.status),
-                '--tournament-gradient': tournament.gradient 
+              style={{
+                '--tournament-color': '#d4af37',
+                '--tournament-gradient': tournament.gradient || 'linear-gradient(135deg, #222, #111)'
               }}
             >
               <div className="plate-wrapper">
-                <div className="plate-header">
-                  <div 
-                    className="plate-icon-wrapper"
-                    style={{ background: tournament.gradient }}
+                {tournament.canvaImage && (
+                  <div
+                    className="tournament-image-preview"
+                    style={{ cursor: 'zoom-in' }}
+                    onClick={() => { setSelectedTournament(tournament); setShowDescription(false); }}
                   >
-                    <span className="plate-icon">{tournament.icon}</span>
+                    <img src={tournament.canvaImage} alt={tournament.name} />
                   </div>
-                  
-                  <div className="plate-status">
-                    <span 
-                      className="status-badge"
-                      style={{ backgroundColor: getStatusColor(tournament.status) }}
-                    >
-                      {tournament.status}
-                    </span>
+                )}
+                <div className="plate-header">
+                  <div
+                    className="plate-icon-wrapper"
+                    style={{ background: tournament.gradient || 'linear-gradient(135deg, #222, #111)' }}
+                  >
+                    <span className="plate-icon">🏆</span>
                   </div>
                 </div>
-                
+
                 <div className="plate-body">
                   <h3 className="tournament-name">{tournament.name}</h3>
-                  
-                  <div className="tournament-details">
-                    <div className="detail-item">
-                      <span className="detail-icon">📅</span>
-                      <span className="detail-text">{tournament.date}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-icon">👥</span>
-                      <span className="detail-text">{tournament.participants}</span>
-                    </div>
-                  </div>
                 </div>
-                
-                <div className="plate-footer">
-                  <button className="view-details-btn">
-                    View Details
-                    <span className="btn-arrow">→</span>
+
+                <div className="plate-footer" style={{ display: 'flex', gap: '1rem' }}>
+                  <button className="view-details-btn" style={{ flex: 1 }} onClick={() => { setSelectedTournament(tournament); setShowDescription(false); }}>
+                    View More
                   </button>
+                  {tournament.pdfUrl && (
+                    <button
+                      className="download-pdf-btn"
+                      onClick={() => handleDownload(tournament.pdfUrl, tournament.name)}
+                    >
+                      📄 PDF Details
+                    </button>
+                  )}
                 </div>
-                
+
                 <div className="plate-decoration">
                   <div className="corner-line top-left"></div>
                   <div className="corner-line top-right"></div>
@@ -99,15 +148,50 @@ const TournamentsSection = () => {
             </div>
           ))}
         </div>
-        
-        <div className="tournaments-cta">
-          <p className="cta-text">Want to participate in our upcoming tournaments?</p>
-          <button className="register-cta-btn">
-            Register Now
-            <span className="cta-icon">♛</span>
-          </button>
-        </div>
+
       </div>
+
+      {selectedTournament && (
+        <div className="tournament-modal-overlay" onClick={() => setSelectedTournament(null)}>
+          <div className="tournament-modal-content focus-mode" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close-btn" onClick={() => setSelectedTournament(null)}>×</button>
+
+            <div className="modal-focus-view">
+              <div className="modal-image-full">
+                <img
+                  src={selectedTournament.canvaImage}
+                  alt={selectedTournament.name}
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                />
+
+                <div className={`modal-description-overlay ${showDescription ? "active" : ""}`}>
+                  <h2 className="modal-tournament-name">{selectedTournament.name}</h2>
+                  <div className="modal-description-text">
+                    {renderDescription(selectedTournament.description)}
+                  </div>
+                  {selectedTournament.pdfUrl && (
+                    <button
+                      className="modal-download-btn"
+                      onClick={() => handleDownload(selectedTournament.pdfUrl, selectedTournament.name)}
+                    >
+                      📄 Download PDF
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="modal-actions-bar">
+                <button className="back-to-grid-btn" onClick={() => setSelectedTournament(null)}>
+                  ← Back
+                </button>
+                <button className="toggle-description-btn" onClick={() => setShowDescription(!showDescription)}>
+                  {showDescription ? "✕ Hide Details" : "ⓘ Show Details"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 };

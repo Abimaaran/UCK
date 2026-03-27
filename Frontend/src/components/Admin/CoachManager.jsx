@@ -4,6 +4,7 @@ import { createItem, updateItem, deleteItem } from '../../services/api';
 const CoachManager = ({ coaches, setCoaches }) => {
   const [editingCoach, setEditingCoach] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState(null);
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this coach?')) {
@@ -26,9 +27,10 @@ const CoachManager = ({ coaches, setCoaches }) => {
       specialization: formData.get('specialization'),
       fideId: formData.get('fideId'),
       rating: formData.get('rating'),
-      bio: formData.get('bio'),
+       bio: formData.get('bio'),
       achievements: formData.get('achievements').split(',').map(a => a.trim()),
       chessPiece: '♔',
+      photo: photoPreview || editingCoach?.photo || '',
       colorGradient: editingCoach ? editingCoach.colorGradient : 'linear-gradient(135deg, #00BFFF, #0A74DA)'
     };
 
@@ -49,10 +51,22 @@ const CoachManager = ({ coaches, setCoaches }) => {
         const created = await createItem('coaches', coachData);
         setCoaches([...coaches, created]);
       }
-      setEditingCoach(null);
+       setEditingCoach(null);
       setIsAdding(false);
+      setPhotoPreview(null);
     } catch (err) {
       alert("Failed to save coach.");
+    }
+  };
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -82,9 +96,18 @@ const CoachManager = ({ coaches, setCoaches }) => {
               <label>FIDE ID</label>
               <input name="fideId" defaultValue={editingCoach?.fideId} />
             </div>
-            <div className="form-group">
+             <div className="form-group">
               <label>Rating</label>
               <input name="rating" defaultValue={editingCoach?.rating} />
+            </div>
+            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+              <label>Coach Photo</label>
+              <input type="file" accept="image/*" onChange={handlePhotoChange} style={{ border: '1px dashed #d4af37', padding: '1rem' }} />
+              {(photoPreview || editingCoach?.photo) && (
+                <div style={{ marginTop: '0.5rem' }}>
+                  <img src={photoPreview || editingCoach.photo} alt="Preview" style={{ width: '80px', height: '80px', borderRadius: '8px', objectFit: 'contain', background: 'rgba(255,255,255,0.05)', border: '1px solid #d4af37' }} />
+                </div>
+              )}
             </div>
           </div>
           <div className="form-group">
@@ -95,9 +118,9 @@ const CoachManager = ({ coaches, setCoaches }) => {
             <label>Achievements (comma separated)</label>
             <input name="achievements" defaultValue={editingCoach?.achievements.join(', ')} />
           </div>
-          <div className="form-actions">
+           <div className="form-actions">
             <button type="submit" className="add-btn">Save Coach</button>
-            <button type="button" className="delete-btn" onClick={() => { setEditingCoach(null); setIsAdding(false); }}>Cancel</button>
+            <button type="button" className="delete-btn" onClick={() => { setEditingCoach(null); setIsAdding(false); setPhotoPreview(null); }}>Cancel</button>
           </div>
         </form>
       </div>
@@ -114,23 +137,29 @@ const CoachManager = ({ coaches, setCoaches }) => {
       <div className="data-table-container">
         <table>
           <thead>
-            <tr>
+             <tr>
               <th>Name</th>
               <th>Title</th>
-              <th>Specialization</th>
+              <th>Photo</th>
               <th>Rating</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {coaches.map(coach => (
-              <tr key={coach.id || coach._id}>
+               <tr key={coach.id || coach._id}>
                 <td>{coach.name}</td>
                 <td>{coach.title}</td>
-                <td>{coach.specialization}</td>
+                <td>
+                  {coach.photo ? (
+                    <img src={coach.photo} alt={coach.name} style={{ width: '40px', height: '40px', borderRadius: '4px', objectFit: 'contain', background: 'rgba(255,255,255,0.05)', border: '1px solid #d4af37' }} />
+                  ) : (
+                    <span style={{ fontSize: '1.5rem' }}>♔</span>
+                  )}
+                </td>
                 <td>{coach.rating}</td>
                 <td className="action-btns">
-                  <button className="edit-btn" onClick={() => setEditingCoach(coach)}>Edit</button>
+                  <button className="edit-btn" onClick={() => { setEditingCoach(coach); setPhotoPreview(null); }}>Edit</button>
                   <button className="delete-btn" onClick={() => handleDelete(coach.id || coach._id)}>Delete</button>
                 </td>
               </tr>
