@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getCollection } from '../../services/api';
 import CoachManager from './CoachManager';
 import TournamentManager from './TournamentManager';
@@ -9,9 +10,21 @@ import AttendanceManager from './AttendanceManager';
 import FeesManager from './FeesManager';
 import StudentReviewManager from './StudentReviewManager';
 import UserReviewManager from './UserReviewManager';
+import AdminSettings from './AdminSettings';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
+  const isAdmin = localStorage.getItem('isAdminLoggedIn') === 'true';
+
+  useEffect(() => {
+    if (!isAdmin) {
+      navigate('/');
+    }
+  }, [isAdmin, navigate]);
+
+  if (!isAdmin) return null; // Prevent UI flash during redirect
+
   const [activeTab, setActiveTab] = useState('students');
 
   // State for all manageable entities
@@ -80,6 +93,8 @@ const AdminDashboard = () => {
         return <StudentReviewManager />;
       case 'user-feedbacks':
         return <UserReviewManager />;
+      case 'settings':
+        return <AdminSettings />;
       case 'students':
       default:
         return <StudentApprovalManager students={pendingStudents} setStudents={setPendingStudents} />;
@@ -156,6 +171,13 @@ const AdminDashboard = () => {
           >
             <span className="nav-icon">💬</span>
             User Feedbacks
+          </button>
+          <button
+            className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
+            onClick={() => setActiveTab('settings')}
+          >
+            <span className="nav-icon">⚙️</span>
+            Settings
           </button>
         </nav>
         <div className="sidebar-footer">

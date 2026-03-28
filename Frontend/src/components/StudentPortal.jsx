@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getStudentProfile, getStudentAttendance, getStudentFees, getStudentReviews } from '../services/api';
+import StudentSettings from './StudentSettings';
 import './StudentPortal.css';
 
 const APPROVED_KEY = 'chess_academy_approved_students';
@@ -17,6 +18,7 @@ const StudentPortal = () => {
   const [hasNewNotification, setHasNewNotification] = useState(false);
   const [lastReadId, setLastReadId] = useState(localStorage.getItem(`lastReadReview_${localStorage.getItem('loggedInStudentId')}`));
   const [isFeedbackHistoryVisible, setIsFeedbackHistoryVisible] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const dropdownRef = useRef(null);
 
   // Click outside handler for notifications
@@ -208,13 +210,20 @@ const StudentPortal = () => {
             )}
           </div>
 
+          <button className="portal-logout-btn" onClick={() => setShowSettings(!showSettings)} style={{ marginRight: '1rem', background: 'transparent', border: '1px solid var(--accent-gold)', color: 'var(--accent-gold)' }}>
+            {showSettings ? 'Back to Dashboard' : '⚙️ Settings'}
+          </button>
+
           <button className="portal-logout-btn" onClick={handleLogout}>
             Logout
           </button>
         </div>
       </header>
 
-      <main className="portal-main">
+      {showSettings ? (
+        <StudentSettings />
+      ) : (
+        <main className="portal-main">
         {/* Welcome card */}
         <div className="portal-welcome-card">
           <div className="portal-avatar">{initials}</div>
@@ -427,6 +436,7 @@ const StudentPortal = () => {
           )}
         </div>
       </main>
+      )}
     </div>
   );
 };

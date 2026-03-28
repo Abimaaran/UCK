@@ -1,0 +1,246 @@
+.settings-wrapper {
+  padding: 2rem;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.settings-header {
+  margin-bottom: 2.5rem;
+}
+
+.settings-header h2 {
+  font-size: 2.2rem;
+  color: var(--text-color, #ffffff);
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.5px;
+}
+
+.settings-header p {
+  color: var(--text-muted, #a0aec0);
+  font-size: 1rem;
+}
+
+.settings-card {
+  background: rgba(30, 30, 35, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 3rem;
+  max-width: 600px;
+  margin: 0 auto; /* Added to center the card */
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(212, 175, 55, 0.1) inset;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.settings-card:hover {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(212, 175, 55, 0.3) inset;
+  transform: translateY(-2px);
+}
+
+.settings-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.settings-icon-wrapper {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.05));
+  width: 45px;
+  height: 45px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+.settings-icon {
+  color: #d4af37;
+  font-size: 1.4rem;
+}
+
+.settings-title h3 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+}
+
+/* Status Message Alert */
+.settings-alert {
+  padding: 1rem 1.2rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  font-size: 0.95rem;
+  animation: slideDown 0.3s ease-out forwards;
+}
+
+.settings-alert.error {
+  background: rgba(220, 53, 69, 0.1);
+  border: 1px solid rgba(220, 53, 69, 0.2);
+  color: #ff6b6b;
+}
+
+/* Updated success styling based on previous logic, adjusting for a better visual fit */
+.settings-alert.success {
+  background: rgba(40, 167, 69, 0.1);
+  border: 1px solid rgba(40, 167, 69, 0.2);
+  color: #4ade80;
+}
+
+.alert-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+/* High-end Inputs */
+.settings-form-group {
+  margin-bottom: 1.8rem;
+  position: relative;
+}
+
+.settings-form-group label {
+  display: block;
+  font-size: 0.9rem;
+  color: #cbd5e1;
+  margin-bottom: 0.6rem;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+.settings-form-group:focus-within label {
+  color: #d4af37;
+}
+
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-with-icon .input-icon {
+  position: absolute;
+  left: 1rem;
+  color: #64748b;
+  font-size: 1.2rem;
+  transition: color 0.3s;
+}
+
+.settings-input {
+  width: 100%;
+  background: rgba(15, 15, 18, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1rem 1rem 1rem 3rem; /* padding for left icon */
+  color: #fff;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.settings-input.with-toggle {
+  padding-right: 3rem; /* padding for right eye icon */
+}
+
+.settings-input:focus {
+  border-color: rgba(212, 175, 55, 0.5);
+  box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1);
+  background: rgba(15, 15, 18, 0.9);
+}
+
+.settings-form-group:focus-within .input-icon {
+  color: #d4af37;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+  height: 100%;
+}
+
+.password-toggle-btn:hover {
+  color: #cbd5e1;
+}
+
+.password-toggle-btn:focus {
+  outline: none;
+  color: #d4af37;
+}
+
+.settings-submit-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #d4af37 0%, #aa8422 100%);
+  color: #000;
+  border: none;
+  border-radius: 12px;
+  padding: 1.1rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  transition: all 0.3s ease;
+  margin-top: 1.5rem;
+  box-shadow: 0 6px 15px rgba(212, 175, 55, 0.2);
+}
+
+.settings-submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
+  filter: brightness(1.1);
+}
+
+.settings-submit-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 4px 10px rgba(212, 175, 55, 0.2);
+}
+
+.btn-icon {
+  font-size: 1.2rem;
+}
+
+/* Animations */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 768px) {
+  .settings-wrapper {
+    padding: 1rem;
+  }
+  
+  .settings-card {
+    padding: 2rem 1.5rem;
+  }
+}

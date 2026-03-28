@@ -4,6 +4,20 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api",
 });
 
+// Add a request interceptor to automatically attach tokens
+api.interceptors.request.use(
+  (config) => {
+    const adminToken = localStorage.getItem('adminToken');
+    if (adminToken) {
+      config.headers['Authorization'] = `Bearer ${adminToken}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 export const registerUser = async (userData) => {
   const response = await api.post("/users/register", userData);
   return response.data;

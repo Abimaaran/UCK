@@ -6,6 +6,7 @@ router.post('/register', studentController.register);
 router.post('/', studentController.register);
 router.get('/', studentController.getAll);
 router.get('/pending', studentController.getPending);
+router.put('/change-password', studentController.changePassword);
 router.put('/:id', studentController.update);
 router.delete('/:id', studentController.delete);
 router.post('/login', studentController.login);

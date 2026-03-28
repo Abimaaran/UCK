@@ -4,8 +4,8 @@ const coachController = require('../controllers/coachController');
 const { verifyAdmin } = require('../middleware/authMiddleware');
 
 router.get('/', coachController.getAll);
-router.post('/', coachController.create);
-router.put('/:id', coachController.update);
-router.delete('/:id', coachController.remove);
+router.post('/', verifyAdmin, coachController.create);
+router.put('/:id', verifyAdmin, coachController.update);
+router.delete('/:id', verifyAdmin, coachController.remove);
 
 module.exports = router;

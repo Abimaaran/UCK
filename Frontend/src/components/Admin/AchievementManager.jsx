@@ -4,6 +4,7 @@ import { createItem, updateItem, deleteItem } from '../../services/api';
 const AchievementManager = ({ achievements, setAchievements }) => {
   const [editingAchievement, setEditingAchievement] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState(null);
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this achievement?')) {
@@ -22,9 +23,8 @@ const AchievementManager = ({ achievements, setAchievements }) => {
     const achievementData = {
       studentName: formData.get('studentName'),
       title: formData.get('title'),
-      position: formData.get('position'),
-      date: formData.get('date'),
-      description: formData.get('description')
+      description: formData.get('description'),
+      photo: photoPreview || editingAchievement?.photo || ''
     };
 
     try {
@@ -46,8 +46,20 @@ const AchievementManager = ({ achievements, setAchievements }) => {
       }
       setEditingAchievement(null);
       setIsAdding(false);
+      setPhotoPreview(null);
     } catch (err) {
       alert("Failed to save achievement.");
+    }
+  };
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -65,22 +77,23 @@ const AchievementManager = ({ achievements, setAchievements }) => {
               <label>Achievement Title</label>
               <input name="title" defaultValue={editingAchievement?.title} required />
             </div>
-            <div className="form-group">
-              <label>Position / Rank</label>
-              <input name="position" defaultValue={editingAchievement?.position} required />
-            </div>
-            <div className="form-group">
-              <label>Date</label>
-              <input type="date" name="date" defaultValue={editingAchievement?.date} required />
+            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+              <label>Achievement Photo</label>
+              <input type="file" accept="image/*" onChange={handlePhotoChange} style={{ border: '1px dashed #d4af37', padding: '1rem' }} />
+              {(photoPreview || editingAchievement?.photo) && (
+                <div style={{ marginTop: '0.5rem' }}>
+                  <img src={photoPreview || editingAchievement.photo} alt="Preview" style={{ width: '80px', height: '80px', borderRadius: '8px', objectFit: 'contain', background: 'rgba(255,255,255,0.05)', border: '1px solid #d4af37' }} />
+                </div>
+              )}
             </div>
           </div>
           <div className="form-group">
-            <label>Description</label>
+            <label>Description (Optional)</label>
             <textarea name="description" defaultValue={editingAchievement?.description} rows="3"></textarea>
           </div>
           <div className="form-actions">
             <button type="submit" className="add-btn">Save Achievement</button>
-            <button type="button" className="delete-btn" onClick={() => { setEditingAchievement(null); setIsAdding(false); }}>Cancel</button>
+            <button type="button" className="delete-btn" onClick={() => { setEditingAchievement(null); setIsAdding(false); setPhotoPreview(null); }}>Cancel</button>
           </div>
         </form>
       </div>
@@ -98,22 +111,26 @@ const AchievementManager = ({ achievements, setAchievements }) => {
         <table>
           <thead>
             <tr>
-              <th>Student</th>
+              <th>Photo</th>
+              <th>Studentname</th>
               <th>Achievement</th>
-              <th>Position</th>
-              <th>Date</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {achievements.map(achievement => (
               <tr key={achievement.id || achievement._id}>
+                <td>
+                  {achievement.photo ? (
+                    <img src={achievement.photo} alt={achievement.studentName} style={{ width: '40px', height: '40px', borderRadius: '4px', objectFit: 'contain', background: 'rgba(255,255,255,0.05)', border: '1px solid #d4af37' }} />
+                  ) : (
+                    <span style={{ fontSize: '1.2rem', opacity: 0.5 }}>🏆</span>
+                  )}
+                </td>
                 <td>{achievement.studentName}</td>
                 <td>{achievement.title}</td>
-                <td>{achievement.position}</td>
-                <td>{achievement.date}</td>
                 <td className="action-btns">
-                  <button className="edit-btn" onClick={() => setEditingAchievement(achievement)}>Edit</button>
+                  <button className="edit-btn" onClick={() => { setEditingAchievement(achievement); setPhotoPreview(null); }}>Edit</button>
                   <button className="delete-btn" onClick={() => handleDelete(achievement.id || achievement._id)}>Delete</button>
                 </td>
               </tr>

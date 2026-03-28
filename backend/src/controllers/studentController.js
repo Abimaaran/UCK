@@ -188,3 +188,65 @@ exports.getProfile = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.changePassword = async (req, res) => {
+  try {
+    const { studentId, currentPassword, newPassword } = req.body;
+
+    if (!studentId || !currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // 1. Fetch current student record
+    let snapshot = await db.collection('students')
+      .where('studentId', '==', studentId)
+      .limit(1)
+      .get();
+      
+    if (snapshot.empty) {
+      const doc = await db.collection('students').doc(studentId).get();
+      if (doc.exists) {
+        snapshot = { docs: [doc], empty: false };
+      } else {
+        return res.status(404).json({ error: 'Student not found.' });
+      }
+    }
+
+    const studentDocRef = snapshot.docs[0].ref;
+    const studentData = snapshot.docs[0].data();
+
+    // 2. Verify current password
+    let isMatch = false;
+    if (studentData.password) {
+      if (studentData.password.startsWith('$2')) {
+        isMatch = await bcrypt.compare(currentPassword, studentData.password);
+      } else {
+        isMatch = (studentData.password === currentPassword);
+      }
+    }
+    
+    // Fallback to DOB check if password is unset or doesn't match
+    if (!isMatch && studentData.dob) {
+      isMatch = (studentData.dob === currentPassword);
+    }
+
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Incorrect current password.' });
+    }
+
+    // 3. Hash new password and save
+    const salt = await bcrypt.genSalt(10);
+    const hashedNewPassword = await bcrypt.hash(newPassword, salt);
+
+    await studentDocRef.update({
+      password: hashedNewPassword,
+      updatedAt: new Date().toISOString()
+    });
+
+    res.status(200).json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({ error: 'Failed to update password' });
+  }
+};
+

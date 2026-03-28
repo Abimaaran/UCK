@@ -32,20 +32,21 @@ const LoginSection = () => {
     setLoginError('');
 
     if (portalType === 'admin') {
-      // Admin login (email + static password)
-      const isAdmin =
-        (loginId === 'admin@uck.com' && password === 'admin123') ||
-        (loginId === 'uncrownedkings2025@gmail.com' && password === 'UCK2025');
-
-      if (isAdmin) {
-        localStorage.setItem('isAdminLoggedIn', 'true');
-        // Admin token simulation, usually backend returns JWT here
-        localStorage.setItem('adminToken', 'simulated_admin_token'); 
-        window.dispatchEvent(new Event('adminLogin'));
-        navigate('/admin');
-        return;
-      } else {
-        setLoginError('Invalid Admin credentials. Please try again.');
+      try {
+        const response = await api.post('/auth/admin-login', {
+          email: loginId.trim(),
+          password: password.trim()
+        });
+        
+        if (response.data && response.data.token) {
+          localStorage.setItem('isAdminLoggedIn', 'true');
+          localStorage.setItem('adminToken', response.data.token);
+          window.dispatchEvent(new Event('adminLogin'));
+          navigate('/admin');
+          return;
+        }
+      } catch (error) {
+        setLoginError('Invalid Admin credentials. Check your database settings.');
       }
     } else if (portalType === 'student') {
       try {
@@ -53,7 +54,7 @@ const LoginSection = () => {
           studentId: loginId.trim(),
           password: password.trim()
         });
-        
+
         if (response.data && response.data.student) {
           const student = response.data.student;
           localStorage.setItem('isStudentLoggedIn', 'true');
@@ -62,7 +63,7 @@ const LoginSection = () => {
           navigate('/student-portal');
         }
       } catch (error) {
-         setLoginError('Invalid Student ID or Password. Please check your credentials.');
+        setLoginError('Invalid Student ID or Password. Please check your credentials.');
       }
     }
   };
@@ -92,7 +93,7 @@ const LoginSection = () => {
 
     const password = formData.get('password');
     const confirmPassword = formData.get('confirmPassword');
-    
+
     if (password !== confirmPassword) {
       alert('Passwords do not match!');
       return;
@@ -182,7 +183,7 @@ const LoginSection = () => {
                     </label>
                     <input
                       type={portalType === 'admin' ? 'email' : 'text'}
-                      placeholder={portalType === 'admin' ? 'admin@uck.com' : 'Student ID'}
+                      placeholder={portalType === 'admin' ? 'Enter the Email' : 'Student ID'}
                       value={loginId}
                       onChange={(e) => setLoginId(e.target.value)}
                       required
@@ -205,13 +206,6 @@ const LoginSection = () => {
                     </div>
                   )}
 
-                  <div className="form-options">
-                    <label className="remember-me">
-                      <input type="checkbox" />
-                      Remember me
-                    </label>
-                    <a href="#contact" className="forgot-password">Need help?</a>
-                  </div>
 
                   <button type="submit" className="submit-btn portal-submit">
                     Login to {portalType === 'admin' ? 'Admin' : 'Student'} Portal

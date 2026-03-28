@@ -4,8 +4,8 @@ const controller = require('../controllers/achievementController');
 const { verifyAdmin } = require('../middleware/authMiddleware');
 
 router.get('/', controller.getAll);
-router.post('/', controller.create);
-router.put('/:id', controller.update);
-router.delete('/:id', controller.remove);
+router.post('/', verifyAdmin, controller.create);
+router.put('/:id', verifyAdmin, controller.update);
+router.delete('/:id', verifyAdmin, controller.remove);
 
 module.exports = router;
