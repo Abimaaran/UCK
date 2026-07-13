@@ -342,7 +342,8 @@
   -webkit-backdrop-filter: blur(20px);
   padding: 0;
   max-height: 0;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   transition: max-height 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
@@ -354,7 +355,7 @@
 }
 
 .mobile-menu.open {
-  max-height: 500px;
+  max-height: 90vh;
   padding: 1rem 2rem 2rem;
 }
 
