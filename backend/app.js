@@ -22,6 +22,8 @@ const reviewRoutes = require('./src/routes/reviewRoutes');
 const aboutRoutes = require('./src/routes/aboutRoutes');
 const userRoutes = require('./src/routes/userRoutes');
 const userReviewRoutes = require('./src/routes/userReviewRoutes');
+const whatsappRoutes = require('./src/routes/whatsappRoutes');
+const whatsappService = require('./src/services/whatsappService');
 
 // Use Routes
 app.use('/api/auth', authRoutes);
@@ -37,6 +39,10 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/about', aboutRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/user-reviews', userReviewRoutes);
+app.use('/api/whatsapp', whatsappRoutes);
+
+// Initialize WhatsApp client
+whatsappService.initialize();
 
 // Health Check
 app.get('/health', (req, res) => {

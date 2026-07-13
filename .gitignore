@@ -26,3 +26,9 @@ yarn-error.log*
 **/node_modules/
 **/.env
 serviceAccountKey.json
+
+# WhatsApp sessions & auth
+.wwebjs_auth/
+.wwebjs_cache/
+backend/.wwebjs_auth/
+backend/.wwebjs_cache/

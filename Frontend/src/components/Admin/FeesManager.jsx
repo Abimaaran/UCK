@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getCollection, updateItem } from '../../services/api';
+import api, { getCollection, updateItem } from '../../services/api';
 
 const FeesManager = () => {
   const [approvedStudents, setApprovedStudents] = useState([]);
@@ -8,6 +8,11 @@ const FeesManager = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [selectedLevel, setSelectedLevel] = useState('All');
+  
+  // WhatsApp States
+  const [waStatus, setWaStatus] = useState('LOADING');
+  const [waQr, setWaQr] = useState(null);
+  const [sendingReminders, setSendingReminders] = useState(false);
 
   const getStudentLevel = (student) => {
     const levelStr = student.level || student.chessExperience || '';
@@ -55,6 +60,67 @@ const FeesManager = () => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    let interval;
+    const checkStatus = async () => {
+      try {
+        const response = await api.get('/whatsapp/status');
+        setWaStatus(response.data.status);
+        if (response.data.status === 'QR_READY') {
+          const qrResponse = await api.get('/whatsapp/qr');
+          setWaQr(qrResponse.data.qr);
+        } else {
+          setWaQr(null);
+        }
+      } catch (err) {
+        console.warn("Failed to fetch WhatsApp status:", err.message);
+      }
+    };
+
+    checkStatus();
+    interval = setInterval(checkStatus, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleWaLogout = async () => {
+    if (!window.confirm("Are you sure you want to disconnect WhatsApp?")) return;
+    try {
+      setWaStatus('LOADING');
+      await api.post('/whatsapp/logout');
+      setWaQr(null);
+    } catch (err) {
+      alert("Failed to logout WhatsApp session.");
+    }
+  };
+
+  const handleSendReminders = async () => {
+    const unpaidCount = approvedStudents.filter(s => {
+      const status = fees[s.studentId]?.[selectedMonth] || 'Not Paid';
+      return status !== 'Paid';
+    }).length;
+
+    if (unpaidCount === 0) {
+      alert("No unpaid approved students found for this month!");
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to send automatic WhatsApp reminders to ${unpaidCount} unpaid students for ${getMonthName(selectedMonth)}?`)) {
+      return;
+    }
+
+    try {
+      setSendingReminders(true);
+      const response = await api.post('/fees/send-reminders', { month: selectedMonth });
+      alert(response.data.message || `Reminders started in background for ${unpaidCount} students!`);
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.error || "Failed to trigger reminders. Make sure WhatsApp is connected.");
+    } finally {
+      setSendingReminders(false);
+    }
+  };
+
   const handleFeeChange = async (studentId, status) => {
     try {
       const payload = {
@@ -97,6 +163,145 @@ const FeesManager = () => {
 
   return (
     <div className="manager-container">
+      {/* WhatsApp Connection Status Panel */}
+      <div 
+        style={{
+          background: 'rgba(255, 255, 255, 0.03)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: '12px',
+          padding: '1.5rem',
+          marginBottom: '2rem',
+          backdropFilter: 'blur(10px)'
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span>💬</span> WhatsApp Automation Status
+            </h3>
+            <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: '#888' }}>
+              Automatically checks database and triggers reminders to unpaid students on the 6th, 13th, 20th, 27th.
+            </p>
+          </div>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            {/* Status Badge */}
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              borderRadius: '20px',
+              fontSize: '0.85rem',
+              fontWeight: '600',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              background: 
+                waStatus === 'CONNECTED' ? 'rgba(37, 211, 102, 0.12)' :
+                waStatus === 'QR_READY' ? 'rgba(255, 193, 7, 0.12)' :
+                waStatus === 'INITIALIZING' ? 'rgba(0, 123, 255, 0.12)' :
+                'rgba(220, 53, 69, 0.12)',
+              color: 
+                waStatus === 'CONNECTED' ? '#25D366' :
+                waStatus === 'QR_READY' ? '#FFC107' :
+                waStatus === 'INITIALIZING' ? '#007BFF' :
+                '#DC3545',
+              border: `1px solid ${
+                waStatus === 'CONNECTED' ? '#25D366' :
+                waStatus === 'QR_READY' ? '#FFC107' :
+                waStatus === 'INITIALIZING' ? '#007BFF' :
+                '#DC3545'
+              }`
+            }}>
+              <span style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: 
+                  waStatus === 'CONNECTED' ? '#25D366' :
+                  waStatus === 'QR_READY' ? '#FFC107' :
+                  waStatus === 'INITIALIZING' ? '#007BFF' :
+                  '#DC3545',
+                display: 'inline-block',
+                boxShadow: `0 0 8px ${
+                  waStatus === 'CONNECTED' ? '#25D366' :
+                  waStatus === 'QR_READY' ? '#FFC107' :
+                  waStatus === 'INITIALIZING' ? '#007BFF' :
+                  '#DC3545'
+                }`
+              }}></span>
+              {waStatus === 'CONNECTED' ? 'Connected' :
+               waStatus === 'QR_READY' ? 'Scan QR Code' :
+               waStatus === 'INITIALIZING' ? 'Initializing...' :
+               waStatus === 'LOADING' ? 'Checking...' :
+               'Disconnected'}
+            </span>
+
+            {waStatus === 'CONNECTED' && (
+              <button
+                onClick={handleWaLogout}
+                style={{
+                  background: 'rgba(220, 53, 69, 0.15)',
+                  border: '1px solid #DC3545',
+                  color: '#DC3545',
+                  padding: '6px 14px',
+                  borderRadius: '8px',
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={e => e.target.style.background = 'rgba(220, 53, 69, 0.25)'}
+                onMouseLeave={e => e.target.style.background = 'rgba(220, 53, 69, 0.15)'}
+              >
+                Disconnect Session
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* QR Code Scan Section */}
+        {waStatus === 'QR_READY' && waQr && (
+          <div style={{
+            marginTop: '1.5rem',
+            padding: '1.5rem',
+            background: 'rgba(0,0,0,0.2)',
+            borderRadius: '8px',
+            border: '1px solid rgba(255,255,255,0.05)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '2rem',
+            flexWrap: 'wrap'
+          }}>
+            <div style={{
+              background: '#fff',
+              padding: '10px',
+              borderRadius: '8px',
+              display: 'inline-block',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.4)'
+            }}>
+              <img src={waQr} alt="WhatsApp QR Code" style={{ width: '180px', height: '180px', display: 'block' }} />
+            </div>
+            <div style={{ flex: '1', minWidth: '250px' }}>
+              <h4 style={{ margin: '0 0 0.5rem 0', color: '#fff' }}>Scan QR Code to Link</h4>
+              <ol style={{ margin: 0, paddingLeft: '1.2rem', color: '#ccc', fontSize: '0.9rem', lineHeight: '1.6' }}>
+                <li>Open <strong>WhatsApp</strong> on your phone.</li>
+                <li>Tap <strong>Menu</strong> or <strong>Settings</strong> and select <strong>Linked Devices</strong>.</li>
+                <li>Tap on <strong>Link a Device</strong> and point your camera at this screen.</li>
+                <li>Wait a few seconds for registration to complete.</li>
+              </ol>
+            </div>
+          </div>
+        )}
+
+        {/* Initializing message */}
+        {waStatus === 'INITIALIZING' && (
+          <div style={{ marginTop: '1rem', color: '#aaa', fontSize: '0.9rem' }}>
+            🤖 Preparing browser context and connecting to WhatsApp Web. This might take up to a minute...
+          </div>
+        )}
+      </div>
+
       {/* Level Filter Buttons */}
       <div className="level-filter-container" style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
         {['All', 'Beginner', 'Intermediate', 'Advanced'].map(level => {
@@ -179,6 +384,44 @@ const FeesManager = () => {
             <option value="Paid">Paid</option>
             <option value="Unpaid">Unpaid</option>
           </select>
+        </div>
+
+        {/* Send Reminders Trigger Button */}
+        <div className="form-group" style={{ minWidth: '220px' }}>
+          <label>WhatsApp Automation</label>
+          <button 
+            onClick={handleSendReminders}
+            disabled={sendingReminders || waStatus !== 'CONNECTED'}
+            style={{
+              width: '100%',
+              padding: '0.6rem 1rem',
+              borderRadius: '8px',
+              border: waStatus === 'CONNECTED' ? '1px solid #25D366' : '1px solid rgba(255,255,255,0.1)',
+              background: waStatus === 'CONNECTED' ? 'rgba(37, 211, 102, 0.15)' : 'rgba(255,255,255,0.03)',
+              color: waStatus === 'CONNECTED' ? '#25D366' : '#666',
+              fontWeight: 'bold',
+              cursor: waStatus === 'CONNECTED' ? 'pointer' : 'not-allowed',
+              fontSize: '0.85rem',
+              transition: 'all 0.3s ease',
+              height: '42px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
+            }}
+            onMouseEnter={e => {
+              if (waStatus === 'CONNECTED') {
+                e.currentTarget.style.background = 'rgba(37, 211, 102, 0.25)';
+              }
+            }}
+            onMouseLeave={e => {
+              if (waStatus === 'CONNECTED') {
+                e.currentTarget.style.background = 'rgba(37, 211, 102, 0.15)';
+              }
+            }}
+          >
+            {sendingReminders ? '⏳ Sending...' : '🚀 Send Reminders'}
+          </button>
         </div>
       </div>
 
