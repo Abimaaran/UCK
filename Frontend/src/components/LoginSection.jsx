@@ -24,6 +24,21 @@ const LoginSection = () => {
     return () => window.removeEventListener('setPortalType', handleSetPortal);
   }, []);
 
+  React.useEffect(() => {
+    if (portalType) {
+      const timer = setTimeout(() => {
+        const element = document.getElementById('login');
+        if (element) {
+          const offset = 80; // Navbar offset
+          const elementPosition = element.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - offset;
+          window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+        }
+      }, 80);
+      return () => clearTimeout(timer);
+    }
+  }, [portalType]);
+
   const [isRegistered, setIsRegistered] = useState(false);
 
   // ── LOGIN ──────────────────────────────────────────────────────────────────
