@@ -59,10 +59,8 @@ function App() {
       
      
       
-      {/* Login Section */}
-      <section id="login">
-        <LoginSection />
-      </section>
+      {/* Login Modal */}
+      <LoginSection />
       
       
       <Footer />

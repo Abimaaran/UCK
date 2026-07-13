@@ -1,5 +1,7 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const QRCode = require('qrcode');
+const fs = require('fs');
+const path = require('path');
 
 let client = null;
 let qrCodeData = null; // Stores the base64 QR code image URI
@@ -115,21 +117,33 @@ const sendReminder = async (phone, message) => {
 };
 
 const logout = async () => {
+  console.log('🤖 WhatsApp: Force logging out active session...');
+  
   if (client) {
-    console.log('🤖 WhatsApp: Logging out active session...');
     try {
-      await client.logout();
       await client.destroy();
     } catch (e) {
       console.error('🤖 WhatsApp: Error destroying client:', e.message);
     }
     client = null;
-    connectionStatus = 'DISCONNECTED';
-    qrCodeData = null;
-    
-    // Restart as clean client ready for QR scanning
-    initialize();
   }
+
+  connectionStatus = 'DISCONNECTED';
+  qrCodeData = null;
+
+  try {
+    const sessionPath = path.join(process.cwd(), '.wwebjs_auth');
+    if (fs.existsSync(sessionPath)) {
+      console.log('🤖 WhatsApp: Deleting session directory:', sessionPath);
+      fs.rmSync(sessionPath, { recursive: true, force: true });
+      console.log('🤖 WhatsApp: Session directory deleted successfully.');
+    }
+  } catch (err) {
+    console.error('❌ WhatsApp: Failed to delete session directory:', err.message);
+  }
+
+  // Reinitialize clean client
+  initialize();
 };
 
 module.exports = {

@@ -97,14 +97,16 @@ const Navigation = () => {
   const logoImageUrl = "/image.png";
 
   const scrollToSection = (sectionId) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      const offset = 80;
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - offset;
-      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
-    }
     setIsOpen(false);
+    setTimeout(() => {
+      const element = document.getElementById(sectionId) || document.querySelector(`.${sectionId}`);
+      if (element) {
+        const offset = 80;
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - offset;
+        window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+      }
+    }, 150);
   };
 
   const scrollToTop = () => {
@@ -159,24 +161,13 @@ const Navigation = () => {
     return (
       <div className="nav-actions-group">
         <button 
-          className={`${baseClass} login-btn outline`} 
-          onClick={() => { 
-            scrollToSection('login'); 
-            window.dispatchEvent(new CustomEvent('setPortalType', { detail: 'admin' }));
-            setIsOpen(false); 
-          }}
-        >
-          Admin Login
-        </button>
-        <button 
           className={`${baseClass} login-btn primary`} 
           onClick={() => { 
-            scrollToSection('login'); 
-            window.dispatchEvent(new CustomEvent('setPortalType', { detail: 'student' }));
+            window.dispatchEvent(new CustomEvent('showLoginModal'));
             setIsOpen(false); 
           }}
         >
-          Student Portal
+          Portal Login
         </button>
       </div>
     );

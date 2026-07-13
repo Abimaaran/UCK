@@ -20,7 +20,10 @@ const HeroSection = () => {
             Build strategic thinking, improve consistently, and take your game to the next level.
           </p>
           <div className="hero-actions">
-            <button className="hero-btn primary" onClick={() => navigate('/register')}>
+            <button className="hero-btn primary" onClick={() => {
+              console.log("Register Now clicked!");
+              window.dispatchEvent(new Event('showRegisterModal'));
+            }}>
               Register Now..
             </button>
             <button className="hero-btn secondary" onClick={() => setShowVideo(true)}>

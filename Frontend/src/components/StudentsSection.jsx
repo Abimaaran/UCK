@@ -163,7 +163,10 @@ const StudentsSection = () => {
 
         <div className="students-cta">
           <p className="cta-text">Join our winning team and start your journey to chess mastery</p>
-          <button className="cta-button" onClick={() => navigate('/register')}>Start Your Journey</button>
+          <button className="cta-button" onClick={() => {
+            console.log("Start Your Journey clicked!");
+            window.dispatchEvent(new Event('showRegisterModal'));
+          }}>Start Your Journey</button>
         </div>
       </div>
     </section>
