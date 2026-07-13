@@ -13,18 +13,24 @@ const initialize = () => {
   connectionStatus = 'INITIALIZING';
   console.log('\n🤖 WhatsApp: Starting client initialization...');
 
+  const puppeteerOpts = {
+    headless: true,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage'
+    ]
+  };
+
+  if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+    puppeteerOpts.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+  }
+
   client = new Client({
     authStrategy: new LocalAuth({
       dataPath: './.wwebjs_auth'
     }),
-    puppeteer: {
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage'
-      ]
-    }
+    puppeteer: puppeteerOpts
   });
 
   client.on('qr', async (qr) => {
