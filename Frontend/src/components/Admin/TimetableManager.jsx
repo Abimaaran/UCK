@@ -64,7 +64,7 @@ const TimetableManager = ({ timetable, setTimetable }) => {
               <label>Day</label>
               <select name="day" defaultValue={editingEntry?.day || 'Monday'}>
                 {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
-                  <option key={day} value={day}>{day}</option>
+                  <option key={day} value={day} style={{ background: '#15151a', color: '#fff' }}>{day}</option>
                 ))}
               </select>
             </div>
@@ -75,9 +75,9 @@ const TimetableManager = ({ timetable, setTimetable }) => {
             <div className="form-group">
               <label>Level</label>
               <select name="level" defaultValue={editingEntry?.level || 'Beginner'}>
-                <option value="Beginner">Beginner</option>
-                <option value="Intermediate">Intermediate</option>
-                <option value="Advanced">Advanced</option>
+                <option value="Beginner" style={{ background: '#15151a', color: '#fff' }}>Beginner</option>
+                <option value="Intermediate" style={{ background: '#15151a', color: '#fff' }}>Intermediate</option>
+                <option value="Advanced" style={{ background: '#15151a', color: '#fff' }}>Advanced</option>
               </select>
             </div>
             <div className="form-group">

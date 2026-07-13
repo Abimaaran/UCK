@@ -311,9 +311,9 @@ const ManualAddTab = ({ onRefresh }) => {
           <label style={labelStyle}>Level</label>
           <select name="level" value={form.level} onChange={handle}
             style={{ ...inputStyle, cursor: 'pointer' }}>
-            <option value="Beginner">Beginner</option>
-            <option value="Intermediate">Intermediate</option>
-            <option value="Advanced">Advanced</option>
+            <option value="Beginner" style={{ background: '#15151a', color: '#fff' }}>Beginner</option>
+            <option value="Intermediate" style={{ background: '#15151a', color: '#fff' }}>Intermediate</option>
+            <option value="Advanced" style={{ background: '#15151a', color: '#fff' }}>Advanced</option>
           </select>
         </div>
 
@@ -450,9 +450,9 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
                   <td>
                     {editingId === (s.id || s._id) ? (
                       <select name="chessExperience" value={editForm.chessExperience || editForm.level} onChange={handleEditChange} style={miniInput}>
-                        <option value="Beginner level">Beginner</option>
-                        <option value="Intermediate level">Intermediate</option>
-                        <option value="Advanced level">Advanced</option>
+                        <option value="Beginner level" style={{ background: '#15151a', color: '#fff' }}>Beginner</option>
+                        <option value="Intermediate level" style={{ background: '#15151a', color: '#fff' }}>Intermediate</option>
+                        <option value="Advanced level" style={{ background: '#15151a', color: '#fff' }}>Advanced</option>
                       </select>
                     ) : (s.chessExperience || s.level || 'N/A')}
                   </td>

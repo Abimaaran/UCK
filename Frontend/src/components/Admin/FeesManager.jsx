@@ -381,9 +381,9 @@ const FeesManager = () => {
             value={statusFilter} 
             onChange={(e) => setStatusFilter(e.target.value)}
           >
-            <option value="All">All Students</option>
-            <option value="Paid">Paid</option>
-            <option value="Unpaid">Unpaid</option>
+            <option value="All" style={{ background: '#15151a', color: '#fff' }}>All Students</option>
+            <option value="Paid" style={{ background: '#15151a', color: '#fff' }}>Paid</option>
+            <option value="Unpaid" style={{ background: '#15151a', color: '#fff' }}>Unpaid</option>
           </select>
         </div>
 

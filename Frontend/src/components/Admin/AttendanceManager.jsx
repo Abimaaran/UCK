@@ -200,10 +200,10 @@ const AttendanceManager = () => {
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
-            <option value="All">All Students</option>
-            <option value="Present">Present</option>
-            <option value="Absent">Absent</option>
-            <option value="Unmarked">Unmarked </option>
+            <option value="All" style={{ background: '#15151a', color: '#fff' }}>All Students</option>
+            <option value="Present" style={{ background: '#15151a', color: '#fff' }}>Present</option>
+            <option value="Absent" style={{ background: '#15151a', color: '#fff' }}>Absent</option>
+            <option value="Unmarked" style={{ background: '#15151a', color: '#fff' }}>Unmarked </option>
           </select>
         </div>
       </div>
