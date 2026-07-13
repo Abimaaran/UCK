@@ -498,78 +498,70 @@ const FeesManager = () => {
       </div>
 
       {/* Student Details Modal */}
-      {selectedStudentForView && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.75)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1000,
-          backdropFilter: 'blur(5px)'
-        }}>
+      {selectedStudentForView && (() => {
+        const detailRow = (label, value) => (
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <span style={{ color: '#aaa', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>
+            <span style={{ color: '#fff', fontWeight: '600' }}>{value || 'N/A'}</span>
+          </div>
+        );
+        return (
           <div style={{
-            background: '#1a1a1a',
-            border: '1px solid rgba(212, 175, 55, 0.3)',
-            borderRadius: '12px',
-            padding: '2rem',
-            width: '95%',
-            maxWidth: '500px',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
-            color: '#fff'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.75rem' }}>
-              <h3 style={{ margin: 0, color: '#d4af37' }}>Student Information</h3>
-              <button 
-                onClick={() => setSelectedStudentForView(null)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#aaa',
-                  fontSize: '1.5rem',
-                  cursor: 'pointer'
-                }}
-              >
-                &times;
-              </button>
-            </div>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '0.95rem' }}>
-              <div><strong>Student ID:</strong> #{selectedStudentForView.studentId}</div>
-              <div><strong>Name:</strong> {selectedStudentForView.studentName || selectedStudentForView.name || 'N/A'}</div>
-              <div><strong>Email:</strong> {selectedStudentForView.email || 'N/A'}</div>
-              <div><strong>Phone Number:</strong> {selectedStudentForView.phoneNumber || selectedStudentForView.phone || selectedStudentForView.whatsappNo || 'N/A'}</div>
-              <div><strong>Level:</strong> {selectedStudentForView.level || 'N/A'}</div>
-              <div><strong>DOB:</strong> {selectedStudentForView.dob || 'N/A'}</div>
-              <div><strong>Parent Name:</strong> {selectedStudentForView.parentName || 'N/A'}</div>
-              <div><strong>Parent Phone:</strong> {selectedStudentForView.parentPhone || 'N/A'}</div>
-              <div><strong>Chess Experience:</strong> {selectedStudentForView.chessExperience || 'N/A'}</div>
-              <div><strong>Status:</strong> {selectedStudentForView.status || 'N/A'}</div>
-            </div>
-
-            <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => setSelectedStudentForView(null)}
-                style={{
-                  padding: '0.5rem 1.25rem',
-                  borderRadius: '6px',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  background: 'rgba(255,255,255,0.05)',
-                  color: '#fff',
-                  cursor: 'pointer',
-                  fontWeight: '600'
-                }}
-              >
-                Close
-              </button>
+            position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+            background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)',
+            display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 10000,
+            padding: '1rem'
+          }} onClick={() => setSelectedStudentForView(null)}>
+            <div style={{
+              background: '#15151a', width: '100%', maxWidth: '500px',
+              borderRadius: '15px', border: '1px solid rgba(212,175,55,0.3)',
+              boxShadow: '0 25px 50px rgba(0,0,0,0.5)', overflow: 'hidden'
+            }} onClick={e => e.stopPropagation()}>
+              <div style={{
+                padding: '1.25rem 1.5rem', background: 'rgba(212,175,55,0.1)',
+                borderBottom: '1px solid rgba(212,175,55,0.2)',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+              }}>
+                <h3 style={{ margin: 0, color: '#d4af37', fontSize: '1.25rem' }}>Student Profile Details</h3>
+                <button onClick={() => setSelectedStudentForView(null)} style={{ background: 'none', border: 'none', color: '#fff', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+              </div>
+              <div style={{ padding: '1.5rem', maxHeight: '70vh', overflowY: 'auto' }}>
+                <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
+                  <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🎓</div>
+                  <h2 style={{ margin: 0, color: '#fff' }}>{selectedStudentForView.studentName || selectedStudentForView.name}</h2>
+                  <span style={{ color: '#d4af37', fontWeight: '700' }}>#{selectedStudentForView.studentId}</span>
+                </div>
+                
+                {detailRow('Full Name', selectedStudentForView.studentName || selectedStudentForView.name)}
+                {detailRow('Email Address', selectedStudentForView.email)}
+                {detailRow('Phone Number', selectedStudentForView.phoneNumber || selectedStudentForView.phone || selectedStudentForView.whatsappNo)}
+                {detailRow('Date of Birth', selectedStudentForView.dateOfBirth || selectedStudentForView.dob)}
+                {detailRow('Chess Level', selectedStudentForView.chessExperience || selectedStudentForView.level)}
+                {detailRow('Registration Date', selectedStudentForView.approvedDate || (selectedStudentForView.createdAt ? new Date(selectedStudentForView.createdAt).toLocaleDateString() : 'N/A'))}
+                {detailRow('School / College', selectedStudentForView.school)}
+                {detailRow('Gender', selectedStudentForView.gender)}
+                {detailRow('FIDE ID', selectedStudentForView.fideId && String(selectedStudentForView.fideId).trim() ? selectedStudentForView.fideId : 'N/A')}
+                {detailRow('FIDE Rating', selectedStudentForView.fideRating && String(selectedStudentForView.fideRating).trim() ? selectedStudentForView.fideRating : 'N/A')}
+                {detailRow('Parent Name', selectedStudentForView.parentName)}
+                {detailRow('Parent Occupation', selectedStudentForView.parentOccupation)}
+                
+                <div style={{ marginTop: '1.5rem' }}>
+                   <span style={{ color: '#aaa', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '0.5rem' }}>Address</span>
+                   <p style={{ color: '#fff', fontSize: '0.95rem', background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', lineHeight: '1.6', border: '1px solid rgba(255,255,255,0.05)' }}>
+                     {selectedStudentForView.address || 'No address provided.'}
+                   </p>
+                </div>
+              </div>
+              <div style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
+                <button onClick={() => setSelectedStudentForView(null)} style={{
+                  padding: '0.6rem 2rem', background: '#d4af37', color: '#000',
+                  border: 'none', borderRadius: '6px', fontWeight: '700', cursor: 'pointer'
+                }}>Close Details</button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 };
