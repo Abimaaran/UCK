@@ -13,6 +13,7 @@ const FeesManager = () => {
   const [waStatus, setWaStatus] = useState('LOADING');
   const [waQr, setWaQr] = useState(null);
   const [sendingReminders, setSendingReminders] = useState(false);
+  const [selectedStudentForView, setSelectedStudentForView] = useState(null);
 
   const getStudentLevel = (student) => {
     const levelStr = student.level || student.chessExperience || '';
@@ -460,7 +461,19 @@ const FeesManager = () => {
                         {status}
                       </span>
                     </td>
-                    <td className="action-btns">
+                    <td className="action-btns" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <button 
+                        className="edit-btn"
+                        onClick={() => setSelectedStudentForView(student)}
+                        style={{
+                          background: 'rgba(212, 175, 55, 0.15)',
+                          border: '1px solid #d4af37',
+                          color: '#d4af37',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        View
+                      </button>
                       <button 
                         className="edit-btn"
                         onClick={() => handleFeeChange(student.studentId, 'Paid')}
@@ -483,6 +496,80 @@ const FeesManager = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Student Details Modal */}
+      {selectedStudentForView && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.75)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000,
+          backdropFilter: 'blur(5px)'
+        }}>
+          <div style={{
+            background: '#1a1a1a',
+            border: '1px solid rgba(212, 175, 55, 0.3)',
+            borderRadius: '12px',
+            padding: '2rem',
+            width: '95%',
+            maxWidth: '500px',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+            color: '#fff'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.75rem' }}>
+              <h3 style={{ margin: 0, color: '#d4af37' }}>Student Information</h3>
+              <button 
+                onClick={() => setSelectedStudentForView(null)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#aaa',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer'
+                }}
+              >
+                &times;
+              </button>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '0.95rem' }}>
+              <div><strong>Student ID:</strong> #{selectedStudentForView.studentId}</div>
+              <div><strong>Name:</strong> {selectedStudentForView.studentName || selectedStudentForView.name || 'N/A'}</div>
+              <div><strong>Email:</strong> {selectedStudentForView.email || 'N/A'}</div>
+              <div><strong>Phone Number:</strong> {selectedStudentForView.phoneNumber || selectedStudentForView.phone || selectedStudentForView.whatsappNo || 'N/A'}</div>
+              <div><strong>Level:</strong> {selectedStudentForView.level || 'N/A'}</div>
+              <div><strong>DOB:</strong> {selectedStudentForView.dob || 'N/A'}</div>
+              <div><strong>Parent Name:</strong> {selectedStudentForView.parentName || 'N/A'}</div>
+              <div><strong>Parent Phone:</strong> {selectedStudentForView.parentPhone || 'N/A'}</div>
+              <div><strong>Chess Experience:</strong> {selectedStudentForView.chessExperience || 'N/A'}</div>
+              <div><strong>Status:</strong> {selectedStudentForView.status || 'N/A'}</div>
+            </div>
+
+            <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setSelectedStudentForView(null)}
+                style={{
+                  padding: '0.5rem 1.25rem',
+                  borderRadius: '6px',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  background: 'rgba(255,255,255,0.05)',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontWeight: '600'
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
