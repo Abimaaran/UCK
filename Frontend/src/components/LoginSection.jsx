@@ -149,59 +149,10 @@ const LoginSection = () => {
   if (!isOpen) return null;
 
   return (
-    <div 
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'rgba(0, 0, 0, 0.75)',
-        backdropFilter: 'blur(8px)',
-        zIndex: 99999,
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: '1.5rem',
-        boxSizing: 'border-box'
-      }}
-      onClick={() => setIsOpen(false)}
-    >
-      <div 
-        className="login-form-container"
-        style={{
-          width: '100%',
-          maxWidth: '480px',
-          background: 'var(--card-bg, #121214)',
-          border: '1px solid rgba(255, 215, 0, 0.25)',
-          boxShadow: '0 25px 50px rgba(0, 0, 0, 0.6)',
-          borderRadius: '16px',
-          padding: '2rem 2.5rem',
-          position: 'relative',
-          minHeight: 'auto',
-          display: 'block',
-          boxSizing: 'border-box',
-          overflowY: 'auto',
-          maxHeight: '90vh'
-        }}
-        onClick={e => e.stopPropagation()}
-      >
+    <div className="login-modal-overlay" onClick={() => setIsOpen(false)}>
+      <div className="login-modal-content" onClick={e => e.stopPropagation()}>
         {/* Close Button "X" */}
-        <button 
-          onClick={() => setIsOpen(false)}
-          style={{
-            position: 'absolute',
-            top: '1rem',
-            right: '1rem',
-            background: 'none',
-            border: 'none',
-            color: '#aaa',
-            fontSize: '1.5rem',
-            cursor: 'pointer',
-            lineHeight: 1,
-            zIndex: 10
-          }}
-        >
+        <button className="login-modal-close" onClick={() => setIsOpen(false)}>
           &times;
         </button>
 
