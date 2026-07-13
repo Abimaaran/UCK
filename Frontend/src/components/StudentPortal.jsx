@@ -103,8 +103,9 @@ const StudentPortal = () => {
       ? attendance.filter(r => r.date?.startsWith(viewMonth))
       : [];
 
-    const total = monthRecords.length;
-    const present = monthRecords.filter(r => r.status === 'Present').length;
+    const activeRecords = monthRecords.filter(r => r.status === 'Present' || r.status === 'Absent');
+    const total = activeRecords.length;
+    const present = activeRecords.filter(r => r.status === 'Present').length;
     const percentage = total === 0 ? 0 : Math.round((present / total) * 100);
     return { total, present, percentage, history: monthRecords };
   };

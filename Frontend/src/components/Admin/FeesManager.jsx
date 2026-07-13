@@ -7,6 +7,21 @@ const FeesManager = () => {
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [selectedLevel, setSelectedLevel] = useState('All');
+
+  const getStudentLevel = (student) => {
+    const levelStr = student.level || student.chessExperience || '';
+    const lower = levelStr.toLowerCase();
+    if (lower.includes('advanced')) return 'Advanced';
+    if (lower.includes('intermediate')) return 'Intermediate';
+    if (lower.includes('beginner')) return 'Beginner';
+    return 'Unassigned';
+  };
+
+  const getLevelCount = (level) => {
+    if (level === 'All') return approvedStudents.length;
+    return approvedStudents.filter(s => getStudentLevel(s) === level).length;
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -75,11 +90,65 @@ const FeesManager = () => {
                          (statusFilter === 'Paid' && status === 'Paid') ||
                          (statusFilter === 'Unpaid' && status === 'Not Paid');
     
-    return matchesSearch && matchesFilter;
+    const matchesLevel = selectedLevel === 'All' || getStudentLevel(student) === selectedLevel;
+    
+    return matchesSearch && matchesFilter && matchesLevel;
   });
 
   return (
     <div className="manager-container">
+      {/* Level Filter Buttons */}
+      <div className="level-filter-container" style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+        {['All', 'Beginner', 'Intermediate', 'Advanced'].map(level => {
+          const count = getLevelCount(level);
+          const isActive = selectedLevel === level;
+          return (
+            <button
+              key={level}
+              onClick={() => setSelectedLevel(level)}
+              style={{
+                padding: '0.6rem 1.25rem',
+                borderRadius: '8px',
+                border: `1px solid ${isActive ? '#d4af37' : 'rgba(255,255,255,0.1)'}`,
+                background: isActive ? 'rgba(212, 175, 55, 0.15)' : 'rgba(255, 255, 255, 0.03)',
+                color: isActive ? '#d4af37' : '#bbb',
+                fontWeight: isActive ? '700' : '500',
+                cursor: 'pointer',
+                fontSize: '0.85rem',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: isActive ? '0 4px 12px rgba(212, 175, 55, 0.15)' : 'none'
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.border = '1px solid rgba(212, 175, 55, 0.4)';
+                  e.currentTarget.style.color = '#fff';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.border = '1px solid rgba(255,255,255,0.1)';
+                  e.currentTarget.style.color = '#bbb';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+                }
+              }}
+            >
+              {level} <span style={{
+                background: isActive ? 'rgba(212, 175, 55, 0.25)' : 'rgba(255, 255, 255, 0.08)',
+                color: isActive ? '#d4af37' : '#888',
+                padding: '2px 6px',
+                borderRadius: '12px',
+                fontSize: '0.75rem',
+                fontWeight: 'bold'
+              }}>{count}</span>
+            </button>
+          );
+        })}
+      </div>
+
       <div className="manager-header" style={{ marginBottom: '2rem', display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
         <div className="form-group" style={{ minWidth: '200px' }}>
           <label>Select Month</label>
