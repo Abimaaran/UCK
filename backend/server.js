@@ -1,22 +1,15 @@
 require('dotenv').config();
-const admin = require("firebase-admin");
-const serviceAccount = require("./serviceAccountKey.json");
+const { admin } = require('./src/config/firebaseAdmin');
 
 console.log("\n" + "=".repeat(40));
 console.log("🚀 SCK BACKEND SYSTEM STARTUP");
 console.log("=".repeat(40));
 
-// 1. Firebase Initialization
-try {
-  if (!admin.apps.length) {
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount)
-    });
-  }
+// 1. Firebase Initialization Verification
+if (admin.apps.length > 0) {
   console.log("✅ DATABASE: Firebase Connection Successful");
-} catch (error) {
+} else {
   console.error("❌ DATABASE: Connection Failed!");
-  console.error("   Error:", error.message);
   process.exit(1);
 }
 
