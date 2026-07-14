@@ -15,13 +15,16 @@ const initialize = () => {
 
   const puppeteerOpts = {
     headless: true,
-    protocolTimeout: 90000,
+    protocolTimeout: 180000,
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage',
       '--disable-gpu',
-      '--disable-extensions'
+      '--disable-extensions',
+      '--no-zygote',
+      '--single-process',
+      '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
     ]
   };
 

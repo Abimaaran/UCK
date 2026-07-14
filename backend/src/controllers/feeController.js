@@ -68,6 +68,10 @@ const processRemindersInBackground = async (unpaidStudents, month) => {
   console.log(`\n🤖 WhatsApp: Starting background reminders for ${unpaidStudents.length} students for month ${month}`);
   const monthName = getMonthName(month);
   
+  // Wait 15 seconds to ensure WhatsApp Web is fully synchronized and idle
+  console.log('🤖 WhatsApp: Waiting 15s for client warmup/sync...');
+  await new Promise(resolve => setTimeout(resolve, 15000));
+  
   for (let i = 0; i < unpaidStudents.length; i++) {
     const student = unpaidStudents[i];
     const phone = student.phoneNumber || student.phone || student.whatsappNo;
