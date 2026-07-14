@@ -24,7 +24,8 @@ const initialize = () => {
       '--disable-extensions',
       '--no-zygote',
       '--single-process',
-      '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+      '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+      '--js-flags=--max-old-space-size=150'
     ]
   };
 
@@ -43,7 +44,6 @@ const initialize = () => {
     console.log('🤖 WhatsApp: QR Code generated. Ready for scanning.');
     connectionStatus = 'QR_READY';
     try {
-      // Generate QR code data URL (PNG format)
       qrCodeData = await QRCode.toDataURL(qr);
     } catch (err) {
       console.error('❌ WhatsApp: QR Code generation error:', err);
@@ -51,9 +51,9 @@ const initialize = () => {
   });
 
   client.on('ready', () => {
-    console.log('🤖 WhatsApp: Connection established! Client is READY.');
     connectionStatus = 'CONNECTED';
     qrCodeData = null;
+    console.log('🤖 WhatsApp: Connection established! Client is READY.');
   });
 
   client.on('authenticated', () => {
@@ -61,22 +61,17 @@ const initialize = () => {
   });
 
   client.on('auth_failure', (msg) => {
-    console.error('❌ WhatsApp: Authentication failed:', msg);
+    console.error('❌ WhatsApp: Authentication failure:', msg);
     connectionStatus = 'DISCONNECTED';
-    qrCodeData = null;
   });
 
   client.on('disconnected', (reason) => {
-    console.warn('⚠️ WhatsApp: Client was disconnected. Reason:', reason);
+    console.error('⚠️ WhatsApp: Client was disconnected. Reason:', reason);
     connectionStatus = 'DISCONNECTED';
     qrCodeData = null;
-    try {
-      client.destroy();
-    } catch (e) {
-      // ignore
-    }
-    client = null;
-    // Auto-retry initialization after 5 seconds
+    
+    // Auto-reinitialize on disconnect to get a new QR
+    console.log('🤖 WhatsApp: Re-initializing client in 5 seconds...');
     setTimeout(initialize, 5000);
   });
 
@@ -89,41 +84,32 @@ const initialize = () => {
 const getStatus = () => connectionStatus;
 const getQR = () => qrCodeData;
 
-/**
- * Sanitizes and formats phone numbers to WhatsApp API format (+94 xxx xxx xxx -> 94xxxxxxxxxx@c.us)
- */
-const formatNumber = (phone) => {
-  if (!phone) return null;
-  
-  // Remove all non-numeric characters
-  let cleaned = phone.replace(/[^0-9]/g, '');
-
-  // Sri Lanka: Replace leading 0 with 94 (e.g. 0771234567 -> 94771234567)
-  if (cleaned.startsWith('0') && cleaned.length === 10) {
-    cleaned = '94' + cleaned.substring(1);
-  }
-  // Sri Lanka: Prepend 94 if number is 9 digits (e.g. 771234567 -> 94771234567)
-  else if (cleaned.length === 9) {
-    cleaned = '94' + cleaned;
-  }
-
-  // Final validation (Sri Lankan mobile numbers have 11 digits when formatted with 94)
-  if (cleaned.length >= 11) {
-    return `${cleaned}@c.us`;
-  }
-  return null;
-};
-
 const sendReminder = async (phone, message) => {
   if (connectionStatus !== 'CONNECTED' || !client) {
     throw new Error('WhatsApp client is not connected');
   }
 
-  const formatted = formatNumber(phone);
-  if (!formatted) {
+  // Clean and format number to digits
+  let cleaned = phone.replace(/[^0-9]/g, '');
+  if (cleaned.startsWith('0') && cleaned.length === 10) {
+    cleaned = '94' + cleaned.substring(1);
+  } else if (cleaned.length === 9) {
+    cleaned = '94' + cleaned;
+  }
+
+  if (cleaned.length < 11) {
     throw new Error(`Invalid phone number format: "${phone}". Must be a valid Sri Lankan mobile number.`);
   }
 
+  console.log(`🤖 WhatsApp: Verifying WhatsApp registration for ${cleaned}...`);
+  const numberId = await client.getNumberId(cleaned);
+  
+  if (!numberId) {
+    throw new Error(`The phone number ${phone} (${cleaned}) is not registered on WhatsApp.`);
+  }
+
+  const formatted = numberId._serialized;
+  console.log(`🤖 WhatsApp: Sending message to registered ID: ${formatted}...`);
   await client.sendMessage(formatted, message);
   console.log(`🤖 WhatsApp: Message sent successfully to ${formatted}`);
 };
