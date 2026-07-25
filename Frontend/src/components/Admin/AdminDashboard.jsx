@@ -129,6 +129,13 @@ const AdminDashboard = () => {
         </div>
         <nav className="sidebar-nav">
           <button
+            className={`nav-item ${activeTab === 'web-demo' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('web-demo'); setIsSidebarOpen(false); }}
+          >
+            <span className="nav-icon">🌐</span>
+            Web Demo
+          </button>
+          <button
             className={`nav-item ${activeTab === 'students' ? 'active' : ''}`}
             onClick={() => { setActiveTab('students'); setIsSidebarOpen(false); }}
           >
@@ -191,13 +198,7 @@ const AdminDashboard = () => {
             <span className="nav-icon">💬</span>
             User Feedbacks
           </button>
-          <button
-            className={`nav-item ${activeTab === 'web-demo' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('web-demo'); setIsSidebarOpen(false); }}
-          >
-            <span className="nav-icon">🌐</span>
-            Web Demo
-          </button>
+
           <button
             className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
             onClick={() => { setActiveTab('settings'); setIsSidebarOpen(false); }}
