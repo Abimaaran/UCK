@@ -73,6 +73,33 @@ const StudentApprovalManager = ({ students, setStudents }) => {
 ═══════════════════════════════════════════════════════════ */
 const PendingTab = ({ students, setStudents, onRefresh, setViewingStudent }) => {
   const [customIds, setCustomIds] = useState({});
+  const [sortBy, setSortBy] = useState('name');
+  const [sortOrder, setSortOrder] = useState('asc');
+
+  const handleSort = (field) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder('asc');
+    }
+  };
+
+  const sortedStudents = [...students].sort((a, b) => {
+    let valA = '';
+    let valB = '';
+
+    if (sortBy === 'name') {
+      valA = a.studentName || a.name || '';
+      valB = b.studentName || b.name || '';
+      return sortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    } else if (sortBy === 'time') {
+      valA = a.createdAt || a.appliedDate || '';
+      valB = b.createdAt || b.appliedDate || '';
+      return sortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    }
+    return 0;
+  });
 
   const handleApprove = async (student) => {
     const rawId = customIds[student.id] || student.id; // fallback to original id if no custom ID
@@ -116,6 +143,40 @@ const PendingTab = ({ students, setStudents, onRefresh, setViewingStudent }) => 
   return (
     <>
       <InfoBanner text="Enter a custom Student ID for each student before clicking Approve. Ensure they have their chosen password ready for login." />
+      
+      {/* Sorting Control Bar */}
+      <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', background: 'rgba(255,255,255,0.02)', padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+        <span style={{ color: '#aaa', fontSize: '0.82rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Sort Pending By:</span>
+        {[
+          { key: 'name', label: '🔤 Name (A-Z)' },
+          { key: 'time', label: '📅 Applied Date' }
+        ].map(item => {
+          const isActive = sortBy === item.key;
+          return (
+            <button
+              key={item.key}
+              onClick={() => handleSort(item.key)}
+              style={{
+                padding: '0.35rem 0.8rem',
+                borderRadius: '6px',
+                border: `1px solid ${isActive ? '#d4af37' : 'rgba(255,255,255,0.1)'}`,
+                background: isActive ? 'rgba(212,175,55,0.15)' : 'rgba(255,255,255,0.03)',
+                color: isActive ? '#d4af37' : '#ccc',
+                fontSize: '0.8rem',
+                fontWeight: isActive ? '600' : '400',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.3rem',
+                transition: 'all 0.2s'
+              }}
+            >
+              {item.label} {isActive ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+            </button>
+          );
+        })}
+      </div>
+
       <div className="data-table-container">
         <table>
           <thead>
@@ -131,14 +192,14 @@ const PendingTab = ({ students, setStudents, onRefresh, setViewingStudent }) => 
             </tr>
           </thead>
           <tbody>
-            {students.length === 0 ? (
+            {sortedStudents.length === 0 ? (
               <tr>
                 <td colSpan="8" style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
                   No pending registrations
                 </td>
               </tr>
             ) : (
-              students.map(student => (
+              sortedStudents.map(student => (
                 <tr key={student.id}>
                   <td style={{ fontWeight: '600', minWidth: '140px' }}>{student.studentName || student.name || 'N/A'}</td>
                   <td style={{ minWidth: '180px' }}>{student.email}</td>
@@ -346,6 +407,8 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [approved, setApproved] = useState([]);
+  const [sortBy, setSortBy] = useState('studentId');
+  const [sortOrder, setSortOrder] = useState('asc');
 
   useEffect(() => {
     const fetchApproved = async () => {
@@ -358,6 +421,41 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
     };
     fetchApproved();
   }, [onRefresh]);
+
+  const handleSort = (field) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder('asc');
+    }
+  };
+
+  const sortedApproved = [...approved].sort((a, b) => {
+    let valA = '';
+    let valB = '';
+
+    if (sortBy === 'studentId') {
+      valA = a.studentId || '';
+      valB = b.studentId || '';
+      // Natural sorting for ID prefixes (e.g. UCK10 vs UCK2)
+      const numA = parseInt(valA.replace(/\D/g, ''), 10);
+      const numB = parseInt(valB.replace(/\D/g, ''), 10);
+      if (!isNaN(numA) && !isNaN(numB)) {
+        return sortOrder === 'asc' ? numA - numB : numB - numA;
+      }
+      return sortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    } else if (sortBy === 'name') {
+      valA = a.studentName || a.name || '';
+      valB = b.studentName || b.name || '';
+      return sortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    } else if (sortBy === 'time') {
+      valA = a.approvedDate || a.createdAt || '';
+      valB = b.approvedDate || b.createdAt || '';
+      return sortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    }
+    return 0;
+  });
 
   const handleDelete = async (id) => {
     if (window.confirm(`Are you sure you want to delete student #${id}? This action cannot be undone.`)) {
@@ -402,6 +500,41 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
   return (
     <>
       <InfoBanner text="All approved / manually added students with their portal credentials. You can edit their details or remove them from the system." />
+      
+      {/* Sorting Control Bar */}
+      <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', background: 'rgba(255,255,255,0.02)', padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+        <span style={{ color: '#aaa', fontSize: '0.82rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Sort Approved Students By:</span>
+        {[
+          { key: 'studentId', label: '🪪 Student ID' },
+          { key: 'name', label: '🔤 Name (A-Z)' },
+          { key: 'time', label: '📅 Approved Date' }
+        ].map(item => {
+          const isActive = sortBy === item.key;
+          return (
+            <button
+              key={item.key}
+              onClick={() => handleSort(item.key)}
+              style={{
+                padding: '0.35rem 0.8rem',
+                borderRadius: '6px',
+                border: `1px solid ${isActive ? '#d4af37' : 'rgba(255,255,255,0.1)'}`,
+                background: isActive ? 'rgba(212,175,55,0.15)' : 'rgba(255,255,255,0.03)',
+                color: isActive ? '#d4af37' : '#ccc',
+                fontSize: '0.8rem',
+                fontWeight: isActive ? '600' : '400',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.3rem',
+                transition: 'all 0.2s'
+              }}
+            >
+              {item.label} {isActive ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+            </button>
+          );
+        })}
+      </div>
+
       <div className="data-table-container">
         <table>
           <thead>
@@ -416,14 +549,14 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
             </tr>
           </thead>
           <tbody>
-            {approved.length === 0 ? (
+            {sortedApproved.length === 0 ? (
               <tr>
                 <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
                   No approved students yet
                 </td>
               </tr>
             ) : (
-              approved.map(s => (
+              sortedApproved.map(s => (
                 <tr key={s.id || s._id || s.studentId}>
                   <td>
                     {editingId === (s.id || s._id) ? (
@@ -486,6 +619,8 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
 ═══════════════════════════════════════════════════════════ */
 const DeclinedTab = ({ students, setStudents, onRefresh, setViewingStudent }) => {
   const [declined, setDeclined] = useState([]);
+  const [sortBy, setSortBy] = useState('name');
+  const [sortOrder, setSortOrder] = useState('asc');
 
   useEffect(() => {
     const fetchDeclined = async () => {
@@ -498,6 +633,31 @@ const DeclinedTab = ({ students, setStudents, onRefresh, setViewingStudent }) =>
     };
     fetchDeclined();
   }, [onRefresh]);
+
+  const handleSort = (field) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder('asc');
+    }
+  };
+
+  const sortedDeclined = [...declined].sort((a, b) => {
+    let valA = '';
+    let valB = '';
+
+    if (sortBy === 'name') {
+      valA = a.studentName || a.name || '';
+      valB = b.studentName || b.name || '';
+      return sortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    } else if (sortBy === 'time') {
+      valA = a.declinedDate || a.updatedAt || '';
+      valB = b.declinedDate || b.updatedAt || '';
+      return sortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    }
+    return 0;
+  });
 
   const handleRestore = async (student) => {
     if (window.confirm(`Restore registration for ${student.name} to Pending?`)) {
@@ -520,6 +680,40 @@ const DeclinedTab = ({ students, setStudents, onRefresh, setViewingStudent }) =>
   return (
     <>
       <InfoBanner text="History of declined registration requests. You can restore them to pending or delete them permanently." />
+      
+      {/* Sorting Control Bar */}
+      <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', background: 'rgba(255,255,255,0.02)', padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+        <span style={{ color: '#aaa', fontSize: '0.82rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Sort Declined By:</span>
+        {[
+          { key: 'name', label: '🔤 Name (A-Z)' },
+          { key: 'time', label: '📅 Declined Date' }
+        ].map(item => {
+          const isActive = sortBy === item.key;
+          return (
+            <button
+              key={item.key}
+              onClick={() => handleSort(item.key)}
+              style={{
+                padding: '0.35rem 0.8rem',
+                borderRadius: '6px',
+                border: `1px solid ${isActive ? '#d4af37' : 'rgba(255,255,255,0.1)'}`,
+                background: isActive ? 'rgba(212,175,55,0.15)' : 'rgba(255,255,255,0.03)',
+                color: isActive ? '#d4af37' : '#ccc',
+                fontSize: '0.8rem',
+                fontWeight: isActive ? '600' : '400',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.3rem',
+                transition: 'all 0.2s'
+              }}
+            >
+              {item.label} {isActive ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+            </button>
+          );
+        })}
+      </div>
+
       <div className="data-table-container">
         <table>
           <thead>
@@ -533,14 +727,14 @@ const DeclinedTab = ({ students, setStudents, onRefresh, setViewingStudent }) =>
             </tr>
           </thead>
           <tbody>
-            {declined.length === 0 ? (
+            {sortedDeclined.length === 0 ? (
               <tr>
                 <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
                   No declined registrations
                 </td>
               </tr>
             ) : (
-              declined.map(student => (
+              sortedDeclined.map(student => (
                 <tr key={student.id}>
                   <td>{student.studentName || student.name || 'N/A'}</td>
                   <td>{student.email}</td>
