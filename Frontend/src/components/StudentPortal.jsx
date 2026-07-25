@@ -138,7 +138,8 @@ const StudentPortal = () => {
       <header className="portal-header">
         <div className="portal-brand">
           <span className="portal-crown">♔</span>
-          <span>Uncrowned Kings Chess Academy</span>
+          <span className="portal-brand-text-desktop">Uncrowned Kings Chess Academy</span>
+          <span className="portal-brand-text-mobile">UCK Chess Academy</span>
         </div>
         <div className="portal-header-right">
           {/* Notification Bell */}
@@ -211,12 +212,22 @@ const StudentPortal = () => {
             )}
           </div>
 
-          <button className="portal-logout-btn" onClick={() => setShowSettings(!showSettings)} style={{ marginRight: '1rem', background: 'transparent', border: '1px solid var(--accent-gold)', color: 'var(--accent-gold)' }}>
-            {showSettings ? 'Back to Dashboard' : '⚙️ Settings'}
+          <button 
+            className="portal-settings-icon-btn" 
+            onClick={() => setShowSettings(!showSettings)}
+            title={showSettings ? 'Back to Dashboard' : 'Settings'}
+          >
+            <span className="btn-icon">{showSettings ? '🏠' : '⚙️'}</span>
+            <span className="btn-label-desktop">{showSettings ? ' Dashboard' : ' Settings'}</span>
           </button>
 
-          <button className="portal-logout-btn" onClick={handleLogout}>
-            Logout
+          <button 
+            className="portal-logout-icon-btn" 
+            onClick={handleLogout}
+            title="Logout"
+          >
+            <span className="btn-icon">🚪</span>
+            <span className="btn-label-desktop"> Logout</span>
           </button>
         </div>
       </header>
