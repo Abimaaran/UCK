@@ -100,18 +100,33 @@ exports.login = async (req, res) => {
     const { studentId, password, dob } = req.body;
     const loginSecret = password || dob;
     
-    // 1. Find the student by studentId (UCK ID)
+    if (!studentId) {
+      return res.status(400).json({ error: 'Student ID is required.' });
+    }
+
+    const idStr = String(studentId).trim();
+    const variations = Array.from(new Set([
+      idStr,
+      idStr.toLowerCase(),
+      idStr.toUpperCase(),
+      idStr.charAt(0).toUpperCase() + idStr.slice(1).toLowerCase()
+    ]));
+    
+    // 1. Find the student by studentId (UCK ID variations)
     let snapshot = await db.collection('students')
-      .where('studentId', '==', studentId)
+      .where('studentId', 'in', variations)
       .get();
       
     if (snapshot.empty) {
-      // Also try doc ID for direct login if necessary
-      const doc = await db.collection('students').doc(studentId).get();
-      if (doc.exists) {
-         // mock a snapshot
-         snapshot = { docs: [doc], empty: false };
-      } else {
+      // Also try doc ID variations for direct login if necessary
+      for (const variant of variations) {
+        const doc = await db.collection('students').doc(variant).get();
+        if (doc.exists) {
+           snapshot = { docs: [doc], empty: false };
+           break;
+        }
+      }
+      if (snapshot.empty) {
          return res.status(401).json({ error: 'Invalid Student ID or account does not exist.' });
       }
     }
