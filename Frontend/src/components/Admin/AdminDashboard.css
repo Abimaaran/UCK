@@ -330,3 +330,135 @@ tr:hover {
   gap: 1rem;
   margin-top: 1rem;
 }
+
+/* ── RESPONSIVE COMPONENT CONTROLS ──────────────────────────── */
+.sidebar-close-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: #ff5252;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.hamburger-menu-btn {
+  display: none;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  color: #d4af37;
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  line-height: 1;
+  transition: all 0.2s;
+}
+
+.hamburger-menu-btn:hover {
+  background: rgba(212, 175, 55, 0.15);
+  border-color: #d4af37;
+}
+
+.sidebar-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 999;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.logout-label-desktop {
+  display: inline;
+}
+
+/* ── RESPONSIVE MEDIA QUERIES ───────────────────────────────── */
+@media (max-width: 1024px) {
+  .admin-sidebar {
+    width: 240px;
+  }
+  .admin-content {
+    padding: 1.5rem 2rem;
+  }
+}
+
+@media (max-width: 900px) {
+  /* Toggle Sidebar system */
+  .admin-sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    width: 280px;
+    z-index: 1000;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 10px 0 30px rgba(0,0,0,0.8);
+  }
+
+  .admin-sidebar.open {
+    left: 0;
+  }
+
+  .sidebar-close-btn {
+    display: inline-block;
+  }
+
+  .hamburger-menu-btn {
+    display: inline-block;
+  }
+
+  .admin-content {
+    padding: 1.25rem 1.5rem;
+    width: 100%;
+  }
+
+  .content-header h1 {
+    font-size: 1.4rem;
+  }
+
+  .content-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .logout-label-desktop {
+    display: none !important;
+  }
+
+  .header-logout-btn {
+    padding: 0.5rem;
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    justify-content: center;
+  }
+
+  .content-header h1 {
+    font-size: 1.15rem;
+  }
+
+  /* Form layouts responsive */
+  .form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  .edit-form-container {
+    padding: 1.25rem;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+}

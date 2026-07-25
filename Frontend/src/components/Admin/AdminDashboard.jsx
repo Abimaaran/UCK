@@ -26,6 +26,7 @@ const AdminDashboard = () => {
   if (!isAdmin) return null; // Prevent UI flash during redirect
 
   const [activeTab, setActiveTab] = useState('students');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // State for all manageable entities
   const [coaches, setCoaches] = useState([]);
@@ -102,79 +103,95 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="admin-dashboard">
-      <div className="admin-sidebar">
+    <div className={`admin-dashboard ${isSidebarOpen ? 'sidebar-open' : ''}`}>
+      {/* Sidebar Backdrop Overlay on Mobile */}
+      {isSidebarOpen && (
+        <div 
+          className="sidebar-backdrop" 
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      <div className={`admin-sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
-          <span className="sidebar-logo">♔</span>
-          <h2>Admin Panel</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+            <span className="sidebar-logo">♔</span>
+            <h2>Admin Panel</h2>
+          </div>
+          <button 
+            className="sidebar-close-btn" 
+            onClick={() => setIsSidebarOpen(false)}
+          >
+            ✕
+          </button>
         </div>
         <nav className="sidebar-nav">
           <button
             className={`nav-item ${activeTab === 'students' ? 'active' : ''}`}
-            onClick={() => setActiveTab('students')}
+            onClick={() => { setActiveTab('students'); setIsSidebarOpen(false); }}
           >
             <span className="nav-icon">👥</span>
             Student Management
           </button>
           <button
             className={`nav-item ${activeTab === 'coaches' ? 'active' : ''}`}
-            onClick={() => setActiveTab('coaches')}
+            onClick={() => { setActiveTab('coaches'); setIsSidebarOpen(false); }}
           >
             <span className="nav-icon">👤</span>
             Coaches
           </button>
           <button
             className={`nav-item ${activeTab === 'tournaments' ? 'active' : ''}`}
-            onClick={() => setActiveTab('tournaments')}
+            onClick={() => { setActiveTab('tournaments'); setIsSidebarOpen(false); }}
           >
             <span className="nav-icon">🏆</span>
             Tournaments
           </button>
           <button
             className={`nav-item ${activeTab === 'achievements' ? 'active' : ''}`}
-            onClick={() => setActiveTab('achievements')}
+            onClick={() => { setActiveTab('achievements'); setIsSidebarOpen(false); }}
           >
             <span className="nav-icon">🎖️</span>
             Achievements
           </button>
           <button
             className={`nav-item ${activeTab === 'timetable' ? 'active' : ''}`}
-            onClick={() => setActiveTab('timetable')}
+            onClick={() => { setActiveTab('timetable'); setIsSidebarOpen(false); }}
           >
             <span className="nav-icon">📅</span>
             Timetable
           </button>
           <button
             className={`nav-item ${activeTab === 'attendance' ? 'active' : ''}`}
-            onClick={() => setActiveTab('attendance')}
+            onClick={() => { setActiveTab('attendance'); setIsSidebarOpen(false); }}
           >
             <span className="nav-icon">📅</span>
             Attendance
           </button>
           <button
             className={`nav-item ${activeTab === 'fees' ? 'active' : ''}`}
-            onClick={() => setActiveTab('fees')}
+            onClick={() => { setActiveTab('fees'); setIsSidebarOpen(false); }}
           >
             <span className="nav-icon">💰</span>
             Fees System
           </button>
           <button
             className={`nav-item ${activeTab === 'reviews' ? 'active' : ''}`}
-            onClick={() => setActiveTab('reviews')}
+            onClick={() => { setActiveTab('reviews'); setIsSidebarOpen(false); }}
           >
             <span className="nav-icon">📝</span>
             Reviews Management
           </button>
           <button
             className={`nav-item ${activeTab === 'user-feedbacks' ? 'active' : ''}`}
-            onClick={() => setActiveTab('user-feedbacks')}
+            onClick={() => { setActiveTab('user-feedbacks'); setIsSidebarOpen(false); }}
           >
             <span className="nav-icon">💬</span>
             User Feedbacks
           </button>
           <button
             className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
-            onClick={() => setActiveTab('settings')}
+            onClick={() => { setActiveTab('settings'); setIsSidebarOpen(false); }}
           >
             <span className="nav-icon">⚙️</span>
             Settings
@@ -188,10 +205,18 @@ const AdminDashboard = () => {
       </div>
       <main className="admin-content">
         <header className="content-header">
-          <h1>{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Management</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+            <button 
+              className="hamburger-menu-btn" 
+              onClick={() => setIsSidebarOpen(true)}
+            >
+              ☰
+            </button>
+            <h1>{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Management</h1>
+          </div>
           <button className="header-logout-btn" onClick={handleLogout}>
             <span className="nav-icon">🚪</span>
-            Logout
+            <span className="logout-label-desktop">Logout</span>
           </button>
         </header>
         <div className="content-body">
