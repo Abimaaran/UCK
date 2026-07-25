@@ -457,6 +457,25 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
     return 0;
   });
 
+  const handleTogglePause = async (student) => {
+    const confirmMsg = student.isPaused 
+      ? `Are you sure you want to resume ${student.studentName || student.name || 'this student'}?`
+      : `Are you sure you want to pause ${student.studentName || student.name || 'this student'}?`;
+      
+    if (window.confirm(confirmMsg)) {
+      try {
+        await updateItem('students', student.id || student._id, {
+          ...student,
+          isPaused: !student.isPaused
+        });
+        onRefresh();
+      } catch (err) {
+        console.error("Failed to toggle pause status:", err);
+        alert("Could not update student status.");
+      }
+    }
+  };
+
   const handleDelete = async (id) => {
     if (window.confirm(`Are you sure you want to delete student #${id}? This action cannot be undone.`)) {
       try {
@@ -568,7 +587,25 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
                   <td>
                     {editingId === (s.id || s._id) ? (
                       <input name="studentName" value={editForm.studentName || editForm.name} onChange={handleEditChange} style={miniInput} />
-                    ) : (s.studentName || s.name || 'N/A')}
+                    ) : (
+                      <span>
+                        {s.studentName || s.name || 'N/A'}
+                        {s.isPaused && (
+                          <span style={{ 
+                            marginLeft: '8px', 
+                            fontSize: '0.7rem', 
+                            background: 'rgba(255, 107, 107, 0.15)', 
+                            color: '#ff6b6b', 
+                            padding: '2px 6px', 
+                            borderRadius: '4px',
+                            fontWeight: 'bold',
+                            border: '1px solid rgba(255, 107, 107, 0.3)'
+                          }}>
+                            ⏸️ Paused
+                          </span>
+                        )}
+                      </span>
+                    )}
                   </td>
                   <td>
                     {editingId === (s.id || s._id) ? (
@@ -600,6 +637,18 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
                       <>
                         <button className="view-btn" onClick={() => setViewingStudent(s)}>View</button>
                         <button className="edit-btn" onClick={() => startEdit(s)}>Edit</button>
+                        <button 
+                          className={s.isPaused ? "approve-btn" : "delete-btn"} 
+                          style={{ 
+                            background: s.isPaused ? 'rgba(76,175,80,0.15)' : 'rgba(255,107,107,0.15)',
+                            color: s.isPaused ? '#a0e4a0' : '#ff6b6b',
+                            border: s.isPaused ? '1px solid rgba(76,175,80,0.4)' : '1px solid rgba(255,107,107,0.4)',
+                            cursor: 'pointer'
+                          }}
+                          onClick={() => handleTogglePause(s)}
+                        >
+                          {s.isPaused ? "▶️ Resume" : "⏸️ Pause"}
+                        </button>
                         <button className="delete-btn" onClick={() => handleDelete(s.id || s._id || s.studentId)}>Delete</button>
                       </>
                     )}

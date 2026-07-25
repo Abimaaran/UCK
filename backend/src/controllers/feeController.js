@@ -118,7 +118,7 @@ exports.sendWhatsAppReminders = async (req, res) => {
       .map(doc => ({ id: doc.id, ...doc.data() }))
       .filter(s => {
         const status = (s.status || 'Pending').toLowerCase();
-        return status === 'approved' || status === 'active';
+        return (status === 'approved' || status === 'active') && !s.isPaused;
       });
 
     // 2. Fetch all paid fee records for this month
@@ -172,7 +172,7 @@ exports.cronSendWhatsAppReminders = async (req, res) => {
       .map(doc => ({ id: doc.id, ...doc.data() }))
       .filter(s => {
         const status = (s.status || 'Pending').toLowerCase();
-        return status === 'approved' || status === 'active';
+        return (status === 'approved' || status === 'active') && !s.isPaused;
       });
 
     // 2. Fetch all paid fee records for this month

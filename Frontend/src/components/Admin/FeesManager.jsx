@@ -112,7 +112,7 @@ const FeesManager = () => {
   const handleSendReminders = async () => {
     const unpaidCount = approvedStudents.filter(s => {
       const status = fees[s.studentId]?.[selectedMonth] || 'Not Paid';
-      return status !== 'Paid';
+      return status !== 'Paid' && !s.isPaused;
     }).length;
 
     if (unpaidCount === 0) {
@@ -514,20 +514,50 @@ const FeesManager = () => {
                 const status = fees[student.studentId]?.[selectedMonth] || 'Not Paid';
                 
                 return (
-                  <tr key={student.studentId}>
+                  <tr key={student.studentId} style={{ opacity: student.isPaused ? 0.7 : 1 }}>
                     <td>#{highlightMatch(student.studentId, searchTerm)}</td>
-                    <td>{highlightMatch(student.studentName || student.name || 'N/A', searchTerm)}</td>
                     <td>
-                      <span className={`status-badge ${status === 'Paid' ? 'approved' : 'pending'}`} style={{
-                        padding: '4px 12px',
-                        borderRadius: '20px',
-                        fontSize: '0.85rem',
-                        background: status === 'Paid' ? 'rgba(32, 201, 151, 0.1)' : 'rgba(255, 107, 107, 0.1)',
-                        color: status === 'Paid' ? '#20C997' : '#FF6B6B',
-                        border: `1px solid ${status === 'Paid' ? '#20C997' : '#FF6B6B'}`
-                      }}>
-                        {status}
-                      </span>
+                      {highlightMatch(student.studentName || student.name || 'N/A', searchTerm)}
+                      {student.isPaused && (
+                        <span style={{ 
+                          marginLeft: '8px', 
+                          fontSize: '0.7rem', 
+                          background: 'rgba(255, 107, 107, 0.15)', 
+                          color: '#ff6b6b', 
+                          padding: '2px 6px', 
+                          borderRadius: '4px',
+                          fontWeight: 'bold',
+                          border: '1px solid rgba(255, 107, 107, 0.3)'
+                        }}>
+                          Paused
+                        </span>
+                      )}
+                    </td>
+                    <td>
+                      {student.isPaused ? (
+                        <span style={{
+                          padding: '4px 12px',
+                          borderRadius: '20px',
+                          fontSize: '0.85rem',
+                          background: 'rgba(255, 107, 107, 0.15)',
+                          color: '#ff6b6b',
+                          border: '1px solid rgba(255, 107, 107, 0.3)',
+                          fontWeight: 'bold'
+                        }}>
+                          PAUSED
+                        </span>
+                      ) : (
+                        <span className={`status-badge ${status === 'Paid' ? 'approved' : 'pending'}`} style={{
+                          padding: '4px 12px',
+                          borderRadius: '20px',
+                          fontSize: '0.85rem',
+                          background: status === 'Paid' ? 'rgba(32, 201, 151, 0.1)' : 'rgba(255, 107, 107, 0.1)',
+                          color: status === 'Paid' ? '#20C997' : '#FF6B6B',
+                          border: `1px solid ${status === 'Paid' ? '#20C997' : '#FF6B6B'}`
+                        }}>
+                          {status}
+                        </span>
+                      )}
                     </td>
                     <td className="action-btns" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                       <button 
@@ -542,20 +572,28 @@ const FeesManager = () => {
                       >
                         View
                       </button>
-                      <button 
-                        className="edit-btn"
-                        onClick={() => handleFeeChange(student.studentId, 'Paid')}
-                        disabled={status === 'Paid'}
-                      >
-                        Mark as Paid
-                      </button>
-                      <button 
-                        className="delete-btn"
-                        onClick={() => handleFeeChange(student.studentId, 'Not Paid')}
-                        disabled={status === 'Not Paid'}
-                      >
-                        Mark as Unpaid
-                      </button>
+                      {student.isPaused ? (
+                        <span style={{ color: '#ff6b6b', fontSize: '0.85rem', alignSelf: 'center', paddingLeft: '8px', fontWeight: 'bold' }}>
+                          ⏸️ Account Paused
+                        </span>
+                      ) : (
+                        <>
+                          <button 
+                            className="edit-btn"
+                            onClick={() => handleFeeChange(student.studentId, 'Paid')}
+                            disabled={status === 'Paid'}
+                          >
+                            Mark as Paid
+                          </button>
+                          <button 
+                            className="delete-btn"
+                            onClick={() => handleFeeChange(student.studentId, 'Not Paid')}
+                            disabled={status === 'Not Paid'}
+                          >
+                            Mark as Unpaid
+                          </button>
+                        </>
+                      )}
                     </td>
                   </tr>
                 );

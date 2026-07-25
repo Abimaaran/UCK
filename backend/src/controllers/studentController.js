@@ -125,6 +125,11 @@ exports.login = async (req, res) => {
       return res.status(401).json({ error: 'Your account is pending approval from the admin.' });
     }
 
+    // Check if account is paused
+    if (studentData.isPaused) {
+      return res.status(403).json({ error: 'Your account has been temporarily paused by the admin. Please contact support.' });
+    }
+
     // 2. Verify password/dob
     // Use bcrypt search for password field if it looks hashed or if specifically matched
     let isMatch = false;

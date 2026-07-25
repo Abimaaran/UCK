@@ -320,106 +320,143 @@ const AttendanceManager = () => {
             ) : (
               sortedStudents.map(student => {
                 const stats = calculateStats(student.studentId);
-                const currentStatus = attendance[student.studentId]?.[selectedDate] || 'Unmarked';
+                const currentStatus = student.isPaused ? 'Unmarked' : (attendance[student.studentId]?.[selectedDate] || 'Unmarked');
 
                 return (
-                  <tr key={student.studentId}>
+                  <tr key={student.studentId} style={{ opacity: student.isPaused ? 0.7 : 1 }}>
                     <td>#{highlightMatch(student.studentId, searchTerm)}</td>
                     <td>
                       <span 
-                        onClick={() => setViewingCalendarStudent(student)}
+                        onClick={() => !student.isPaused && setViewingCalendarStudent(student)}
                         style={{ 
-                          cursor: 'pointer', 
-                          color: '#d4af37', 
+                          cursor: student.isPaused ? 'default' : 'pointer', 
+                          color: student.isPaused ? '#888' : '#d4af37', 
                           fontWeight: '600',
-                          borderBottom: '1px dashed rgba(212, 175, 55, 0.4)',
+                          borderBottom: student.isPaused ? 'none' : '1px dashed rgba(212, 175, 55, 0.4)',
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: '6px',
                           transition: 'color 0.2s, border-bottom 0.2s'
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.color = '#fff';
-                          e.currentTarget.style.borderBottom = '1px solid #fff';
+                          if (!student.isPaused) {
+                            e.currentTarget.style.color = '#fff';
+                            e.currentTarget.style.borderBottom = '1px solid #fff';
+                          }
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.color = '#d4af37';
-                          e.currentTarget.style.borderBottom = '1px dashed rgba(212, 175, 55, 0.4)';
+                          if (!student.isPaused) {
+                            e.currentTarget.style.color = '#d4af37';
+                            e.currentTarget.style.borderBottom = '1px dashed rgba(212, 175, 55, 0.4)';
+                          }
                         }}
-                        title="Click to view full attendance calendar"
+                        title={student.isPaused ? "Student is paused" : "Click to view full attendance calendar"}
                       >
                         {highlightMatch(student.studentName || student.name || 'N/A', searchTerm)} 📅
+                        {student.isPaused && (
+                          <span style={{ 
+                            marginLeft: '8px', 
+                            fontSize: '0.7rem', 
+                            background: 'rgba(255, 107, 107, 0.15)', 
+                            color: '#ff6b6b', 
+                            padding: '2px 6px', 
+                            borderRadius: '4px',
+                            fontWeight: 'bold',
+                            border: '1px solid rgba(255, 107, 107, 0.3)'
+                          }}>
+                            Paused
+                          </span>
+                        )}
                       </span>
                     </td>
                     <td>
-                      <div className="attendance-action-wrapper" style={{ display: 'flex', gap: '0.75rem' }}>
-                        <button
-                          className={`attendance-btn present-btn ${currentStatus === 'Present' ? 'active' : ''}`}
-                          style={{
-                            padding: '0.6rem 1.25rem',
-                            borderRadius: '8px',
-                            cursor: 'pointer',
-                            fontSize: '0.85rem',
-                            fontWeight: '700',
-                            transition: 'all 0.3s ease',
-                            display: 'flex',
+                      {student.isPaused ? (
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          <span style={{ 
+                            fontSize: '0.82rem', 
+                            fontWeight: 'bold', 
+                            color: '#ff6b6b', 
+                            background: 'rgba(255, 107, 107, 0.1)', 
+                            padding: '0.5rem 1.25rem', 
+                            borderRadius: '8px', 
+                            border: '1px solid rgba(255, 107, 107, 0.3)',
+                            display: 'inline-flex',
                             alignItems: 'center',
-                            gap: '8px',
-                            border: `2px solid ${currentStatus === 'Present' ? '#20C997' : 'rgba(255,255,255,0.05)'}`,
-                            background: currentStatus === 'Present' ? '#20C997' : 'rgba(255,255,255,0.03)',
-                            color: currentStatus === 'Present' ? '#000' : '#888',
-                            boxShadow: currentStatus === 'Present' ? '0 4px 12px rgba(32, 201, 151, 0.25)' : 'none'
-                          }}
-                          onClick={() => handleAttendanceChange(student.studentId, 'Present')}
-                        >
-                          <span style={{ fontSize: '1rem' }}>{currentStatus === 'Present' ? '✓' : '○'}</span>
-                          Present
-                        </button>
-                        <button
-                          className={`attendance-btn absent-btn ${currentStatus === 'Absent' ? 'active' : ''}`}
-                          style={{
-                            padding: '0.6rem 1.25rem',
-                            borderRadius: '8px',
-                            cursor: 'pointer',
-                            fontSize: '0.85rem',
-                            fontWeight: '700',
-                            transition: 'all 0.3s ease',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            border: `2px solid ${currentStatus === 'Absent' ? '#FF6B6B' : 'rgba(255,255,255,0.05)'}`,
-                            background: currentStatus === 'Absent' ? '#FF6B6B' : 'rgba(255,255,255,0.03)',
-                            color: currentStatus === 'Absent' ? '#000' : '#888',
-                            boxShadow: currentStatus === 'Absent' ? '0 4px 12px rgba(255, 107, 107, 0.25)' : 'none'
-                          }}
-                          onClick={() => handleAttendanceChange(student.studentId, 'Absent')}
-                        >
-                          <span style={{ fontSize: '1rem' }}>{currentStatus === 'Absent' ? '✕' : '○'}</span>
-                          Absent
-                        </button>
-                        <button
-                          className={`attendance-btn none-btn ${currentStatus === 'Unmarked' ? 'active' : ''}`}
-                          style={{
-                            padding: '0.6rem 1.25rem',
-                            borderRadius: '8px',
-                            cursor: 'pointer',
-                            fontSize: '0.85rem',
-                            fontWeight: '700',
-                            transition: 'all 0.3s ease',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            border: `2px solid ${currentStatus === 'Unmarked' ? '#aaa' : 'rgba(255,255,255,0.05)'}`,
-                            background: currentStatus === 'Unmarked' ? '#aaa' : 'rgba(255,255,255,0.03)',
-                            color: currentStatus === 'Unmarked' ? '#000' : '#888',
-                            boxShadow: currentStatus === 'Unmarked' ? '0 4px 12px rgba(255, 255, 255, 0.1)' : 'none'
-                          }}
-                          onClick={() => handleAttendanceChange(student.studentId, 'Unmarked')}
-                        >
-                          <span style={{ fontSize: '1rem' }}>{currentStatus === 'Unmarked' ? '●' : '○'}</span>
-                          Clear
-                        </button>
-                      </div>
+                            gap: '6px'
+                          }}>
+                            ⏸️ PAUSED (Unmarked)
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="attendance-action-wrapper" style={{ display: 'flex', gap: '0.75rem' }}>
+                          <button
+                            className={`attendance-btn present-btn ${currentStatus === 'Present' ? 'active' : ''}`}
+                            style={{
+                              padding: '0.6rem 1.25rem',
+                              borderRadius: '8px',
+                              cursor: 'pointer',
+                              fontSize: '0.85rem',
+                              fontWeight: '700',
+                              transition: 'all 0.3s ease',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              border: `2px solid ${currentStatus === 'Present' ? '#20C997' : 'rgba(255,255,255,0.05)'}`,
+                              background: currentStatus === 'Present' ? '#20C997' : 'rgba(255,255,255,0.03)',
+                              color: currentStatus === 'Present' ? '#000' : '#888',
+                              boxShadow: currentStatus === 'Present' ? '0 4px 12px rgba(32, 201, 151, 0.25)' : 'none'
+                            }}
+                            onClick={() => handleAttendanceChange(student.studentId, 'Present')}
+                          >
+                            <span style={{ fontSize: '1rem' }}>{currentStatus === 'Present' ? '✓' : '○'}</span>
+                            Present
+                          </button>
+                          <button
+                            className={`attendance-btn absent-btn ${currentStatus === 'Absent' ? 'active' : ''}`}
+                            style={{
+                              padding: '0.6rem 1.25rem',
+                              borderRadius: '8px',
+                              cursor: 'pointer',
+                              fontSize: '0.85rem',
+                              fontWeight: '700',
+                              transition: 'all 0.3s ease',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              border: `2px solid ${currentStatus === 'Absent' ? '#FF6B6B' : 'rgba(255,255,255,0.05)'}`,
+                              background: currentStatus === 'Absent' ? '#FF6B6B' : 'rgba(255,255,255,0.03)',
+                              color: currentStatus === 'Absent' ? '#000' : '#888',
+                              boxShadow: currentStatus === 'Absent' ? '0 4px 12px rgba(255, 107, 107, 0.25)' : 'none'
+                            }}
+                            onClick={() => handleAttendanceChange(student.studentId, 'Absent')}
+                          >
+                            <span style={{ fontSize: '1rem' }}>{currentStatus === 'Absent' ? '✕' : '○'}</span>
+                            Absent
+                          </button>
+                          <button
+                            className={`attendance-btn none-btn ${currentStatus === 'Unmarked' ? 'active' : ''}`}
+                            style={{
+                              padding: '0.6rem 1.25rem',
+                              borderRadius: '8px',
+                              cursor: 'pointer',
+                              fontSize: '0.85rem',
+                              fontWeight: '700',
+                              transition: 'all 0.3s ease',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              border: `2px solid ${currentStatus === 'Unmarked' ? '#aaa' : 'rgba(255,255,255,0.05)'}`,
+                              background: currentStatus === 'Unmarked' ? '#aaa' : 'rgba(255,255,255,0.03)',
+                              color: currentStatus === 'Unmarked' ? '#000' : '#888',
+                              boxShadow: currentStatus === 'Unmarked' ? '0 4px 12px rgba(255, 255, 255, 0.1)' : 'none'
+                            }}
+                            onClick={() => handleAttendanceChange(student.studentId, 'Unmarked')}
+                          >
+                            <span style={{ fontSize: '1rem' }}>{currentStatus === 'Unmarked' ? '●' : '○'}</span>
+                            Clear
+                          </button>
+                        </div>
+                      )}
                     </td>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
