@@ -96,6 +96,8 @@ const AdminDashboard = () => {
         return <UserReviewManager />;
       case 'settings':
         return <AdminSettings />;
+      case 'web-demo':
+        return <WebDemoView />;
       case 'students':
       default:
         return <StudentApprovalManager students={pendingStudents} setStudents={setPendingStudents} />;
@@ -190,6 +192,13 @@ const AdminDashboard = () => {
             User Feedbacks
           </button>
           <button
+            className={`nav-item ${activeTab === 'web-demo' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('web-demo'); setIsSidebarOpen(false); }}
+          >
+            <span className="nav-icon">🌐</span>
+            Web Demo
+          </button>
+          <button
             className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
             onClick={() => { setActiveTab('settings'); setIsSidebarOpen(false); }}
           >
@@ -223,6 +232,25 @@ const AdminDashboard = () => {
           {renderContent()}
         </div>
       </main>
+    </div>
+  );
+};
+
+const WebDemoView = () => {
+  return (
+    <div style={{ 
+      width: '100%', 
+      height: 'calc(100vh - 180px)', 
+      background: 'rgba(0,0,0,0.2)', 
+      borderRadius: '12px', 
+      border: '1px solid rgba(212,175,55,0.2)', 
+      overflow: 'hidden' 
+    }}>
+      <iframe 
+        src={window.location.origin} 
+        title="UCK Chess Academy Public Website" 
+        style={{ width: '100%', height: '100%', border: 'none', background: '#050505' }}
+      />
     </div>
   );
 };
