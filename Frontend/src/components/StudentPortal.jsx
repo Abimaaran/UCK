@@ -142,10 +142,20 @@ const StudentPortal = () => {
           <span className="portal-brand-text-mobile">UCK Chess Academy</span>
         </div>
         <div className="portal-header-right">
+          {/* Settings / Dashboard Toggle */}
+          <button 
+            className="portal-settings-icon-btn" 
+            onClick={() => setShowSettings(!showSettings)}
+            title={showSettings ? 'Back to Dashboard' : 'Settings'}
+          >
+            <span className="btn-icon">{showSettings ? '🏠' : '⚙️'}</span>
+            <span className="btn-label-desktop">{showSettings ? ' Dashboard' : ' Settings'}</span>
+          </button>
+
           {/* Notification Bell */}
           <div className="notification-wrapper" ref={dropdownRef}>
             <button 
-              className={`notification-bell ${hasNewNotification ? 'has-new' : ''}`}
+              className={`portal-notifications-btn ${hasNewNotification ? 'has-new' : ''}`}
               onClick={() => {
                 setShowNotifications(!showNotifications);
                 if (hasNewNotification && !showNotifications) {
@@ -154,7 +164,8 @@ const StudentPortal = () => {
               }}
               title="Notifications"
             >
-              <span className="bell-icon">🔔</span>
+              <span className="btn-icon">🔔</span>
+              <span className="btn-label-desktop"> Notifications</span>
               {hasNewNotification && <span className="notification-dot"></span>}
             </button>
 
@@ -212,15 +223,7 @@ const StudentPortal = () => {
             )}
           </div>
 
-          <button 
-            className="portal-settings-icon-btn" 
-            onClick={() => setShowSettings(!showSettings)}
-            title={showSettings ? 'Back to Dashboard' : 'Settings'}
-          >
-            <span className="btn-icon">{showSettings ? '🏠' : '⚙️'}</span>
-            <span className="btn-label-desktop">{showSettings ? ' Dashboard' : ' Settings'}</span>
-          </button>
-
+          {/* Logout Button */}
           <button 
             className="portal-logout-icon-btn" 
             onClick={handleLogout}
