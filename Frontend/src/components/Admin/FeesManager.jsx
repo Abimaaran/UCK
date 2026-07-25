@@ -14,6 +14,30 @@ const FeesManager = () => {
   const [waQr, setWaQr] = useState(null);
   const [sendingReminders, setSendingReminders] = useState(false);
   const [selectedStudentForView, setSelectedStudentForView] = useState(null);
+  const [reminderLog, setReminderLog] = useState(null);
+
+  const fetchLatestReminderStatus = async () => {
+    try {
+      const response = await api.get(`/fees/reminder-status/latest`, {
+        params: { month: selectedMonth }
+      });
+      setReminderLog(response.data);
+    } catch (err) {
+      console.warn("Failed to fetch latest reminder status:", err.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchLatestReminderStatus();
+  }, [selectedMonth]);
+
+  useEffect(() => {
+    let timer;
+    if (reminderLog && reminderLog.status === 'PROCESSING') {
+      timer = setInterval(fetchLatestReminderStatus, 4000);
+    }
+    return () => clearInterval(timer);
+  }, [reminderLog]);
 
   const highlightMatch = (text, query) => {
     if (!query || !query.trim()) return text;
@@ -128,6 +152,7 @@ const FeesManager = () => {
       setSendingReminders(true);
       const response = await api.post('/fees/send-reminders', { month: selectedMonth });
       alert(response.data.message || `Reminders started in background for ${unpaidCount} students!`);
+      fetchLatestReminderStatus();
     } catch (err) {
       console.error(err);
       alert(err.response?.data?.error || "Failed to trigger reminders. Make sure WhatsApp is connected.");
@@ -336,6 +361,135 @@ const FeesManager = () => {
           </div>
         )}
       </div>
+
+      {/* WhatsApp Reminder Logs / Status Feed */}
+      {reminderLog && (
+        <div 
+          style={{
+            background: 'rgba(255, 255, 255, 0.03)',
+            border: `1px solid ${
+              reminderLog.status === 'PROCESSING' ? 'rgba(0, 123, 255, 0.3)' :
+              reminderLog.failCount > 0 ? 'rgba(220, 53, 69, 0.3)' :
+              'rgba(40, 167, 69, 0.3)'
+            }`,
+            borderRadius: '12px',
+            padding: '1.5rem',
+            marginBottom: '2rem',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
+            <div>
+              <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>📢</span> Monthly Fee Reminders Status ({getMonthName(reminderLog.month)})
+              </h4>
+              <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: '#888' }}>
+                Started at: {new Date(reminderLog.startedAt).toLocaleTimeString()} | Mode: {reminderLog.runType || 'Manual'}
+              </p>
+            </div>
+            
+            <span style={{
+              padding: '4px 10px',
+              borderRadius: '6px',
+              fontSize: '0.75rem',
+              fontWeight: 'bold',
+              background: 
+                reminderLog.status === 'PROCESSING' ? 'rgba(0, 123, 255, 0.15)' :
+                'rgba(40, 167, 69, 0.15)',
+              color: 
+                reminderLog.status === 'PROCESSING' ? '#007BFF' :
+                '#28a745',
+              border: `1px solid ${
+                reminderLog.status === 'PROCESSING' ? '#007BFF' :
+                '#28a745'
+              }`
+            }}>
+              {reminderLog.status}
+            </span>
+          </div>
+
+          {/* Progress Bar / Counters */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem', marginBottom: '1.25rem' }}>
+            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '0.75rem', borderRadius: '8px', textAlign: 'center' }}>
+              <div style={{ fontSize: '0.75rem', color: '#aaa', textTransform: 'uppercase' }}>Total Unpaid</div>
+              <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#fff' }}>{reminderLog.totalRecipients}</div>
+            </div>
+            <div style={{ background: 'rgba(40, 167, 69, 0.05)', padding: '0.75rem', borderRadius: '8px', textAlign: 'center', border: '1px solid rgba(40,167,69,0.1)' }}>
+              <div style={{ fontSize: '0.75rem', color: '#888', textTransform: 'uppercase' }}>✅ Sent</div>
+              <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#28a745' }}>{reminderLog.successCount}</div>
+            </div>
+            <div style={{ background: 'rgba(220, 53, 69, 0.05)', padding: '0.75rem', borderRadius: '8px', textAlign: 'center', border: '1px solid rgba(220,53,69,0.1)' }}>
+              <div style={{ fontSize: '0.75rem', color: '#888', textTransform: 'uppercase' }}>❌ Failed</div>
+              <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#dc3545' }}>{reminderLog.failCount}</div>
+            </div>
+          </div>
+
+          {/* Processing State */}
+          {reminderLog.status === 'PROCESSING' && (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#aaa', marginBottom: '0.4rem' }}>
+                <span>Sending in progress...</span>
+                <span>{Math.round(((reminderLog.successCount + reminderLog.failCount) / reminderLog.totalRecipients) * 100)}%</span>
+              </div>
+              <div style={{ height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', overflow: 'hidden' }}>
+                <div style={{ 
+                  width: `${((reminderLog.successCount + reminderLog.failCount) / reminderLog.totalRecipients) * 100}%`, 
+                  height: '100%', 
+                  background: 'linear-gradient(90deg, #d4af37, #aa8422)', 
+                  transition: 'width 0.3s ease-in-out' 
+                }}/>
+              </div>
+              <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8rem', color: '#bbb', fontStyle: 'italic' }}>
+                * Delays are applied between reminders to comply with spam filters. Feel free to navigate away; reminders will continue in the background.
+              </p>
+            </div>
+          )}
+
+          {/* Completed State */}
+          {reminderLog.status === 'COMPLETED' && (
+            <div>
+              {reminderLog.failCount === 0 ? (
+                <div style={{ background: 'rgba(40, 167, 69, 0.1)', border: '1px solid rgba(40, 167, 69, 0.2)', padding: '0.8rem 1.2rem', borderRadius: '8px', color: '#28a745', fontWeight: '600', fontSize: '0.88rem' }}>
+                  🎉 Success! All messages have been sent successfully.
+                </div>
+              ) : (
+                <div>
+                  <div style={{ background: 'rgba(220, 53, 69, 0.1)', border: '1px solid rgba(220, 53, 69, 0.2)', padding: '0.8rem 1.2rem', borderRadius: '8px', color: '#ff6b6b', fontWeight: '600', fontSize: '0.88rem', marginBottom: '1rem' }}>
+                    ⚠️ Send Complete: {reminderLog.successCount} sent successfully. {reminderLog.failCount} messages failed to send. See details below.
+                  </div>
+
+                  {/* Failed Recipients details */}
+                  <h5 style={{ margin: '0 0 0.5rem 0', color: '#fff', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Failed Deliveries ({reminderLog.failCount})
+                  </h5>
+                  <div style={{ maxHeight: '180px', overflowY: 'auto', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', background: 'rgba(0,0,0,0.2)' }}>
+                    <table style={{ minWidth: '100%', tableLayout: 'fixed' }}>
+                      <thead>
+                        <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
+                          <th style={{ padding: '0.5rem 0.75rem', fontSize: '0.75rem', color: '#aaa', width: '25%' }}>Student ID</th>
+                          <th style={{ padding: '0.5rem 0.75rem', fontSize: '0.75rem', color: '#aaa', width: '35%' }}>Student Name</th>
+                          <th style={{ padding: '0.5rem 0.75rem', fontSize: '0.75rem', color: '#aaa', width: '40%' }}>Reason for Failure</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reminderLog.failList.map((fail, fIdx) => (
+                          <tr key={fIdx} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                            <td style={{ padding: '0.5rem 0.75rem', fontSize: '0.8rem', color: '#ff6b6b', fontWeight: 'bold' }}>#{fail.studentId}</td>
+                            <td style={{ padding: '0.5rem 0.75rem', fontSize: '0.8rem', color: '#ddd' }}>{fail.name}</td>
+                            <td style={{ padding: '0.5rem 0.75rem', fontSize: '0.8rem', color: '#aaa', wordBreak: 'break-word' }}>
+                              ⚠️ {fail.error || 'Unknown failure'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Level Filter Buttons */}
       <div className="level-filter-container" style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>

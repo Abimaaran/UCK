@@ -64,10 +64,33 @@ const getMonthName = (monthStr) => {
 };
 
 // Internal function to process sending reminders in the background
-const processRemindersInBackground = async (unpaidStudents, month) => {
-  console.log(`\n🤖 WhatsApp: Starting background reminders for ${unpaidStudents.length} students for month ${month}`);
+const processRemindersInBackground = async (unpaidStudents, month, runType = 'Manual') => {
+  console.log(`\n🤖 WhatsApp: Starting background reminders for ${unpaidStudents.length} students for month ${month} (${runType})`);
   const monthName = getMonthName(month);
   
+  let successCount = 0;
+  let failCount = 0;
+  const successList = [];
+  const failList = [];
+  let logId = null;
+
+  try {
+    const logRef = await db.collection('reminderLogs').add({
+      month,
+      status: 'PROCESSING',
+      totalRecipients: unpaidStudents.length,
+      successCount: 0,
+      failCount: 0,
+      successList: [],
+      failList: [],
+      startedAt: new Date().toISOString(),
+      runType
+    });
+    logId = logRef.id;
+  } catch (logErr) {
+    console.error('⚠️ WhatsApp Log: Failed to create initial reminder run log:', logErr.message);
+  }
+
   // Wait 15 seconds to ensure WhatsApp Web is fully synchronized and idle
   console.log('🤖 WhatsApp: Waiting 15s for client warmup/sync...');
   await new Promise(resolve => setTimeout(resolve, 15000));
@@ -76,9 +99,19 @@ const processRemindersInBackground = async (unpaidStudents, month) => {
     const student = unpaidStudents[i];
     const phone = student.phoneNumber || student.phone || student.whatsappNo;
     const name = student.studentName || student.name || 'Student';
+    const studentId = student.studentId || 'N/A';
 
     if (!phone) {
-      console.log(`⚠️ WhatsApp: Skipping ${name} - No phone number`);
+      const errorMsg = 'No phone number configured';
+      console.log(`⚠️ WhatsApp: Skipping ${name} - ${errorMsg}`);
+      failCount++;
+      failList.push({ studentId, name, phone: 'N/A', error: errorMsg });
+      
+      if (logId) {
+        try {
+          await db.collection('reminderLogs').doc(logId).update({ failCount, failList });
+        } catch (e) {}
+      }
       continue;
     }
 
@@ -93,10 +126,45 @@ const processRemindersInBackground = async (unpaidStudents, month) => {
       
       await whatsappService.sendReminder(phone, message);
       console.log(`✅ WhatsApp: Reminder sent to ${name} (${phone})`);
+      successCount++;
+      successList.push({ studentId, name, phone });
     } catch (err) {
       console.error(`❌ WhatsApp: Failed to send reminder to ${name} (${phone}):`, err.message);
+      failCount++;
+      failList.push({ studentId, name, phone, error: err.message });
+    }
+
+    // Update progress in database in real time
+    if (logId) {
+      try {
+        await db.collection('reminderLogs').doc(logId).update({
+          successCount,
+          failCount,
+          successList,
+          failList
+        });
+      } catch (dbErr) {
+        console.error('⚠️ WhatsApp Log: Progress update failed:', dbErr.message);
+      }
     }
   }
+
+  // Finalize log
+  if (logId) {
+    try {
+      await db.collection('reminderLogs').doc(logId).update({
+        status: 'COMPLETED',
+        successCount,
+        failCount,
+        successList,
+        failList,
+        finishedAt: new Date().toISOString()
+      });
+    } catch (dbErr) {
+      console.error('⚠️ WhatsApp Log: Final log update failed:', dbErr.message);
+    }
+  }
+
   console.log('🤖 WhatsApp: Background reminders processing finished.\n');
 };
 
@@ -137,7 +205,7 @@ exports.sendWhatsAppReminders = async (req, res) => {
     }
 
     // 4. Start processing in background to avoid API timeout
-    processRemindersInBackground(unpaidStudents, month);
+    processRemindersInBackground(unpaidStudents, month, 'Manual');
 
     res.status(200).json({
       success: true,
@@ -191,13 +259,39 @@ exports.cronSendWhatsAppReminders = async (req, res) => {
     }
 
     // 4. Start processing in background
-    processRemindersInBackground(unpaidStudents, currentMonth);
+    processRemindersInBackground(unpaidStudents, currentMonth, 'Cron');
 
     res.status(200).json({
       success: true,
       message: `Cron trigger successful. Reminders started in background for ${unpaidStudents.length} unpaid students.`,
       count: unpaidStudents.length
     });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// GET the latest reminder process logs/status for a month
+exports.getReminderStatus = async (req, res) => {
+  try {
+    const { month } = req.query;
+    if (!month) {
+      return res.status(400).json({ error: 'Month parameter YYYY-MM is required' });
+    }
+
+    const snapshot = await db.collection('reminderLogs')
+      .where('month', '==', month)
+      .get();
+      
+    if (snapshot.empty) {
+      return res.status(200).json(null);
+    }
+    
+    const logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // Sort in-memory to find the latest log by startedAt
+    logs.sort((a, b) => new Date(b.startedAt) - new Date(a.startedAt));
+    
+    res.status(200).json(logs[0]);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

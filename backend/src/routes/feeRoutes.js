@@ -10,6 +10,7 @@ router.put('/:studentId', controller.update);
 
 // Automated WhatsApp reminders
 router.post('/send-reminders', verifyAdmin, controller.sendWhatsAppReminders);
+router.get('/reminder-status/latest', verifyAdmin, controller.getReminderStatus);
 router.post('/cron-send-reminders', controller.cronSendWhatsAppReminders);
 
 module.exports = router;
