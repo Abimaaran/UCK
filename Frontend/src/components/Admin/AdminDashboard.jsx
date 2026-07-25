@@ -28,6 +28,18 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('students');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  // Lock body scroll when sidebar drawer is open on mobile
+  useEffect(() => {
+    if (isSidebarOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isSidebarOpen]);
+
   // State for all manageable entities
   const [coaches, setCoaches] = useState([]);
   const [tournaments, setTournaments] = useState([]);
