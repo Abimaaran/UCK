@@ -6,6 +6,8 @@ const StudentReviewManager = () => {
   const [reviews, setReviews] = useState({});
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [reviewText, setReviewText] = useState('');
+  const [sortBy, setSortBy] = useState('studentId');
+  const [sortOrder, setSortOrder] = useState('asc');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -36,6 +38,35 @@ const StudentReviewManager = () => {
     fetchData();
   }, []);
 
+  const handleSort = (field) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder('asc');
+    }
+  };
+
+  const sortedStudents = [...approvedStudents].sort((a, b) => {
+    let valA = '';
+    let valB = '';
+
+    if (sortBy === 'studentId') {
+      valA = a.studentId || '';
+      valB = b.studentId || '';
+      const numA = parseInt(valA.replace(/\D/g, ''), 10);
+      const numB = parseInt(valB.replace(/\D/g, ''), 10);
+      if (!isNaN(numA) && !isNaN(numB)) {
+        return sortOrder === 'asc' ? numA - numB : numB - numA;
+      }
+      return sortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    } else if (sortBy === 'name') {
+      valA = a.studentName || a.name || '';
+      valB = b.studentName || b.name || '';
+      return sortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    }
+    return 0;
+  });
 
   const handleSaveReview = async (e) => {
     e.preventDefault();
@@ -68,8 +99,42 @@ const StudentReviewManager = () => {
         {/* Left: Student List */}
         <div className="student-list-card" style={{ background: 'var(--card-bg)', borderRadius: '15px', padding: '1.5rem', border: '1px solid var(--border-color)' }}>
           <h3 style={{ marginBottom: '1.5rem', color: 'var(--accent-gold)' }}>Select Student</h3>
+          
+          {/* Sorting Controls */}
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '1rem' }}>
+            <span style={{ color: '#aaa', fontSize: '0.78rem', fontWeight: '600' }}>Sort:</span>
+            {[
+              { key: 'studentId', label: '🪪 ID' },
+              { key: 'name', label: '🔤 Name' }
+            ].map(item => {
+              const isActive = sortBy === item.key;
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => handleSort(item.key)}
+                  style={{
+                    padding: '0.25rem 0.5rem',
+                    borderRadius: '4px',
+                    border: `1px solid ${isActive ? '#d4af37' : 'rgba(255,255,255,0.1)'}`,
+                    background: isActive ? 'rgba(212,175,55,0.15)' : 'rgba(255,255,255,0.03)',
+                    color: isActive ? '#d4af37' : '#ccc',
+                    fontSize: '0.75rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.2rem',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {item.label} {isActive ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+                </button>
+              );
+            })}
+          </div>
+
           <div className="student-items" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '500px', overflowY: 'auto' }}>
-            {approvedStudents.map(student => (
+            {sortedStudents.map(student => (
               <div
                 key={student.studentId}
                 className={`student-item ${selectedStudent?.studentId === student.studentId ? 'active' : ''}`}

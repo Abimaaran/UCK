@@ -94,6 +94,18 @@ const AttendanceManager = () => {
     return { total, present, percentage };
   };
 
+  const [sortBy, setSortBy] = useState('studentId');
+  const [sortOrder, setSortOrder] = useState('asc');
+
+  const handleSort = (field) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder('asc');
+    }
+  };
+
   const filteredStudents = approvedStudents.filter(student => {
     const studentName = (student.studentName || student.name || '').toLowerCase();
     const studentIdStr = (student.studentId || '').toString().toLowerCase();
@@ -110,6 +122,28 @@ const AttendanceManager = () => {
     const matchesLevel = selectedLevel === 'All' || getStudentLevel(student) === selectedLevel;
 
     return matchesSearch && matchesFilter && matchesLevel;
+  });
+
+  const sortedStudents = [...filteredStudents].sort((a, b) => {
+    if (sortBy === 'studentId') {
+      const valA = a.studentId || '';
+      const valB = b.studentId || '';
+      const numA = parseInt(valA.replace(/\D/g, ''), 10);
+      const numB = parseInt(valB.replace(/\D/g, ''), 10);
+      if (!isNaN(numA) && !isNaN(numB)) {
+        return sortOrder === 'asc' ? numA - numB : numB - numA;
+      }
+      return sortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    } else if (sortBy === 'name') {
+      const valA = a.studentName || a.name || '';
+      const valB = b.studentName || b.name || '';
+      return sortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    } else if (sortBy === 'percentage') {
+      const pctA = calculateStats(a.studentId).percentage;
+      const pctB = calculateStats(b.studentId).percentage;
+      return sortOrder === 'asc' ? pctA - pctB : pctB - pctA;
+    }
+    return 0;
   });
 
   return (
@@ -208,6 +242,40 @@ const AttendanceManager = () => {
         </div>
       </div>
 
+      {/* Sorting Control Bar */}
+      <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', background: 'rgba(255,255,255,0.02)', padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+        <span style={{ color: '#aaa', fontSize: '0.82rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Sort Attendance List By:</span>
+        {[
+          { key: 'studentId', label: '🪪 Student ID' },
+          { key: 'name', label: '🔤 Student Name' },
+          { key: 'percentage', label: '📊 Attendance %' }
+        ].map(item => {
+          const isActive = sortBy === item.key;
+          return (
+            <button
+              key={item.key}
+              onClick={() => handleSort(item.key)}
+              style={{
+                padding: '0.35rem 0.8rem',
+                borderRadius: '6px',
+                border: `1px solid ${isActive ? '#d4af37' : 'rgba(255,255,255,0.1)'}`,
+                background: isActive ? 'rgba(212,175,55,0.15)' : 'rgba(255,255,255,0.03)',
+                color: isActive ? '#d4af37' : '#ccc',
+                fontSize: '0.8rem',
+                fontWeight: isActive ? '600' : '400',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.3rem',
+                transition: 'all 0.2s'
+              }}
+            >
+              {item.label} {isActive ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+            </button>
+          );
+        })}
+      </div>
+
       <div className="data-table-container">
         <table>
           <thead>
@@ -221,10 +289,10 @@ const AttendanceManager = () => {
           <tbody>
             {approvedStudents.length === 0 ? (
               <tr><td colSpan="4" style={{ textAlign: 'center' }}>No approved students found.</td></tr>
-            ) : filteredStudents.length === 0 ? (
+            ) : sortedStudents.length === 0 ? (
               <tr><td colSpan="4" style={{ textAlign: 'center' }}>No students found matching your search or filter.</td></tr>
             ) : (
-              filteredStudents.map(student => {
+              sortedStudents.map(student => {
                 const stats = calculateStats(student.studentId);
                 const currentStatus = attendance[student.studentId]?.[selectedDate] || 'Unmarked';
 
