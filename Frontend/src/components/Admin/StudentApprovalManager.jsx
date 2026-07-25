@@ -75,6 +75,8 @@ const PendingTab = ({ students, setStudents, onRefresh, setViewingStudent }) => 
   const [customIds, setCustomIds] = useState({});
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedLevel, setSelectedLevel] = useState('All');
 
   const handleSort = (field) => {
     if (sortBy === field) {
@@ -85,7 +87,47 @@ const PendingTab = ({ students, setStudents, onRefresh, setViewingStudent }) => 
     }
   };
 
-  const sortedStudents = [...students].sort((a, b) => {
+  const getStudentLevel = (student) => {
+    const levelStr = student.level || student.chessExperience || '';
+    const lower = levelStr.toLowerCase();
+    if (lower.includes('advanced')) return 'Advanced';
+    if (lower.includes('intermediate')) return 'Intermediate';
+    if (lower.includes('beginner')) return 'Beginner';
+    return 'Unassigned';
+  };
+
+  const getLevelCount = (level) => {
+    if (level === 'All') return students.length;
+    return students.filter(s => getStudentLevel(s) === level).length;
+  };
+
+  const highlightMatch = (text, query) => {
+    if (!query || !query.trim()) return text;
+    const escapedQuery = query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const regex = new RegExp(`(${escapedQuery})`, 'gi');
+    const parts = String(text).split(regex);
+    return parts.map((part, index) => 
+      regex.test(part) ? (
+        <span key={index} className="search-highlight-blink">
+          {part}
+        </span>
+      ) : part
+    );
+  };
+
+  const filteredPending = students.filter(student => {
+    const studentName = (student.studentName || student.name || '').toLowerCase();
+    const studentIdStr = (student.studentId || '').toString().toLowerCase();
+
+    const matchesSearch = studentName.includes(searchTerm.toLowerCase()) ||
+      studentIdStr.includes(searchTerm.toLowerCase());
+
+    const matchesLevel = selectedLevel === 'All' || getStudentLevel(student) === selectedLevel;
+
+    return matchesSearch && matchesLevel;
+  });
+
+  const sortedStudents = [...filteredPending].sort((a, b) => {
     let valA = '';
     let valB = '';
 
@@ -142,8 +184,84 @@ const PendingTab = ({ students, setStudents, onRefresh, setViewingStudent }) => 
 
   return (
     <>
+      <style>{`
+        @keyframes blinkHighlight {
+          0% { background-color: rgba(212, 175, 55, 0.95); color: #000; box-shadow: 0 0 5px rgba(212, 175, 55, 0.6); }
+          100% { background-color: rgba(212, 175, 55, 0.2); color: #fff; }
+        }
+        .search-highlight-blink {
+          animation: blinkHighlight 0.6s infinite alternate;
+          font-weight: 700;
+          padding: 0 2px;
+          border-radius: 3px;
+        }
+      `}</style>
       <InfoBanner text="Enter a custom Student ID for each student before clicking Approve. Ensure they have their chosen password ready for login." />
       
+      {/* Level Filter Buttons */}
+      <div className="level-filter-container" style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+        {['All', 'Beginner', 'Intermediate', 'Advanced'].map(level => {
+          const count = getLevelCount(level);
+          const isActive = selectedLevel === level;
+          return (
+            <button
+              key={level}
+              onClick={() => setSelectedLevel(level)}
+              style={{
+                padding: '0.6rem 1.25rem',
+                borderRadius: '8px',
+                border: `1px solid ${isActive ? '#d4af37' : 'rgba(255,255,255,0.1)'}`,
+                background: isActive ? 'rgba(212, 175, 55, 0.15)' : 'rgba(255, 255, 255, 0.03)',
+                color: isActive ? '#d4af37' : '#bbb',
+                fontWeight: isActive ? '700' : '500',
+                cursor: 'pointer',
+                fontSize: '0.85rem',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: isActive ? '0 4px 12px rgba(212, 175, 55, 0.15)' : 'none'
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.border = '1px solid rgba(212, 175, 55, 0.4)';
+                  e.currentTarget.style.color = '#fff';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.border = '1px solid rgba(255,255,255,0.1)';
+                  e.currentTarget.style.color = '#bbb';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+                }
+              }}
+            >
+              {level} <span style={{
+                background: isActive ? 'rgba(212, 175, 55, 0.25)' : 'rgba(255, 255, 255, 0.08)',
+                color: isActive ? '#d4af37' : '#888',
+                padding: '2px 6px',
+                borderRadius: '12px',
+                fontSize: '0.75rem',
+                fontWeight: 'bold'
+              }}>{count}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '2rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+        <div className="form-group" style={{ minWidth: '250px', flex: '1' }}>
+          <label>Search Student Name</label>
+          <input
+            type="text"
+            placeholder="Search pending students..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
+
       {/* Sorting Control Bar */}
       <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', background: 'rgba(255,255,255,0.02)', padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
         <span style={{ color: '#aaa', fontSize: '0.82rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Sort Pending By:</span>
@@ -195,17 +313,17 @@ const PendingTab = ({ students, setStudents, onRefresh, setViewingStudent }) => 
             {sortedStudents.length === 0 ? (
               <tr>
                 <td colSpan="8" style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
-                  No pending registrations
+                  No pending registrations matching criteria
                 </td>
               </tr>
             ) : (
               sortedStudents.map(student => (
                 <tr key={student.id}>
-                  <td style={{ fontWeight: '600', minWidth: '140px' }}>{student.studentName || student.name || 'N/A'}</td>
+                  <td style={{ fontWeight: '600', minWidth: '140px' }}>{highlightMatch(student.studentName || student.name || 'N/A', searchTerm)}</td>
                   <td style={{ minWidth: '180px' }}>{student.email}</td>
                   <td style={{ minWidth: '110px' }}>{student.phoneNumber || student.whatsappNo || student.phone || 'N/A'}</td>
                   <td style={{ fontSize: '0.85rem', minWidth: '220px', whiteSpace: 'normal', lineHeight: '1.4' }}>{student.address || 'N/A'}</td>
-                  <td style={{ minWidth: '110px' }}>{student.chessExperience || student.level || 'N/A'}</td>
+                  <td style={{ minWidth: '110px' }}>{getStudentLevel(student)}</td>
                   <td style={{ fontSize: '0.85rem', minWidth: '100px' }}>{student.createdAt ? new Date(student.createdAt).toLocaleDateString() : (student.appliedDate || 'N/A')}</td>
                   <td>
                     <input
@@ -409,6 +527,8 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
   const [approved, setApproved] = useState([]);
   const [sortBy, setSortBy] = useState('studentId');
   const [sortOrder, setSortOrder] = useState('asc');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedLevel, setSelectedLevel] = useState('All');
 
   useEffect(() => {
     const fetchApproved = async () => {
@@ -431,7 +551,47 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
     }
   };
 
-  const sortedApproved = [...approved].sort((a, b) => {
+  const getStudentLevel = (student) => {
+    const levelStr = student.level || student.chessExperience || '';
+    const lower = levelStr.toLowerCase();
+    if (lower.includes('advanced')) return 'Advanced';
+    if (lower.includes('intermediate')) return 'Intermediate';
+    if (lower.includes('beginner')) return 'Beginner';
+    return 'Unassigned';
+  };
+
+  const getLevelCount = (level) => {
+    if (level === 'All') return approved.length;
+    return approved.filter(s => getStudentLevel(s) === level).length;
+  };
+
+  const highlightMatch = (text, query) => {
+    if (!query || !query.trim()) return text;
+    const escapedQuery = query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const regex = new RegExp(`(${escapedQuery})`, 'gi');
+    const parts = String(text).split(regex);
+    return parts.map((part, index) => 
+      regex.test(part) ? (
+        <span key={index} className="search-highlight-blink">
+          {part}
+        </span>
+      ) : part
+    );
+  };
+
+  const filteredApproved = approved.filter(student => {
+    const studentName = (student.studentName || student.name || '').toLowerCase();
+    const studentIdStr = (student.studentId || '').toString().toLowerCase();
+
+    const matchesSearch = studentName.includes(searchTerm.toLowerCase()) ||
+      studentIdStr.includes(searchTerm.toLowerCase());
+
+    const matchesLevel = selectedLevel === 'All' || getStudentLevel(student) === selectedLevel;
+
+    return matchesSearch && matchesLevel;
+  });
+
+  const sortedApproved = [...filteredApproved].sort((a, b) => {
     let valA = '';
     let valB = '';
 
@@ -518,8 +678,84 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
 
   return (
     <>
+      <style>{`
+        @keyframes blinkHighlight {
+          0% { background-color: rgba(212, 175, 55, 0.95); color: #000; box-shadow: 0 0 5px rgba(212, 175, 55, 0.6); }
+          100% { background-color: rgba(212, 175, 55, 0.2); color: #fff; }
+        }
+        .search-highlight-blink {
+          animation: blinkHighlight 0.6s infinite alternate;
+          font-weight: 700;
+          padding: 0 2px;
+          border-radius: 3px;
+        }
+      `}</style>
       <InfoBanner text="All approved / manually added students with their portal credentials. You can edit their details or remove them from the system." />
       
+      {/* Level Filter Buttons */}
+      <div className="level-filter-container" style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+        {['All', 'Beginner', 'Intermediate', 'Advanced'].map(level => {
+          const count = getLevelCount(level);
+          const isActive = selectedLevel === level;
+          return (
+            <button
+              key={level}
+              onClick={() => setSelectedLevel(level)}
+              style={{
+                padding: '0.6rem 1.25rem',
+                borderRadius: '8px',
+                border: `1px solid ${isActive ? '#d4af37' : 'rgba(255,255,255,0.1)'}`,
+                background: isActive ? 'rgba(212, 175, 55, 0.15)' : 'rgba(255, 255, 255, 0.03)',
+                color: isActive ? '#d4af37' : '#bbb',
+                fontWeight: isActive ? '700' : '500',
+                cursor: 'pointer',
+                fontSize: '0.85rem',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: isActive ? '0 4px 12px rgba(212, 175, 55, 0.15)' : 'none'
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.border = '1px solid rgba(212, 175, 55, 0.4)';
+                  e.currentTarget.style.color = '#fff';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.border = '1px solid rgba(255,255,255,0.1)';
+                  e.currentTarget.style.color = '#bbb';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+                }
+              }}
+            >
+              {level} <span style={{
+                background: isActive ? 'rgba(212, 175, 55, 0.25)' : 'rgba(255, 255, 255, 0.08)',
+                color: isActive ? '#d4af37' : '#888',
+                padding: '2px 6px',
+                borderRadius: '12px',
+                fontSize: '0.75rem',
+                fontWeight: 'bold'
+              }}>{count}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '2rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+        <div className="form-group" style={{ minWidth: '250px', flex: '1' }}>
+          <label>Search Student Name or ID</label>
+          <input
+            type="text"
+            placeholder="Search approved students..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
+
       {/* Sorting Control Bar */}
       <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', background: 'rgba(255,255,255,0.02)', padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
         <span style={{ color: '#aaa', fontSize: '0.82rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Sort Approved Students By:</span>
@@ -571,7 +807,7 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
             {sortedApproved.length === 0 ? (
               <tr>
                 <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
-                  No approved students yet
+                  No approved students matching criteria
                 </td>
               </tr>
             ) : (
@@ -581,7 +817,7 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
                     {editingId === (s.id || s._id) ? (
                       <input name="studentId" value={editForm.studentId} onChange={handleEditChange} style={{ ...miniInput, fontWeight: '700', color: '#d4af37' }} />
                     ) : (
-                      <strong style={{ color: '#d4af37' }}>#{s.studentId}</strong>
+                      <strong style={{ color: '#d4af37' }}>#{highlightMatch(s.studentId, searchTerm)}</strong>
                     )}
                   </td>
                   <td>
@@ -589,7 +825,7 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
                       <input name="studentName" value={editForm.studentName || editForm.name} onChange={handleEditChange} style={miniInput} />
                     ) : (
                       <span>
-                        {s.studentName || s.name || 'N/A'}
+                        {highlightMatch(s.studentName || s.name || 'N/A', searchTerm)}
                         {s.isPaused && (
                           <span style={{ 
                             marginLeft: '8px', 
@@ -670,6 +906,8 @@ const DeclinedTab = ({ students, setStudents, onRefresh, setViewingStudent }) =>
   const [declined, setDeclined] = useState([]);
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedLevel, setSelectedLevel] = useState('All');
 
   useEffect(() => {
     const fetchDeclined = async () => {
@@ -692,7 +930,47 @@ const DeclinedTab = ({ students, setStudents, onRefresh, setViewingStudent }) =>
     }
   };
 
-  const sortedDeclined = [...declined].sort((a, b) => {
+  const getStudentLevel = (student) => {
+    const levelStr = student.level || student.chessExperience || '';
+    const lower = levelStr.toLowerCase();
+    if (lower.includes('advanced')) return 'Advanced';
+    if (lower.includes('intermediate')) return 'Intermediate';
+    if (lower.includes('beginner')) return 'Beginner';
+    return 'Unassigned';
+  };
+
+  const getLevelCount = (level) => {
+    if (level === 'All') return declined.length;
+    return declined.filter(s => getStudentLevel(s) === level).length;
+  };
+
+  const highlightMatch = (text, query) => {
+    if (!query || !query.trim()) return text;
+    const escapedQuery = query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const regex = new RegExp(`(${escapedQuery})`, 'gi');
+    const parts = String(text).split(regex);
+    return parts.map((part, index) => 
+      regex.test(part) ? (
+        <span key={index} className="search-highlight-blink">
+          {part}
+        </span>
+      ) : part
+    );
+  };
+
+  const filteredDeclined = declined.filter(student => {
+    const studentName = (student.studentName || student.name || '').toLowerCase();
+    const studentIdStr = (student.studentId || '').toString().toLowerCase();
+
+    const matchesSearch = studentName.includes(searchTerm.toLowerCase()) ||
+      studentIdStr.includes(searchTerm.toLowerCase());
+
+    const matchesLevel = selectedLevel === 'All' || getStudentLevel(student) === selectedLevel;
+
+    return matchesSearch && matchesLevel;
+  });
+
+  const sortedDeclined = [...filteredDeclined].sort((a, b) => {
     let valA = '';
     let valB = '';
 
@@ -728,8 +1006,84 @@ const DeclinedTab = ({ students, setStudents, onRefresh, setViewingStudent }) =>
 
   return (
     <>
+      <style>{`
+        @keyframes blinkHighlight {
+          0% { background-color: rgba(212, 175, 55, 0.95); color: #000; box-shadow: 0 0 5px rgba(212, 175, 55, 0.6); }
+          100% { background-color: rgba(212, 175, 55, 0.2); color: #fff; }
+        }
+        .search-highlight-blink {
+          animation: blinkHighlight 0.6s infinite alternate;
+          font-weight: 700;
+          padding: 0 2px;
+          border-radius: 3px;
+        }
+      `}</style>
       <InfoBanner text="History of declined registration requests. You can restore them to pending or delete them permanently." />
       
+      {/* Level Filter Buttons */}
+      <div className="level-filter-container" style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+        {['All', 'Beginner', 'Intermediate', 'Advanced'].map(level => {
+          const count = getLevelCount(level);
+          const isActive = selectedLevel === level;
+          return (
+            <button
+              key={level}
+              onClick={() => setSelectedLevel(level)}
+              style={{
+                padding: '0.6rem 1.25rem',
+                borderRadius: '8px',
+                border: `1px solid ${isActive ? '#d4af37' : 'rgba(255,255,255,0.1)'}`,
+                background: isActive ? 'rgba(212, 175, 55, 0.15)' : 'rgba(255, 255, 255, 0.03)',
+                color: isActive ? '#d4af37' : '#bbb',
+                fontWeight: isActive ? '700' : '500',
+                cursor: 'pointer',
+                fontSize: '0.85rem',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: isActive ? '0 4px 12px rgba(212, 175, 55, 0.15)' : 'none'
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.border = '1px solid rgba(212, 175, 55, 0.4)';
+                  e.currentTarget.style.color = '#fff';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.border = '1px solid rgba(255,255,255,0.1)';
+                  e.currentTarget.style.color = '#bbb';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+                }
+              }}
+            >
+              {level} <span style={{
+                background: isActive ? 'rgba(212, 175, 55, 0.25)' : 'rgba(255, 255, 255, 0.08)',
+                color: isActive ? '#d4af37' : '#888',
+                padding: '2px 6px',
+                borderRadius: '12px',
+                fontSize: '0.75rem',
+                fontWeight: 'bold'
+              }}>{count}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '2rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+        <div className="form-group" style={{ minWidth: '250px', flex: '1' }}>
+          <label>Search Student Name</label>
+          <input
+            type="text"
+            placeholder="Search declined students..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
+
       {/* Sorting Control Bar */}
       <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', background: 'rgba(255,255,255,0.02)', padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
         <span style={{ color: '#aaa', fontSize: '0.82rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Sort Declined By:</span>
@@ -779,16 +1133,16 @@ const DeclinedTab = ({ students, setStudents, onRefresh, setViewingStudent }) =>
             {sortedDeclined.length === 0 ? (
               <tr>
                 <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
-                  No declined registrations
+                  No declined registrations matching criteria
                 </td>
               </tr>
             ) : (
               sortedDeclined.map(student => (
                 <tr key={student.id}>
-                  <td>{student.studentName || student.name || 'N/A'}</td>
+                  <td>{highlightMatch(student.studentName || student.name || 'N/A', searchTerm)}</td>
                   <td>{student.email}</td>
                   <td>{student.dateOfBirth || student.dob || 'N/A'}</td>
-                  <td>{student.chessExperience || student.level || 'N/A'}</td>
+                  <td>{getStudentLevel(student)}</td>
                   <td>{student.declinedDate || (student.updatedAt ? new Date(student.updatedAt).toLocaleDateString() : 'N/A')}</td>
                   <td className="action-btns">
                     <button className="view-btn" onClick={() => setViewingStudent(student)}>View</button>
