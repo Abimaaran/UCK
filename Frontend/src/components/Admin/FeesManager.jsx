@@ -15,6 +15,20 @@ const FeesManager = () => {
   const [sendingReminders, setSendingReminders] = useState(false);
   const [selectedStudentForView, setSelectedStudentForView] = useState(null);
 
+  const highlightMatch = (text, query) => {
+    if (!query || !query.trim()) return text;
+    const escapedQuery = query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const regex = new RegExp(`(${escapedQuery})`, 'gi');
+    const parts = String(text).split(regex);
+    return parts.map((part, index) => 
+      regex.test(part) ? (
+        <span key={index} className="search-highlight-blink">
+          {part}
+        </span>
+      ) : part
+    );
+  };
+
   const getStudentLevel = (student) => {
     const levelStr = student.level || student.chessExperience || '';
     const lower = levelStr.toLowerCase();
@@ -198,6 +212,18 @@ const FeesManager = () => {
 
   return (
     <div className="manager-container">
+      <style>{`
+        @keyframes blinkHighlight {
+          0% { background-color: rgba(212, 175, 55, 0.95); color: #000; box-shadow: 0 0 5px rgba(212, 175, 55, 0.6); }
+          100% { background-color: rgba(212, 175, 55, 0.2); color: #fff; }
+        }
+        .search-highlight-blink {
+          animation: blinkHighlight 0.6s infinite alternate;
+          font-weight: 700;
+          padding: 0 2px;
+          border-radius: 3px;
+        }
+      `}</style>
       {/* WhatsApp Connection Status Panel */}
       <div 
         style={{
@@ -489,8 +515,8 @@ const FeesManager = () => {
                 
                 return (
                   <tr key={student.studentId}>
-                    <td>#{student.studentId}</td>
-                    <td>{student.studentName || student.name || 'N/A'}</td>
+                    <td>#{highlightMatch(student.studentId, searchTerm)}</td>
+                    <td>{highlightMatch(student.studentName || student.name || 'N/A', searchTerm)}</td>
                     <td>
                       <span className={`status-badge ${status === 'Paid' ? 'approved' : 'pending'}`} style={{
                         padding: '4px 12px',
