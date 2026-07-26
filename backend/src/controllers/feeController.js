@@ -165,8 +165,8 @@ const processRemindersInBackground = async (unpaidStudents, month, runType = 'Ma
 
     try {
       if (i > 0) {
-        // Random safe delay between 12 to 16 seconds to prevent WhatsApp spam block
-        const safeDelay = Math.floor(Math.random() * 4000) + 12000;
+        // Safe fast delay between 4 to 7 seconds
+        const safeDelay = Math.floor(Math.random() * 3000) + 4000;
         await new Promise(resolve => setTimeout(resolve, safeDelay));
       }
       const formattedMonth = getMonthName(month);
