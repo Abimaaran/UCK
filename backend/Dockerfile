@@ -1,5 +1,5 @@
-# Use official Node.js runtime
-FROM node:20-alpine
+# Use official Node.js 22 runtime for Supabase compatibility
+FROM node:22-alpine
 
 # Set working directory
 WORKDIR /app
