@@ -95,10 +95,19 @@ const sendReminder = async (phone, message) => {
     setTimeout(() => reject(new Error('WhatsApp message dispatch timed out (30s)')), 30000);
   });
 
-  const sendPromise = client.sendText(chatId, message);
+  const sendPromise = async () => {
+    try {
+      console.log(`🤖 WhatsApp: Attempting to send message to ${chatId}...`);
+      const result = await client.sendText(chatId, message);
+      console.log(`✅ WhatsApp: WPPConnect sendText result for ${chatId}:`, result.id || 'Success');
+      return result;
+    } catch (sendErr) {
+      console.error(`❌ WhatsApp: WPPConnect sendText failed for ${chatId}:`, sendErr);
+      throw sendErr;
+    }
+  };
 
-  await Promise.race([sendPromise, timeoutPromise]);
-  console.log(`✅ WhatsApp: Reminder successfully sent to ${formattedNumber}`);
+  await Promise.race([sendPromise(), timeoutPromise]);
 };
 
 const logout = async () => {
