@@ -101,8 +101,19 @@ const sendReminder = async (phone, message) => {
     formattedNumber = '94' + formattedNumber;
   }
   
-  const chatId = `${formattedNumber}@c.us`;
-  await client.sendMessage(chatId, message);
+  try {
+    const numberDetails = await client.getNumberId(formattedNumber);
+    if (numberDetails && numberDetails._serialized) {
+      await client.sendMessage(numberDetails._serialized, message);
+    } else {
+      const chatId = `${formattedNumber}@c.us`;
+      await client.sendMessage(chatId, message);
+    }
+  } catch (err) {
+    // Fallback direct send if getNumberId fails
+    const chatId = `${formattedNumber}@c.us`;
+    await client.sendMessage(chatId, message);
+  }
 };
 
 const logout = async () => {
