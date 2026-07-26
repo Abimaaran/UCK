@@ -131,7 +131,9 @@ const processRemindersInBackground = async (unpaidStudents, month, runType = 'Ma
         const safeDelay = Math.floor(Math.random() * 4000) + 12000;
         await new Promise(resolve => setTimeout(resolve, safeDelay));
       }
-      await whatsappService.sendReminder(phone, `Dear Parent/Student ${name}, this is a gentle reminder regarding UCK Chess Academy fees for ${month}.`);
+      const formattedMonth = getMonthName(month);
+      const reminderMsg = `♟️ *UCK Chess Academy*\n\nDear Parent/Student *${name}*,\nThis is a gentle reminder regarding the academy fee for *${formattedMonth}*.\n\n_Please ignore this message if you have already paid._\n\nThank you!\n*UCK Chess Academy Management*`;
+      await whatsappService.sendReminder(phone, reminderMsg);
       successCount++;
       successList.push({ studentId, name, phone });
     } catch (err) {
