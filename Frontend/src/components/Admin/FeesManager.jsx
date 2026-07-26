@@ -161,6 +161,30 @@ const FeesManager = () => {
     }
   };
 
+  const handleMarkAllPaid = async () => {
+    if (!window.confirm(`Are you sure you want to mark ALL active students as PAID for ${getMonthName(selectedMonth)}?`)) {
+      return;
+    }
+
+    try {
+      const response = await api.post('/fees/mark-all-paid', { month: selectedMonth });
+      alert(response.data.message || "All active students marked as Paid successfully!");
+      
+      // Local state bulk update
+      const newFees = { ...fees };
+      approvedStudents.forEach(s => {
+        if (!s.isPaused) {
+          if (!newFees[s.studentId]) newFees[s.studentId] = {};
+          newFees[s.studentId][selectedMonth] = 'Paid';
+        }
+      });
+      setFees(newFees);
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.error || "Failed to mark all as paid.");
+    }
+  };
+
   const handleFeeChange = async (studentId, status) => {
     try {
       const payload = {
@@ -626,6 +650,39 @@ const FeesManager = () => {
             <option value="Paid" style={{ background: '#15151a', color: '#fff' }}>Paid</option>
             <option value="Unpaid" style={{ background: '#15151a', color: '#fff' }}>Unpaid</option>
           </select>
+        </div>
+
+        {/* Bulk Mark All Paid Button */}
+        <div className="form-group" style={{ minWidth: '180px' }}>
+          <label>Bulk Actions</label>
+          <button 
+            onClick={handleMarkAllPaid}
+            style={{
+              width: '100%',
+              padding: '0.6rem 1rem',
+              borderRadius: '8px',
+              border: '1px solid #d4af37',
+              background: 'rgba(212, 175, 55, 0.15)',
+              color: '#d4af37',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              fontSize: '0.85rem',
+              transition: 'all 0.3s ease',
+              height: '42px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = 'rgba(212, 175, 55, 0.25)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = 'rgba(212, 175, 55, 0.15)';
+            }}
+          >
+            ✅ Mark All as Paid
+          </button>
         </div>
 
         {/* Send Reminders Trigger Button */}

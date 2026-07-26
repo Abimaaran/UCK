@@ -88,6 +88,44 @@ exports.update = async (req, res) => {
   } catch (error) { res.status(500).json({ error: error.message }); }
 };
 
+exports.markAllAsPaid = async (req, res) => {
+  try {
+    const { month } = req.body;
+    if (!month) return res.status(400).json({ error: 'Month parameter is required' });
+
+    // Fetch all active approved students
+    const { data: approvedStudents, error: studErr } = await supabase
+      .from('students')
+      .select('student_id')
+      .eq('status', 'Approved')
+      .eq('is_paused', false);
+
+    if (studErr) throw studErr;
+
+    const studentIds = (approvedStudents || []).map(s => s.student_id);
+    if (studentIds.length === 0) {
+      return res.status(200).json({ message: 'No active students to update', count: 0 });
+    }
+
+    // Upsert fee records for all approved students as 'Paid'
+    const records = studentIds.map(sid => ({
+      student_id: sid,
+      month: month,
+      status: 'Paid'
+    }));
+
+    const { error: upsertErr } = await supabase
+      .from('fees')
+      .upsert(records, { onConflict: 'student_id,month' });
+
+    if (upsertErr) throw upsertErr;
+
+    res.status(200).json({ success: true, message: `Marked all ${studentIds.length} students as Paid for ${month}.`, count: studentIds.length });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 const processRemindersInBackground = async (unpaidStudents, month, runType = 'Manual') => {
   console.log(`\n🤖 WhatsApp: Starting background reminders for ${unpaidStudents.length} students for month ${month} (${runType})`);
   let successCount = 0;

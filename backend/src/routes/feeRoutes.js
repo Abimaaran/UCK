@@ -8,7 +8,8 @@ router.get('/:studentId', controller.getByStudent);
 router.post('/', controller.create);
 router.put('/:studentId', controller.update);
 
-// Automated WhatsApp reminders
+// Bulk Fee Updates & Automated WhatsApp reminders
+router.post('/mark-all-paid', verifyAdmin, controller.markAllAsPaid);
 router.post('/send-reminders', verifyAdmin, controller.sendWhatsAppReminders);
 router.get('/reminder-status/latest', verifyAdmin, controller.getReminderStatus);
 router.post('/cron-send-reminders', controller.cronSendWhatsAppReminders);
