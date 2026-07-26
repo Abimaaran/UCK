@@ -130,14 +130,6 @@ const CoachesSection = () => {
                 </div>
 
                 <div className="modal-badges">
-                  <div className="modal-fide-badge">
-                    <span className="modal-fide-icon">♛</span>
-                    <div>
-                      <div className="fide-label">FIDE ID</div>
-                      <div className="fide-value">{(selectedCoach.fideId || '').includes(' ') ? selectedCoach.fideId.split(' ')[1] : (selectedCoach.fideId || 'N/A')}</div>
-                    </div>
-                  </div>
-
                   <div className="modal-rating-badge">
                     <span className="modal-rating-icon">⭐</span>
                     <div>

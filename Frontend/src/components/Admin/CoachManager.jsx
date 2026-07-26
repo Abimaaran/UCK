@@ -93,10 +93,6 @@ const CoachManager = ({ coaches, setCoaches }) => {
               <input name="specialization" defaultValue={editingCoach?.specialization} required />
             </div>
             <div className="form-group">
-              <label>FIDE ID</label>
-              <input name="fideId" defaultValue={editingCoach?.fideId} />
-            </div>
-             <div className="form-group">
               <label>Rating</label>
               <input name="rating" defaultValue={editingCoach?.rating} />
             </div>
