@@ -342,6 +342,40 @@ const FeesManager = () => {
                 Disconnect Session
               </button>
             )}
+
+            {waStatus !== 'CONNECTED' && waStatus !== 'QR_READY' && (
+              <button
+                onClick={async () => {
+                  try {
+                    setWaStatus('LOADING');
+                    const res = await api.get('/whatsapp/status');
+                    setWaStatus(res.data.status);
+                    if (res.data.status === 'QR_READY') {
+                      const qrRes = await api.get('/whatsapp/qr');
+                      setWaQr(qrRes.data.qr);
+                    }
+                  } catch (e) {
+                    setWaStatus('DISCONNECTED');
+                    alert('Preparing WhatsApp QR code... If this takes time, please refresh in 30 seconds.');
+                  }
+                }}
+                style={{
+                  background: 'rgba(255, 193, 7, 0.15)',
+                  border: '1px solid #FFC107',
+                  color: '#FFC107',
+                  padding: '6px 14px',
+                  borderRadius: '8px',
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                📲 Connect WhatsApp QR
+              </button>
+            )}
           </div>
         </div>
 
