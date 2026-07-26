@@ -20,15 +20,16 @@ const CoachManager = ({ coaches, setCoaches }) => {
   const handleSave = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
+    const rawAchievements = formData.get('achievements') || '';
     const coachData = {
       name: formData.get('name'),
-      title: formData.get('title'),
-      experience: formData.get('experience'),
-      specialization: formData.get('specialization'),
-      fideId: formData.get('fideId'),
-      rating: formData.get('rating'),
-       bio: formData.get('bio'),
-      achievements: formData.get('achievements').split(',').map(a => a.trim()),
+      title: formData.get('title') || '',
+      experience: formData.get('experience') || '',
+      specialization: formData.get('specialization') || '',
+      fideId: formData.get('fideId') || '',
+      rating: formData.get('rating') || '',
+      bio: formData.get('bio') || '',
+      achievements: rawAchievements ? rawAchievements.split(',').map(a => a.trim()).filter(Boolean) : [],
       chessPiece: '♔',
       photo: photoPreview || editingCoach?.photo || '',
       colorGradient: editingCoach ? editingCoach.colorGradient : 'linear-gradient(135deg, #00BFFF, #0A74DA)'
@@ -77,28 +78,28 @@ const CoachManager = ({ coaches, setCoaches }) => {
         <form onSubmit={handleSave} className="admin-form">
           <div className="form-grid">
             <div className="form-group">
-              <label>Name</label>
+              <label>Name *</label>
               <input name="name" defaultValue={editingCoach?.name} required />
             </div>
             <div className="form-group">
               <label>Title</label>
-              <input name="title" defaultValue={editingCoach?.title} required />
+              <input name="title" defaultValue={editingCoach?.title} />
             </div>
             <div className="form-group">
               <label>Experience</label>
-              <input name="experience" defaultValue={editingCoach?.experience} required />
+              <input name="experience" defaultValue={editingCoach?.experience} />
             </div>
             <div className="form-group">
               <label>Specialization</label>
-              <input name="specialization" defaultValue={editingCoach?.specialization} required />
+              <input name="specialization" defaultValue={editingCoach?.specialization} />
             </div>
             <div className="form-group">
               <label>Rating</label>
               <input name="rating" defaultValue={editingCoach?.rating} />
             </div>
             <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-              <label>Coach Photo</label>
-              <input type="file" accept="image/*" onChange={handlePhotoChange} style={{ border: '1px dashed #d4af37', padding: '1rem' }} />
+              <label>Coach Photo *</label>
+              <input type="file" accept="image/*" onChange={handlePhotoChange} required={!editingCoach && !photoPreview} style={{ border: '1px dashed #d4af37', padding: '1rem' }} />
               {(photoPreview || editingCoach?.photo) && (
                 <div style={{ marginTop: '0.5rem' }}>
                   <img src={photoPreview || editingCoach.photo} alt="Preview" style={{ width: '80px', height: '80px', borderRadius: '8px', objectFit: 'contain', background: 'rgba(255,255,255,0.05)', border: '1px solid #d4af37' }} />
@@ -112,7 +113,7 @@ const CoachManager = ({ coaches, setCoaches }) => {
           </div>
           <div className="form-group">
             <label>Achievements (comma separated)</label>
-            <input name="achievements" defaultValue={editingCoach?.achievements.join(', ')} />
+            <input name="achievements" defaultValue={Array.isArray(editingCoach?.achievements) ? editingCoach.achievements.join(', ') : ''} />
           </div>
            <div className="form-actions">
             <button type="submit" className="add-btn">Save Coach</button>
