@@ -82,15 +82,15 @@ const CoachesSection = () => {
                     <span>{coach.specialization}</span>
                   </div>
 
-                  <p className="coach-bio-preview">{coach.bio.substring(0, 80)}...</p>
+                  <p className="coach-bio-preview">{(coach.bio || '').substring(0, 80)}{(coach.bio || '').length > 80 ? '...' : ''}</p>
 
                   <div className="achievements-preview">
-                    {coach.achievements.slice(0, 2).map((achievement, idx) => (
+                    {Array.isArray(coach.achievements) && coach.achievements.slice(0, 2).map((achievement, idx) => (
                       <span key={idx} className="achievement-tag">
                         {achievement}
                       </span>
                     ))}
-                    {coach.achievements.length > 2 && (
+                    {Array.isArray(coach.achievements) && coach.achievements.length > 2 && (
                       <span className="achievement-more">+{coach.achievements.length - 2} more</span>
                     )}
                   </div>
