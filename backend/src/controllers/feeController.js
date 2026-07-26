@@ -165,9 +165,9 @@ const processRemindersInBackground = async (unpaidStudents, month, runType = 'Ma
 
     try {
       if (i > 0) {
-        // 30 second delay between messages for WhatsApp Web stability
-        console.log(`⏳ WhatsApp: Waiting 30s before next message...`);
-        await new Promise(resolve => setTimeout(resolve, 30000));
+        // 10 second delay between messages
+        console.log(`⏳ WhatsApp: Waiting 10s before next message...`);
+        await new Promise(resolve => setTimeout(resolve, 10000));
       }
       const formattedMonth = getMonthName(month);
       const reminderMsg = `♟️ *UCK Chess Academy*\n\nDear Parent/Student *${name}*,\nThis is a gentle reminder regarding the academy fee for *${formattedMonth}*.\n\n_Please ignore this message if you have already paid._\n\nThank you!\n*UCK Chess Academy Management*`;
