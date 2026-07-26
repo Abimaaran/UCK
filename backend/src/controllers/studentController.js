@@ -127,14 +127,26 @@ exports.update = async (req, res) => {
     if (body.fideId !== undefined) updatePayload.fide_id = body.fideId;
     if (body.fideRating !== undefined) updatePayload.fide_rating = body.fideRating;
 
-    const { data: updated, error } = await supabase
+    let { data: updated, error } = await supabase
       .from('students')
       .update(updatePayload)
       .eq('id', id)
       .select()
-      .single();
+      .maybeSingle();
+
+    if (!updated) {
+      const { data: updatedByStudentId, error: err2 } = await supabase
+        .from('students')
+        .update(updatePayload)
+        .eq('student_id', id)
+        .select()
+        .maybeSingle();
+      if (err2) throw err2;
+      updated = updatedByStudentId;
+    }
 
     if (error) throw error;
+    if (!updated) return res.status(404).json({ error: 'Student record not found.' });
 
     res.status(200).json({ id: updated.id, ...updated });
   } catch (error) {
