@@ -89,8 +89,12 @@ const sendReminder = async (phone, message) => {
   }
 
   let formattedNumber = phone.replace(/\D/g, '');
-  if (!formattedNumber.startsWith('91') && formattedNumber.length === 10) {
-    formattedNumber = '94' + formattedNumber; // Default country prefix if needed
+  
+  // Handle Sri Lanka phone numbers (e.g. 0771234567 -> 94771234567, or 771234567 -> 94771234567)
+  if (formattedNumber.startsWith('0') && formattedNumber.length === 10) {
+    formattedNumber = '94' + formattedNumber.slice(1);
+  } else if (formattedNumber.length === 9) {
+    formattedNumber = '94' + formattedNumber;
   }
   
   const chatId = `${formattedNumber}@c.us`;
