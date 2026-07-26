@@ -12,13 +12,13 @@ exports.getAll = async (req, res) => {
     const formatted = (data || []).map(c => ({
       id: c.id,
       name: c.name,
-      title: c.title,
+      title: c.title || '',
       fideRating: c.fide_rating || '',
       rating: c.fide_rating || '',
       experience: c.experience || '',
       bio: c.bio || '',
-      specialization: c.title || 'Chess Coach',
-      achievements: typeof c.bio === 'string' ? [c.bio] : [],
+      specialization: c.specialization || '',
+      achievements: typeof c.bio === 'string' && c.bio ? [c.bio] : [],
       imageUrl: c.image_url,
       photo: c.image_url,
       createdAt: c.created_at

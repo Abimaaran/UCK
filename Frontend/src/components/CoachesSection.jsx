@@ -67,15 +67,19 @@ const CoachesSection = () => {
                     </div>
                   </div>
 
-                  <div className="coach-title-container">
-                    <span className="coach-title">{coach.title}</span>
-                    <span className="experience-badge">{coach.experience}</span>
-                  </div>
+                  {(coach.title || coach.experience) && (
+                    <div className="coach-title-container">
+                      {coach.title && <span className="coach-title">{coach.title}</span>}
+                      {coach.experience && <span className="experience-badge">{coach.experience}</span>}
+                    </div>
+                  )}
 
-                  <div className="specialization-tag">
-                    <span className="tag-icon">🎯</span>
-                    <span>{coach.specialization}</span>
-                  </div>
+                  {coach.specialization && coach.specialization !== coach.title && (
+                    <div className="specialization-tag">
+                      <span className="tag-icon">🎯</span>
+                      <span>{coach.specialization}</span>
+                    </div>
+                  )}
 
                   <p className="coach-bio-preview">{(coach.bio || '').substring(0, 80)}{(coach.bio || '').length > 80 ? '...' : ''}</p>
 
