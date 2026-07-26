@@ -56,11 +56,6 @@ const CoachesSection = () => {
                       style={coach.photo ? { objectFit: 'contain', backgroundColor: 'rgba(0,0,0,0.2)' } : {}}
                     />
                   </div>
-
-                  <div className="fide-badge">
-                    <span className="fide-icon">♛</span>
-                    <span className="fide-text">FIDE ID: {coach.fideId}</span>
-                  </div>
                 </div>
 
                 <div className="coach-info">
