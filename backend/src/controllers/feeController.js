@@ -232,6 +232,19 @@ exports.getReminderStatus = async (req, res) => {
       .limit(1);
 
     if (error || !data || data.length === 0) return res.status(200).json(null);
-    res.status(200).json(data[0]);
+    const log = data[0];
+    res.status(200).json({
+      id: log.id,
+      month: log.month,
+      runType: log.run_type,
+      status: log.status,
+      startedAt: log.started_at,
+      finishedAt: log.finished_at,
+      totalRecipients: log.total_recipients || 0,
+      successCount: log.success_count || 0,
+      failCount: log.fail_count || 0,
+      successList: log.success_list || [],
+      failList: log.fail_list || []
+    });
   } catch (error) { res.status(500).json({ error: error.message }); }
 };
