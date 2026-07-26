@@ -17,6 +17,7 @@ exports.getAll = async (req, res) => {
       experience: c.experience,
       bio: c.bio,
       imageUrl: c.image_url,
+      photo: c.image_url,
       createdAt: c.created_at
     }));
 
