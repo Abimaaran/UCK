@@ -126,7 +126,11 @@ const processRemindersInBackground = async (unpaidStudents, month, runType = 'Ma
     }
 
     try {
-      if (i > 0) await new Promise(resolve => setTimeout(resolve, 10000));
+      if (i > 0) {
+        // Random safe delay between 12 to 16 seconds to prevent WhatsApp spam block
+        const safeDelay = Math.floor(Math.random() * 4000) + 12000;
+        await new Promise(resolve => setTimeout(resolve, safeDelay));
+      }
       await whatsappService.sendReminder(phone, `Dear Parent/Student ${name}, this is a gentle reminder regarding UCK Chess Academy fees for ${month}.`);
       successCount++;
       successList.push({ studentId, name, phone });
