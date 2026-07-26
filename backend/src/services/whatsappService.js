@@ -10,8 +10,10 @@ let connectionStatus = 'DISCONNECTED'; // 'DISCONNECTED' | 'INITIALIZING' | 'QR_
 const initialize = () => {
   if (client) return;
 
-  connectionStatus = 'INITIALIZING';
-  console.log('\n🤖 WhatsApp: Starting client initialization...');
+  if (process.env.DISABLE_WHATSAPP === 'true') {
+    console.log('🤖 WhatsApp: Client initialization disabled by env variable.');
+    return;
+  }
 
   const puppeteerOpts = {
     headless: true,
@@ -69,10 +71,6 @@ const initialize = () => {
     console.error('⚠️ WhatsApp: Client was disconnected. Reason:', reason);
     connectionStatus = 'DISCONNECTED';
     qrCodeData = null;
-    
-    // Auto-reinitialize on disconnect to get a new QR
-    console.log('🤖 WhatsApp: Re-initializing client in 5 seconds...');
-    setTimeout(initialize, 5000);
   });
 
   client.initialize().catch(err => {
