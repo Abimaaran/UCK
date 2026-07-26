@@ -348,15 +348,35 @@ const FeesManager = () => {
                 onClick={async () => {
                   try {
                     setWaStatus('LOADING');
-                    const res = await api.get('/whatsapp/status');
-                    setWaStatus(res.data.status);
-                    if (res.data.status === 'QR_READY') {
-                      const qrRes = await api.get('/whatsapp/qr');
-                      setWaQr(qrRes.data.qr);
+                    let attempts = 0;
+                    const pollQr = async () => {
+                      try {
+                        const res = await api.get('/whatsapp/status');
+                        setWaStatus(res.data.status);
+                        if (res.data.status === 'QR_READY') {
+                          const qrRes = await api.get('/whatsapp/qr');
+                          setWaQr(qrRes.data.qr);
+                          return true;
+                        }
+                        return false;
+                      } catch (e) {
+                        return false;
+                      }
+                    };
+
+                    const isReady = await pollQr();
+                    if (!isReady) {
+                      const interval = setInterval(async () => {
+                        attempts++;
+                        const ready = await pollQr();
+                        if (ready || attempts > 15) {
+                          clearInterval(interval);
+                          if (!ready) setWaStatus('DISCONNECTED');
+                        }
+                      }, 3000);
                     }
                   } catch (e) {
                     setWaStatus('DISCONNECTED');
-                    alert('Preparing WhatsApp QR code... If this takes time, please refresh in 30 seconds.');
                   }
                 }}
                 style={{
