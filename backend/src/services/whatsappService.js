@@ -101,19 +101,27 @@ const sendReminder = async (phone, message) => {
     formattedNumber = '94' + formattedNumber;
   }
   
-  try {
-    const numberDetails = await client.getNumberId(formattedNumber);
-    if (numberDetails && numberDetails._serialized) {
-      await client.sendMessage(numberDetails._serialized, message);
-    } else {
-      const chatId = `${formattedNumber}@c.us`;
-      await client.sendMessage(chatId, message);
+  const chatId = `${formattedNumber}@c.us`;
+  
+  // Create a 15-second promise timeout
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('WhatsApp message dispatch timed out (15s)')), 15000);
+  });
+
+  const sendPromise = async () => {
+    try {
+      const numberDetails = await client.getNumberId(formattedNumber);
+      if (numberDetails && numberDetails._serialized) {
+        return await client.sendMessage(numberDetails._serialized, message);
+      }
+    } catch (e) {
+      console.warn(`⚠️ WhatsApp getNumberId check failed for ${formattedNumber}, sending directly.`);
     }
-  } catch (err) {
-    // Fallback direct send if getNumberId fails
-    const chatId = `${formattedNumber}@c.us`;
-    await client.sendMessage(chatId, message);
-  }
+    return await client.sendMessage(chatId, message);
+  };
+
+  await Promise.race([sendPromise(), timeoutPromise]);
+  console.log(`✅ WhatsApp: Reminder successfully sent to ${formattedNumber}`);
 };
 
 const logout = async () => {
