@@ -24,12 +24,13 @@ const initialize = () => {
             connectionStatus = 'CONNECTED';
             qrCodeData = null;
         }
-        if (statusSession === 'notLogged' || statusSession === 'browserClose' || statusSession === 'desconnectedMobile') {
+        if (statusSession === 'notLogged' || statusSession === 'browserClose' || statusSession === 'desconnectedMobile' || statusSession === 'autocloseCalled') {
             connectionStatus = 'DISCONNECTED';
             qrCodeData = null;
         }
       },
       headless: true,
+      autoClose: 0, // Disable 60-second auto close
       puppeteerOptions: {
         userDataDir: './.wppconnect_auth',
         args: [
