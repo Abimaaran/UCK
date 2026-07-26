@@ -177,6 +177,44 @@ const FeesManager = () => {
       console.error("Failed to update fees", err);
       alert("Could not update fees.");
     }
+  const handleMarkAllPaid = async () => {
+    const activeUnpaidStudents = approvedStudents.filter(s => {
+      const status = fees[s.studentId]?.[selectedMonth] || 'Not Paid';
+      return status !== 'Paid' && !s.isPaused;
+    });
+
+    if (activeUnpaidStudents.length === 0) {
+      alert("All active approved students have already paid for this month!");
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to mark all ${activeUnpaidStudents.length} unpaid active students as PAID for ${selectedMonth}?`)) {
+      return;
+    }
+
+    try {
+      // Update DB sequentially or in parallel
+      await Promise.all(
+        activeUnpaidStudents.map(student =>
+          updateItem('fees', student.studentId, {
+            month: selectedMonth,
+            status: 'Paid'
+          })
+        )
+      );
+
+      // Update local state
+      const newFees = { ...fees };
+      activeUnpaidStudents.forEach(student => {
+        if (!newFees[student.studentId]) newFees[student.studentId] = {};
+        newFees[student.studentId][selectedMonth] = 'Paid';
+      });
+      setFees(newFees);
+      alert(`Successfully marked ${activeUnpaidStudents.length} students as PAID for ${selectedMonth}!`);
+    } catch (err) {
+      console.error("Failed to mark all as paid", err);
+      alert("Failed to mark all as paid. Please try again.");
+    }
   };
 
   const getMonthName = (monthStr) => {
@@ -629,7 +667,7 @@ const FeesManager = () => {
         </div>
 
         {/* Send Reminders Trigger Button */}
-        <div className="form-group" style={{ minWidth: '220px' }}>
+        <div className="form-group" style={{ minWidth: '180px' }}>
           <label>WhatsApp Automation</label>
           <button 
             onClick={handleSendReminders}
@@ -663,6 +701,35 @@ const FeesManager = () => {
             }}
           >
             {sendingReminders ? '⏳ Sending...' : '🚀 Send Reminders'}
+          </button>
+        </div>
+
+        {/* Mark All Paid Bulk Action Button */}
+        <div className="form-group" style={{ minWidth: '160px' }}>
+          <label>Bulk Actions</label>
+          <button 
+            onClick={handleMarkAllPaid}
+            style={{
+              width: '100%',
+              padding: '0.6rem 1rem',
+              borderRadius: '8px',
+              border: '1px solid #28a745',
+              background: 'rgba(40, 167, 69, 0.15)',
+              color: '#28a745',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              fontSize: '0.85rem',
+              transition: 'all 0.3s ease',
+              height: '42px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(40, 167, 69, 0.3)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(40, 167, 69, 0.15)'}
+          >
+            ✅ Mark All Paid
           </button>
         </div>
       </div>
