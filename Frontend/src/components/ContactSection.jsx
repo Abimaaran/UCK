@@ -131,7 +131,7 @@ const ContactSection = () => {
                 <div className="hours-grid">
                   <div className="hours-item">
                     <span className="hours-day">Tuesday & Friday</span>
-                    <span className="hours-time">3:00 PM - 7:00 PM</span>
+                    <span className="hours-time">4:00 PM - 7:00 PM</span>
                   </div>
                   <div className="hours-item">
                     <span className="hours-day">Saturday & Sunday</span>
