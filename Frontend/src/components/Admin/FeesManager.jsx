@@ -443,6 +443,32 @@ const FeesManager = () => {
             <span style={{ color: '#000', fontSize: '0.85rem', marginTop: '0.75rem', fontWeight: 'bold', textAlign: 'center' }}>
               Scan this QR Code with WhatsApp Link Device to connect.
             </span>
+            <button
+              onClick={async () => {
+                try {
+                  setWaStatus('LOADING');
+                  setWaQr(null);
+                  await api.post('/whatsapp/logout');
+                  const res = await api.get('/whatsapp/status');
+                  setWaStatus(res.data.status);
+                } catch (e) {
+                  alert('Failed to generate new QR. Please try again.');
+                }
+              }}
+              style={{
+                marginTop: '1rem',
+                background: '#15151a',
+                color: '#FFC107',
+                border: '1px solid #FFC107',
+                padding: '6px 14px',
+                borderRadius: '6px',
+                fontSize: '0.8rem',
+                fontWeight: 'bold',
+                cursor: 'pointer'
+              }}
+            >
+              🔄 Generate New QR Code
+            </button>
           </div>
         )}
 
