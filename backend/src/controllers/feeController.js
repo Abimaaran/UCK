@@ -180,12 +180,16 @@ const processRemindersInBackground = async (unpaidStudents, month, runType = 'Ma
     }
 
     if (logId) {
-      await supabase.from('reminder_logs').update({
-        success_count: successCount,
-        fail_count: failCount,
-        success_list: successList,
-        fail_list: failList
-      }).eq('id', logId);
+      try {
+        await supabase.from('reminder_logs').update({
+          success_count: successCount,
+          fail_count: failCount,
+          success_list: successList,
+          fail_list: failList
+        }).eq('id', logId);
+      } catch (uErr) {
+        console.error('Failed to update log step:', uErr.message);
+      }
     }
   }
 
