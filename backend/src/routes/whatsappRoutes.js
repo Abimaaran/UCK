@@ -5,6 +5,10 @@ const { verifyAdmin } = require('../middleware/authMiddleware');
 
 // Get connection status (Protected to Admin)
 router.get('/status', verifyAdmin, (req, res) => {
+  const currentStatus = whatsappService.getStatus();
+  if (currentStatus === 'DISCONNECTED') {
+    whatsappService.initialize();
+  }
   res.status(200).json({ status: whatsappService.getStatus() });
 });
 
