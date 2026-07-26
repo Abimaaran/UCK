@@ -681,6 +681,15 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
         return;
       }
       await updateItem('students', id, editForm);
+      
+      // Instantly update local UI state
+      setApproved(prev => prev.map(s => {
+        if ((s.id || s._id || s.studentId) === id) {
+          return { ...s, ...editForm };
+        }
+        return s;
+      }));
+
       setEditingId(null);
       alert("✅ Student details updated successfully!");
       onRefresh();
