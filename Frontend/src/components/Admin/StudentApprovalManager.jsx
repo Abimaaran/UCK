@@ -682,6 +682,7 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
       }
       await updateItem('students', id, editForm);
       setEditingId(null);
+      alert("✅ Student details updated successfully!");
       onRefresh();
     } catch (err) {
       console.error("Failed to save edit:", err);
