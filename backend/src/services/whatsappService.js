@@ -23,6 +23,8 @@ const initialize = () => {
       '--no-zygote',
       '--disable-gpu',
       '--disable-web-security',
+      '--disable-features=IsolateOrigins,site-per-process',
+      '--disable-site-isolation-trials',
       '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
     ]
   };
@@ -37,8 +39,7 @@ const initialize = () => {
         dataPath: './.wwebjs_auth'
       }),
       webVersionCache: {
-        type: 'remote',
-        remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1014587000-alpha.html'
+        type: 'none'
       },
       puppeteer: puppeteerOpts
     });
@@ -104,24 +105,15 @@ const sendReminder = async (phone, message) => {
   
   const chatId = `${formattedNumber}@c.us`;
   
-  // Create a 15-second promise timeout
+  // 30-second timeout to prevent infinite hanging
   const timeoutPromise = new Promise((_, reject) => {
-    setTimeout(() => reject(new Error('WhatsApp message dispatch timed out (15s)')), 15000);
+    setTimeout(() => reject(new Error('WhatsApp message dispatch timed out (30s)')), 30000);
   });
 
-  const sendPromise = async () => {
-    try {
-      const numberDetails = await client.getNumberId(formattedNumber);
-      if (numberDetails && numberDetails._serialized) {
-        return await client.sendMessage(numberDetails._serialized, message);
-      }
-    } catch (e) {
-      console.warn(`⚠️ WhatsApp getNumberId check failed for ${formattedNumber}, sending directly.`);
-    }
-    return await client.sendMessage(chatId, message);
-  };
+  // Direct send — skip getNumberId() which triggers detached frame errors
+  const sendPromise = client.sendMessage(chatId, message);
 
-  await Promise.race([sendPromise(), timeoutPromise]);
+  await Promise.race([sendPromise, timeoutPromise]);
   console.log(`✅ WhatsApp: Reminder successfully sent to ${formattedNumber}`);
 };
 
