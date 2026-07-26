@@ -13,6 +13,7 @@ exports.getAll = async (req, res) => {
       category: item.category || '',
       date: item.date || '',
       description: item.description || '',
+      photo: item.photo || item.image_url || item.imageUrl || null,
       createdAt: item.created_at
     }));
 
