@@ -670,7 +670,12 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
   };
 
   const handleEditChange = (e) => {
-    setEditForm({ ...editForm, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === 'phoneNumber' || name === 'phone') {
+      setEditForm({ ...editForm, phoneNumber: value, phone: value });
+    } else {
+      setEditForm({ ...editForm, [name]: value });
+    }
   };
 
   const saveEdit = async () => {
@@ -682,10 +687,18 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
       }
       await updateItem('students', id, editForm);
       
+      const newPhone = editForm.phoneNumber || editForm.phone;
+
       // Instantly update local UI state
       setApproved(prev => prev.map(s => {
         if ((s.id || s._id || s.studentId) === id) {
-          return { ...s, ...editForm };
+          return { 
+            ...s, 
+            ...editForm,
+            phone_number: newPhone,
+            phone: newPhone,
+            phoneNumber: newPhone 
+          };
         }
         return s;
       }));
