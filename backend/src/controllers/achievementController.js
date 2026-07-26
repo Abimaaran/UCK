@@ -4,7 +4,19 @@ exports.getAll = async (req, res) => {
   try {
     const { data, error } = await supabase.from('achievements').select('*').order('created_at', { ascending: false });
     if (error) throw error;
-    res.status(200).json(data || []);
+
+    const formatted = (data || []).map(item => ({
+      id: item.id,
+      title: item.title,
+      studentName: item.student_name || item.studentName || '',
+      student_name: item.student_name || item.studentName || '',
+      category: item.category || '',
+      date: item.date || '',
+      description: item.description || '',
+      createdAt: item.created_at
+    }));
+
+    res.status(200).json(formatted);
   } catch (error) { res.status(500).json({ error: error.message }); }
 };
 
