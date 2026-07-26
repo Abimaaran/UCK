@@ -116,11 +116,16 @@ exports.update = async (req, res) => {
     if (body.studentName !== undefined || body.name !== undefined) updatePayload.student_name = body.studentName || body.name;
     if (body.email !== undefined) updatePayload.email = body.email;
     if (body.phone !== undefined || body.phoneNumber !== undefined) updatePayload.phone_number = body.phone || body.phoneNumber;
-    if (body.dob !== undefined) updatePayload.dob = body.dob;
-    if (body.level !== undefined) updatePayload.level = body.level;
+    if (body.dob !== undefined || body.dateOfBirth !== undefined) updatePayload.dob = body.dob || body.dateOfBirth;
+    if (body.level !== undefined || body.chessExperience !== undefined) updatePayload.level = body.level || body.chessExperience;
     if (body.status !== undefined) updatePayload.status = body.status;
     if (body.isPaused !== undefined) updatePayload.is_paused = body.isPaused;
     if (body.approvedDate !== undefined) updatePayload.approved_date = body.approvedDate;
+    if (body.school !== undefined) updatePayload.school = body.school;
+    if (body.address !== undefined) updatePayload.address = body.address;
+    if (body.parentName !== undefined) updatePayload.parent_name = body.parentName;
+    if (body.fideId !== undefined) updatePayload.fide_id = body.fideId;
+    if (body.fideRating !== undefined) updatePayload.fide_rating = body.fideRating;
 
     const { data: updated, error } = await supabase
       .from('students')

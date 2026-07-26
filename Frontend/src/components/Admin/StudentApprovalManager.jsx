@@ -653,7 +653,19 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
 
   const startEdit = (student) => {
     setEditingId(student.id || student._id);
-    setEditForm({ ...student });
+    setEditForm({ 
+      ...student,
+      studentName: student.studentName || student.name || '',
+      phoneNumber: student.phoneNumber || student.phone || student.whatsappNo || '',
+      dateOfBirth: student.dateOfBirth || student.dob || '',
+      chessExperience: student.chessExperience || student.level || 'Beginner level',
+      school: student.school || '',
+      parentName: student.parentName || '',
+      parentOccupation: student.parentOccupation || '',
+      address: student.address || '',
+      fideId: student.fideId || '',
+      fideRating: student.fideRating || ''
+    });
   };
 
   const handleEditChange = (e) => {
@@ -667,7 +679,8 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
       setEditingId(null);
       onRefresh();
     } catch (err) {
-      console.error(err);
+      console.error("Failed to save edit:", err);
+      alert("Failed to update student details.");
     }
   };
 
@@ -797,6 +810,7 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
               <th>Student ID</th>
               <th>Name</th>
               <th>Email</th>
+              <th>Phone Number</th>
               <th>DOB</th>
               <th>Level</th>
               <th>Approved</th>
@@ -806,7 +820,7 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
           <tbody>
             {sortedApproved.length === 0 ? (
               <tr>
-                <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
+                <td colSpan="8" style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
                   No approved students matching criteria
                 </td>
               </tr>
@@ -847,6 +861,11 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
                     {editingId === (s.id || s._id) ? (
                       <input name="email" value={editForm.email} onChange={handleEditChange} style={miniInput} />
                     ) : s.email}
+                  </td>
+                  <td>
+                    {editingId === (s.id || s._id) ? (
+                      <input name="phoneNumber" value={editForm.phoneNumber || editForm.phone} onChange={handleEditChange} style={{ ...miniInput, color: '#FFC107', fontWeight: 'bold' }} />
+                    ) : <span style={{ color: '#FFC107', fontWeight: '600' }}>{s.phoneNumber || s.phone || s.whatsappNo || 'N/A'}</span>}
                   </td>
                   <td>
                     {editingId === (s.id || s._id) ? (
