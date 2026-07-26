@@ -2,7 +2,7 @@
 FROM node:22-alpine
 
 # Install Chromium and dependencies for Puppeteer/WhatsApp-Web.js
-RUN apk add --no-co-cache \
+RUN apk add --no-cache \
       chromium \
       nss \
       freetype \
