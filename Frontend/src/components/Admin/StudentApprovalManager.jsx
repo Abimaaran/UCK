@@ -652,7 +652,8 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
   };
 
   const startEdit = (student) => {
-    setEditingId(student.id || student._id);
+    const targetId = student.id || student._id || student.studentId;
+    setEditingId(targetId);
     setEditForm({ 
       ...student,
       studentName: student.studentName || student.name || '',
@@ -675,12 +676,16 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
   const saveEdit = async () => {
     try {
       const id = editingId;
+      if (!id) {
+        alert("Cannot update student: Student ID is missing.");
+        return;
+      }
       await updateItem('students', id, editForm);
       setEditingId(null);
       onRefresh();
     } catch (err) {
       console.error("Failed to save edit:", err);
-      alert("Failed to update student details.");
+      alert(err.response?.data?.error || err.message || "Failed to update student details.");
     }
   };
 
@@ -825,91 +830,95 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
                 </td>
               </tr>
             ) : (
-              sortedApproved.map(s => (
-                <tr key={s.id || s._id || s.studentId}>
-                  <td>
-                    {editingId === (s.id || s._id) ? (
-                      <input name="studentId" value={editForm.studentId} onChange={handleEditChange} style={{ ...miniInput, fontWeight: '700', color: '#d4af37' }} />
-                    ) : (
-                      <strong style={{ color: '#d4af37' }}>#{highlightMatch(s.studentId, searchTerm)}</strong>
-                    )}
-                  </td>
-                  <td>
-                    {editingId === (s.id || s._id) ? (
-                      <input name="studentName" value={editForm.studentName || editForm.name} onChange={handleEditChange} style={miniInput} />
-                    ) : (
-                      <span>
-                        {highlightMatch(s.studentName || s.name || 'N/A', searchTerm)}
-                        {s.isPaused && (
-                          <span style={{ 
-                            marginLeft: '8px', 
-                            fontSize: '0.7rem', 
-                            background: 'rgba(255, 107, 107, 0.15)', 
-                            color: '#ff6b6b', 
-                            padding: '2px 6px', 
-                            borderRadius: '4px',
-                            fontWeight: 'bold',
-                            border: '1px solid rgba(255, 107, 107, 0.3)'
-                          }}>
-                            ⏸️ Paused
-                          </span>
-                        )}
-                      </span>
-                    )}
-                  </td>
-                  <td>
-                    {editingId === (s.id || s._id) ? (
-                      <input name="email" value={editForm.email} onChange={handleEditChange} style={miniInput} />
-                    ) : s.email}
-                  </td>
-                  <td>
-                    {editingId === (s.id || s._id) ? (
-                      <input name="phoneNumber" value={editForm.phoneNumber || editForm.phone} onChange={handleEditChange} style={{ ...miniInput, color: '#FFC107', fontWeight: 'bold' }} />
-                    ) : <span style={{ color: '#FFC107', fontWeight: '600' }}>{s.phoneNumber || s.phone || s.whatsappNo || 'N/A'}</span>}
-                  </td>
-                  <td>
-                    {editingId === (s.id || s._id) ? (
-                      <input name="dob" value={editForm.dateOfBirth || editForm.dob} onChange={handleEditChange} style={miniInput} />
-                    ) : <span style={{ fontFamily: 'monospace', color: '#a0e4a0' }}>{s.dateOfBirth || s.dob || 'N/A'}</span>}
-                  </td>
-                  <td>
-                    {editingId === (s.id || s._id) ? (
-                      <select name="chessExperience" value={editForm.chessExperience || editForm.level} onChange={handleEditChange} style={miniInput}>
-                        <option value="Beginner level" style={{ background: '#15151a', color: '#fff' }}>Beginner</option>
-                        <option value="Intermediate level" style={{ background: '#15151a', color: '#fff' }}>Intermediate</option>
-                        <option value="Advanced level" style={{ background: '#15151a', color: '#fff' }}>Advanced</option>
-                      </select>
-                    ) : (s.chessExperience || s.level || 'N/A')}
-                  </td>
-                  <td>{s.approvedDate || (s.updatedAt ? new Date(s.updatedAt).toLocaleDateString() : 'N/A')}</td>
-                  <td className="action-btns">
-                    {editingId === (s.id || s._id) ? (
-                      <>
-                        <button className="approve-btn" onClick={saveEdit}>Save</button>
-                        <button className="delete-btn" onClick={cancelEdit}>Cancel</button>
-                      </>
-                    ) : (
-                      <>
-                        <button className="view-btn" onClick={() => setViewingStudent(s)}>View</button>
-                        <button className="edit-btn" onClick={() => startEdit(s)}>Edit</button>
-                        <button 
-                          className={s.isPaused ? "approve-btn" : "delete-btn"} 
-                          style={{ 
-                            background: s.isPaused ? 'rgba(76,175,80,0.15)' : 'rgba(255,107,107,0.15)',
-                            color: s.isPaused ? '#a0e4a0' : '#ff6b6b',
-                            border: s.isPaused ? '1px solid rgba(76,175,80,0.4)' : '1px solid rgba(255,107,107,0.4)',
-                            cursor: 'pointer'
-                          }}
-                          onClick={() => handleTogglePause(s)}
-                        >
-                          {s.isPaused ? "▶️ Resume" : "⏸️ Pause"}
-                        </button>
-                        <button className="delete-btn" onClick={() => handleDelete(s.id || s._id || s.studentId)}>Delete</button>
-                      </>
-                    )}
-                  </td>
-                </tr>
-              ))
+              sortedApproved.map(s => {
+                const sId = s.id || s._id || s.studentId;
+                const isEditing = editingId === sId;
+                return (
+                  <tr key={sId}>
+                    <td>
+                      {isEditing ? (
+                        <input name="studentId" value={editForm.studentId} onChange={handleEditChange} style={{ ...miniInput, fontWeight: '700', color: '#d4af37' }} />
+                      ) : (
+                        <strong style={{ color: '#d4af37' }}>#{highlightMatch(s.studentId, searchTerm)}</strong>
+                      )}
+                    </td>
+                    <td>
+                      {isEditing ? (
+                        <input name="studentName" value={editForm.studentName || editForm.name} onChange={handleEditChange} style={miniInput} />
+                      ) : (
+                        <span>
+                          {highlightMatch(s.studentName || s.name || 'N/A', searchTerm)}
+                          {s.isPaused && (
+                            <span style={{ 
+                              marginLeft: '8px', 
+                              fontSize: '0.7rem', 
+                              background: 'rgba(255, 107, 107, 0.15)', 
+                              color: '#ff6b6b', 
+                              padding: '2px 6px', 
+                              borderRadius: '4px',
+                              fontWeight: 'bold',
+                              border: '1px solid rgba(255, 107, 107, 0.3)'
+                            }}>
+                              ⏸️ Paused
+                            </span>
+                          )}
+                        </span>
+                      )}
+                    </td>
+                    <td>
+                      {isEditing ? (
+                        <input name="email" value={editForm.email} onChange={handleEditChange} style={miniInput} />
+                      ) : s.email}
+                    </td>
+                    <td>
+                      {isEditing ? (
+                        <input name="phoneNumber" value={editForm.phoneNumber || editForm.phone} onChange={handleEditChange} style={{ ...miniInput, color: '#FFC107', fontWeight: 'bold' }} />
+                      ) : <span style={{ color: '#FFC107', fontWeight: '600' }}>{s.phoneNumber || s.phone || s.whatsappNo || 'N/A'}</span>}
+                    </td>
+                    <td>
+                      {isEditing ? (
+                        <input name="dob" value={editForm.dateOfBirth || editForm.dob} onChange={handleEditChange} style={miniInput} />
+                      ) : <span style={{ fontFamily: 'monospace', color: '#a0e4a0' }}>{s.dateOfBirth || s.dob || 'N/A'}</span>}
+                    </td>
+                    <td>
+                      {isEditing ? (
+                        <select name="chessExperience" value={editForm.chessExperience || editForm.level} onChange={handleEditChange} style={miniInput}>
+                          <option value="Beginner level" style={{ background: '#15151a', color: '#fff' }}>Beginner</option>
+                          <option value="Intermediate level" style={{ background: '#15151a', color: '#fff' }}>Intermediate</option>
+                          <option value="Advanced level" style={{ background: '#15151a', color: '#fff' }}>Advanced</option>
+                        </select>
+                      ) : (s.chessExperience || s.level || 'N/A')}
+                    </td>
+                    <td>{s.approvedDate || (s.updatedAt ? new Date(s.updatedAt).toLocaleDateString() : 'N/A')}</td>
+                    <td className="action-btns">
+                      {isEditing ? (
+                        <>
+                          <button className="approve-btn" onClick={saveEdit}>Save</button>
+                          <button className="delete-btn" onClick={cancelEdit}>Cancel</button>
+                        </>
+                      ) : (
+                        <>
+                          <button className="view-btn" onClick={() => setViewingStudent(s)}>View</button>
+                          <button className="edit-btn" onClick={() => startEdit(s)}>Edit</button>
+                          <button 
+                            className={s.isPaused ? "approve-btn" : "delete-btn"} 
+                            style={{ 
+                              background: s.isPaused ? 'rgba(76,175,80,0.15)' : 'rgba(255,107,107,0.15)',
+                              color: s.isPaused ? '#a0e4a0' : '#ff6b6b',
+                              border: s.isPaused ? '1px solid rgba(76,175,80,0.4)' : '1px solid rgba(255,107,107,0.4)',
+                              cursor: 'pointer'
+                            }}
+                            onClick={() => handleTogglePause(s)}
+                          >
+                            {s.isPaused ? "▶️ Resume" : "⏸️ Pause"}
+                          </button>
+                          <button className="delete-btn" onClick={() => handleDelete(s.id || s._id || s.studentId)}>Delete</button>
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
