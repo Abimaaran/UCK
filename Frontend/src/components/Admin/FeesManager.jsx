@@ -177,44 +177,6 @@ const FeesManager = () => {
       console.error("Failed to update fees", err);
       alert("Could not update fees.");
     }
-  const handleMarkAllPaid = async () => {
-    const activeUnpaidStudents = approvedStudents.filter(s => {
-      const status = fees[s.studentId]?.[selectedMonth] || 'Not Paid';
-      return status !== 'Paid' && !s.isPaused;
-    });
-
-    if (activeUnpaidStudents.length === 0) {
-      alert("All active approved students have already paid for this month!");
-      return;
-    }
-
-    if (!window.confirm(`Are you sure you want to mark all ${activeUnpaidStudents.length} unpaid active students as PAID for ${selectedMonth}?`)) {
-      return;
-    }
-
-    try {
-      // Update DB sequentially or in parallel
-      await Promise.all(
-        activeUnpaidStudents.map(student =>
-          updateItem('fees', student.studentId, {
-            month: selectedMonth,
-            status: 'Paid'
-          })
-        )
-      );
-
-      // Update local state
-      const newFees = { ...fees };
-      activeUnpaidStudents.forEach(student => {
-        if (!newFees[student.studentId]) newFees[student.studentId] = {};
-        newFees[student.studentId][selectedMonth] = 'Paid';
-      });
-      setFees(newFees);
-      alert(`Successfully marked ${activeUnpaidStudents.length} students as PAID for ${selectedMonth}!`);
-    } catch (err) {
-      console.error("Failed to mark all as paid", err);
-      alert("Failed to mark all as paid. Please try again.");
-    }
   };
 
   const getMonthName = (monthStr) => {
@@ -443,32 +405,6 @@ const FeesManager = () => {
             <span style={{ color: '#000', fontSize: '0.85rem', marginTop: '0.75rem', fontWeight: 'bold', textAlign: 'center' }}>
               Scan this QR Code with WhatsApp Link Device to connect.
             </span>
-            <button
-              onClick={async () => {
-                try {
-                  setWaStatus('LOADING');
-                  setWaQr(null);
-                  await api.post('/whatsapp/logout');
-                  const res = await api.get('/whatsapp/status');
-                  setWaStatus(res.data.status);
-                } catch (e) {
-                  alert('Failed to generate new QR. Please try again.');
-                }
-              }}
-              style={{
-                marginTop: '1rem',
-                background: '#15151a',
-                color: '#FFC107',
-                border: '1px solid #FFC107',
-                padding: '6px 14px',
-                borderRadius: '6px',
-                fontSize: '0.8rem',
-                fontWeight: 'bold',
-                cursor: 'pointer'
-              }}
-            >
-              🔄 Generate New QR Code
-            </button>
           </div>
         )}
 
@@ -693,20 +629,20 @@ const FeesManager = () => {
         </div>
 
         {/* Send Reminders Trigger Button */}
-        <div className="form-group" style={{ minWidth: '180px' }}>
+        <div className="form-group" style={{ minWidth: '220px' }}>
           <label>WhatsApp Automation</label>
           <button 
             onClick={handleSendReminders}
-            disabled={sendingReminders || waStatus !== 'CONNECTED'}
+            disabled={sendingReminders}
             style={{
               width: '100%',
               padding: '0.6rem 1rem',
               borderRadius: '8px',
-              border: waStatus === 'CONNECTED' ? '1px solid #25D366' : '1px solid rgba(255,255,255,0.1)',
-              background: waStatus === 'CONNECTED' ? 'rgba(37, 211, 102, 0.15)' : 'rgba(255,255,255,0.03)',
-              color: waStatus === 'CONNECTED' ? '#25D366' : '#666',
+              border: '1px solid #25D366',
+              background: 'rgba(37, 211, 102, 0.15)',
+              color: '#25D366',
               fontWeight: 'bold',
-              cursor: waStatus === 'CONNECTED' ? 'pointer' : 'not-allowed',
+              cursor: sendingReminders ? 'not-allowed' : 'pointer',
               fontSize: '0.85rem',
               transition: 'all 0.3s ease',
               height: '42px',
@@ -716,46 +652,13 @@ const FeesManager = () => {
               gap: '6px'
             }}
             onMouseEnter={e => {
-              if (waStatus === 'CONNECTED') {
-                e.currentTarget.style.background = 'rgba(37, 211, 102, 0.25)';
-              }
+              e.currentTarget.style.background = 'rgba(37, 211, 102, 0.25)';
             }}
             onMouseLeave={e => {
-              if (waStatus === 'CONNECTED') {
-                e.currentTarget.style.background = 'rgba(37, 211, 102, 0.15)';
-              }
+              e.currentTarget.style.background = 'rgba(37, 211, 102, 0.15)';
             }}
           >
             {sendingReminders ? '⏳ Sending...' : '🚀 Send Reminders'}
-          </button>
-        </div>
-
-        {/* Mark All Paid Bulk Action Button */}
-        <div className="form-group" style={{ minWidth: '160px' }}>
-          <label>Bulk Actions</label>
-          <button 
-            onClick={handleMarkAllPaid}
-            style={{
-              width: '100%',
-              padding: '0.6rem 1rem',
-              borderRadius: '8px',
-              border: '1px solid #28a745',
-              background: 'rgba(40, 167, 69, 0.15)',
-              color: '#28a745',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              fontSize: '0.85rem',
-              transition: 'all 0.3s ease',
-              height: '42px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px'
-            }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(40, 167, 69, 0.3)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(40, 167, 69, 0.15)'}
-          >
-            ✅ Mark All Paid
           </button>
         </div>
       </div>
