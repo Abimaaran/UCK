@@ -1,42 +1,36 @@
-const { db, auth } = require('../config/firebaseAdmin');
+const supabase = require('../config/supabaseClient');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
-// Secret for signing admin JWT - in production, move this to .env
 const ADMIN_JWT_SECRET = process.env.JWT_SECRET || 'uck_academy_secret_key_2025';
 
 exports.adminLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
-    
-    // Look up in Firestore 'admins' collection
-    const adminSnapshot = await db.collection('admins')
-      .where('email', '==', email.toLowerCase().trim())
-      .limit(1)
-      .get();
 
-    if (adminSnapshot.empty) {
+    const { data: admin, error } = await supabase
+      .from('admins')
+      .select('*')
+      .eq('email', email.toLowerCase().trim())
+      .single();
+
+    if (error || !admin) {
       return res.status(401).json({ error: 'Invalid admin credentials.' });
     }
 
-    const adminDoc = adminSnapshot.docs[0];
-    const adminData = adminDoc.data();
-
-    // Verify password with Bcrypt
-    const isMatched = await bcrypt.compare(password, adminData.password);
+    const isMatched = await bcrypt.compare(password, admin.password);
 
     if (isMatched) {
-      // Issue a real JWT to protect routes
       const token = jwt.sign(
-        { id: adminDoc.id, email: adminData.email, role: 'admin' }, 
-        ADMIN_JWT_SECRET, 
+        { id: admin.id, email: admin.email, role: 'admin' },
+        ADMIN_JWT_SECRET,
         { expiresIn: '8h' }
       );
 
-      res.status(200).json({ 
-        message: 'Admin login successful', 
+      res.status(200).json({
+        message: 'Admin login successful',
         token,
-        email: adminData.email 
+        email: admin.email
       });
     } else {
       res.status(401).json({ error: 'Invalid admin credentials.' });
@@ -48,53 +42,55 @@ exports.adminLogin = async (req, res) => {
 
 exports.verifyToken = async (req, res) => {
   try {
-    // Verified by authMiddleware
-    res.status(200).json({ message: 'Token is valid', user: req.user });
+    const token = req.headers.authorization?.split('Bearer ')[1];
+    if (!token) {
+      return res.status(401).json({ valid: false, error: 'No token provided' });
+    }
+
+    const decoded = jwt.verify(token, ADMIN_JWT_SECRET);
+    if (decoded.role === 'admin') {
+      return res.status(200).json({ valid: true, admin: decoded });
+    }
+    return res.status(401).json({ valid: false, error: 'Invalid role' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(401).json({ valid: false, error: 'Invalid token' });
   }
 };
 
 exports.changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-    const adminEmail = req.user.email; // From verifyAdmin middleware
+    const adminId = req.user?.id;
 
-    if (!adminEmail || !currentPassword || !newPassword) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current and new password required' });
     }
 
-    // 1. Fetch current admin record
-    const adminSnapshot = await db.collection('admins')
-      .where('email', '==', adminEmail.toLowerCase().trim())
-      .limit(1)
-      .get();
+    const { data: admin } = await supabase
+      .from('admins')
+      .select('*')
+      .eq('id', adminId)
+      .single();
 
-    if (adminSnapshot.empty) {
-      return res.status(404).json({ error: 'Admin account not found' });
+    if (!admin) {
+      return res.status(404).json({ error: 'Admin user not found' });
     }
 
-    const adminDocRef = adminSnapshot.docs[0].ref;
-    const adminData = adminSnapshot.docs[0].data();
-
-    // 2. Verify current password
-    const isMatched = await bcrypt.compare(currentPassword, adminData.password);
+    const isMatched = await bcrypt.compare(currentPassword, admin.password);
     if (!isMatched) {
-      return res.status(401).json({ error: 'Incorrect current password' });
+      return res.status(400).json({ error: 'Incorrect current password' });
     }
 
-    // 3. Hash the new password and update
     const salt = await bcrypt.genSalt(10);
-    const hashedNewPassword = await bcrypt.hash(newPassword, salt);
+    const newHashed = await bcrypt.hash(newPassword, salt);
 
-    await adminDocRef.update({
-      password: hashedNewPassword,
-      updatedAt: new Date().toISOString()
-    });
+    await supabase
+      .from('admins')
+      .update({ password: newHashed })
+      .eq('id', adminId);
 
     res.status(200).json({ message: 'Password updated successfully' });
   } catch (error) {
-    console.error('Change password error:', error);
-    res.status(500).json({ error: 'Failed to update password' });
+    res.status(500).json({ error: error.message });
   }
 };

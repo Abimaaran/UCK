@@ -1,30 +1,43 @@
-const { db } = require('../config/firebaseAdmin');
+const supabase = require('../config/supabaseClient');
 
 exports.approveStudent = async (req, res) => {
   try {
-    const studentRef = db.collection('students').doc(req.params.id);
-    const doc = await studentRef.get();
-    
-    if (!doc.exists) {
-      return res.status(404).json({ error: 'Student registration not found' });
-    }
-    
-    // Update status in the same collection
-    await studentRef.update({
-      status: 'Approved',
-      approvedAt: new Date().toISOString()
-    });
-    
-    res.status(200).json({ message: 'Student approved successfully', studentId: req.params.id });
+    const { studentId } = req.params;
+    const studentData = req.body;
+
+    const { data: updated, error } = await supabase
+      .from('students')
+      .update({
+        student_id: studentId,
+        status: 'Approved',
+        approved_date: new Date().toISOString()
+      })
+      .eq('id', studentData.id || studentId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.status(200).json({ message: 'Student approved successfully', student: updated });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-exports.rejectStudent = async (req, res) => {
+exports.declineStudent = async (req, res) => {
   try {
-    await db.collection('pendingStudents').doc(req.params.id).delete();
-    res.status(200).json({ message: 'Student application rejected' });
+    const { studentId } = req.params;
+
+    const { data: updated, error } = await supabase
+      .from('students')
+      .update({ status: 'Declined' })
+      .eq('id', studentId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.status(200).json({ message: 'Student registration declined', student: updated });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

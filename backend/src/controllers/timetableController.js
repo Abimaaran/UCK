@@ -1,10 +1,14 @@
-const { db } = require('../config/firebaseAdmin');
-const collectionName = 'timetable';
+const supabase = require('../config/supabaseClient');
 
 exports.getAll = async (req, res) => {
   try {
-    const snapshot = await db.collection(collectionName).get();
-    res.status(200).json(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    const { data, error } = await supabase
+      .from('timetable')
+      .select('*')
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+    res.status(200).json(data || []);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -12,8 +16,14 @@ exports.getAll = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
-    const docRef = await db.collection(collectionName).add(req.body);
-    res.status(201).json({ id: docRef.id, ...req.body });
+    const { data, error } = await supabase
+      .from('timetable')
+      .insert([req.body])
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.status(201).json(data);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -21,17 +31,31 @@ exports.create = async (req, res) => {
 
 exports.update = async (req, res) => {
   try {
-    await db.collection(collectionName).doc(req.params.id).update(req.body);
-    res.status(200).json({ id: req.params.id, ...req.body });
+    const { id } = req.params;
+    const { data, error } = await supabase
+      .from('timetable')
+      .update(req.body)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.status(200).json(data);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-exports.remove = async (req, res) => {
+exports.delete = async (req, res) => {
   try {
-    await db.collection(collectionName).doc(req.params.id).delete();
-    res.status(200).json({ message: 'Deleted successfully' });
+    const { id } = req.params;
+    const { error } = await supabase
+      .from('timetable')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+    res.status(200).json({ message: 'Timetable entry deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

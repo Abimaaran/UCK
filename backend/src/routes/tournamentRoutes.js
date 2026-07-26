@@ -6,6 +6,6 @@ const { verifyAdmin } = require('../middleware/authMiddleware');
 router.get('/', controller.getAll);
 router.post('/', verifyAdmin, controller.create);
 router.put('/:id', verifyAdmin, controller.update);
-router.delete('/:id', verifyAdmin, controller.remove);
+router.delete('/:id', verifyAdmin, controller.delete);
 
 module.exports = router;
