@@ -80,6 +80,7 @@ CREATE TABLE IF NOT EXISTS achievements (
     category TEXT,
     date TEXT,
     description TEXT,
+    photo TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
