@@ -67,19 +67,23 @@ const CoachesSection = () => {
                     </div>
                   </div>
 
-                  {(coach.title || coach.experience) && (
-                    <div className="coach-title-container">
-                      {coach.title && <span className="coach-title">{coach.title}</span>}
-                      {coach.experience && <span className="experience-badge">{coach.experience}</span>}
-                    </div>
-                  )}
+                  {(() => {
+                    const cleanTitle = (coach.title || '').trim();
+                    const invalidTitles = ['na', 'no', 'n/a', 'none', '-'];
+                    const isTitleValid = cleanTitle && !invalidTitles.includes(cleanTitle.toLowerCase());
+                    const cleanExp = (coach.experience || '').trim();
 
-                  {coach.specialization && coach.specialization !== coach.title && (
-                    <div className="specialization-tag">
-                      <span className="tag-icon">🎯</span>
-                      <span>{coach.specialization}</span>
-                    </div>
-                  )}
+                    return (
+                      <>
+                        {(isTitleValid || cleanExp) && (
+                          <div className="coach-title-container">
+                            {isTitleValid && <span className="coach-title">{cleanTitle}</span>}
+                            {cleanExp && <span className="experience-badge">{cleanExp}</span>}
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
 
                   <p className="coach-bio-preview">{(coach.bio || '').substring(0, 80)}{(coach.bio || '').length > 80 ? '...' : ''}</p>
 
