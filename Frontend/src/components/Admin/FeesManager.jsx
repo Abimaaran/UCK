@@ -263,10 +263,10 @@ const FeesManager = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span>💬</span> WhatsApp Automation Status
+              <span>💬</span> WhatsApp Reminder Service
             </h3>
             <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: '#888' }}>
-              Automatically checks database and triggers reminders to unpaid students on the 6th, 13th, 20th, 27th.
+              Send instant WhatsApp fee reminders to unpaid students for the selected month by clicking the Send button.
             </p>
           </div>
           
