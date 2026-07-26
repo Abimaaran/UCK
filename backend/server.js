@@ -1,5 +1,4 @@
 require('dotenv').config();
-const { admin } = require('./src/config/firebaseAdmin');
 
 console.log("\n" + "=".repeat(40));
 console.log("🚀 SCK BACKEND SYSTEM STARTUP");
