@@ -41,8 +41,12 @@ app.use('/api/users', userRoutes);
 app.use('/api/user-reviews', userReviewRoutes);
 app.use('/api/whatsapp', whatsappRoutes);
 
-// Initialize WhatsApp client
-whatsappService.initialize();
+// Initialize WhatsApp client safely (non-blocking if Puppeteer Chrome is unavailable)
+try {
+  whatsappService.initialize();
+} catch (waErr) {
+  console.warn('⚠️ WhatsApp initialization skipped:', waErr.message);
+}
 
 // Health Check
 app.get('/health', (req, res) => {
