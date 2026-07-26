@@ -121,11 +121,6 @@ exports.update = async (req, res) => {
     if (body.status !== undefined) updatePayload.status = body.status;
     if (body.isPaused !== undefined) updatePayload.is_paused = body.isPaused;
     if (body.approvedDate !== undefined) updatePayload.approved_date = body.approvedDate;
-    if (body.school !== undefined) updatePayload.school = body.school;
-    if (body.address !== undefined) updatePayload.address = body.address;
-    if (body.parentName !== undefined) updatePayload.parent_name = body.parentName;
-    if (body.fideId !== undefined) updatePayload.fide_id = body.fideId;
-    if (body.fideRating !== undefined) updatePayload.fide_rating = body.fideRating;
 
     let { data: updated, error } = await supabase
       .from('students')
