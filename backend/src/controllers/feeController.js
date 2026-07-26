@@ -165,15 +165,39 @@ const processRemindersInBackground = async (unpaidStudents, month, runType = 'Ma
 
     try {
       if (i > 0) {
-        // Safe fast delay between 4 to 7 seconds
-        const safeDelay = Math.floor(Math.random() * 3000) + 4000;
+        // Longer delay between messages (8-12 seconds) to let WhatsApp Web page stabilize
+        const safeDelay = Math.floor(Math.random() * 4000) + 8000;
+        console.log(`⏳ WhatsApp: Waiting ${(safeDelay / 1000).toFixed(1)}s before next message...`);
         await new Promise(resolve => setTimeout(resolve, safeDelay));
       }
       const formattedMonth = getMonthName(month);
       const reminderMsg = `♟️ *UCK Chess Academy*\n\nDear Parent/Student *${name}*,\nThis is a gentle reminder regarding the academy fee for *${formattedMonth}*.\n\n_Please ignore this message if you have already paid._\n\nThank you!\n*UCK Chess Academy Management*`;
-      await whatsappService.sendReminder(phone, reminderMsg);
-      successCount++;
-      successList.push({ studentId, name, phone });
+      
+      // Retry logic: try up to 3 times
+      let sent = false;
+      let lastError = null;
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          await whatsappService.sendReminder(phone, reminderMsg);
+          sent = true;
+          break;
+        } catch (retryErr) {
+          lastError = retryErr;
+          console.warn(`⚠️ WhatsApp: Attempt ${attempt}/3 failed for ${name} (${phone}): ${retryErr.message}`);
+          if (attempt < 3) {
+            // Wait 5 seconds before retry
+            await new Promise(resolve => setTimeout(resolve, 5000));
+          }
+        }
+      }
+
+      if (sent) {
+        successCount++;
+        successList.push({ studentId, name, phone });
+      } else {
+        failCount++;
+        failList.push({ studentId, name, phone, error: lastError?.message || 'Failed after 3 attempts' });
+      }
     } catch (err) {
       failCount++;
       failList.push({ studentId, name, phone, error: err.message });
