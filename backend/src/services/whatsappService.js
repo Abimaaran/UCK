@@ -120,9 +120,13 @@ const sendReminder = async (phone, message) => {
 const logout = async () => {
   if (client) {
     try {
-      await client.logout();
+      // Use destroy() instead of logout() - logout() hangs on detached frames
+      const destroyPromise = client.destroy();
+      const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 10000));
+      await Promise.race([destroyPromise, timeoutPromise]);
+      console.log('🤖 WhatsApp: Session destroyed successfully.');
     } catch (e) {
-      console.error('Logout error:', e.message);
+      console.error('Logout/destroy error:', e.message);
     }
   }
   connectionStatus = 'DISCONNECTED';
