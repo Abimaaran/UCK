@@ -1,10 +1,10 @@
-const { db } = require('../config/firebaseAdmin');
-const collectionName = 'aboutFeatures';
+const supabase = require('../config/supabaseClient');
 
 exports.getAll = async (req, res) => {
   try {
-    const snapshot = await db.collection(collectionName).get();
-    res.status(200).json(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    const { data, error } = await supabase.from('about_features').select('*');
+    if (error) throw error;
+    res.status(200).json(data || []);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -12,8 +12,9 @@ exports.getAll = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
-    const docRef = await db.collection(collectionName).add(req.body);
-    res.status(201).json({ id: docRef.id, ...req.body });
+    const { data, error } = await supabase.from('about_features').insert([req.body]).select().single();
+    if (error) throw error;
+    res.status(201).json(data);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -21,8 +22,9 @@ exports.create = async (req, res) => {
 
 exports.update = async (req, res) => {
   try {
-    await db.collection(collectionName).doc(req.params.id).update(req.body);
-    res.status(200).json({ id: req.params.id, ...req.body });
+    const { data, error } = await supabase.from('about_features').update(req.body).eq('id', req.params.id).select().single();
+    if (error) throw error;
+    res.status(200).json(data);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -30,7 +32,8 @@ exports.update = async (req, res) => {
 
 exports.remove = async (req, res) => {
   try {
-    await db.collection(collectionName).doc(req.params.id).delete();
+    const { error } = await supabase.from('about_features').delete().eq('id', req.params.id);
+    if (error) throw error;
     res.status(200).json({ message: 'Deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
