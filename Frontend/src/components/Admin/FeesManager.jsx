@@ -286,17 +286,17 @@ const FeesManager = () => {
                 waStatus === 'CONNECTED' ? 'rgba(37, 211, 102, 0.12)' :
                 waStatus === 'QR_READY' ? 'rgba(255, 193, 7, 0.12)' :
                 waStatus === 'INITIALIZING' ? 'rgba(0, 123, 255, 0.12)' :
-                'rgba(220, 53, 69, 0.12)',
+                'rgba(255, 255, 255, 0.08)',
               color: 
                 waStatus === 'CONNECTED' ? '#25D366' :
                 waStatus === 'QR_READY' ? '#FFC107' :
                 waStatus === 'INITIALIZING' ? '#007BFF' :
-                '#DC3545',
+                '#aaa',
               border: `1px solid ${
                 waStatus === 'CONNECTED' ? '#25D366' :
                 waStatus === 'QR_READY' ? '#FFC107' :
                 waStatus === 'INITIALIZING' ? '#007BFF' :
-                '#DC3545'
+                'rgba(255, 255, 255, 0.15)'
               }`
             }}>
               <span style={{
@@ -307,20 +307,19 @@ const FeesManager = () => {
                   waStatus === 'CONNECTED' ? '#25D366' :
                   waStatus === 'QR_READY' ? '#FFC107' :
                   waStatus === 'INITIALIZING' ? '#007BFF' :
-                  '#DC3545',
+                  '#888',
                 display: 'inline-block',
                 boxShadow: `0 0 8px ${
                   waStatus === 'CONNECTED' ? '#25D366' :
                   waStatus === 'QR_READY' ? '#FFC107' :
                   waStatus === 'INITIALIZING' ? '#007BFF' :
-                  '#DC3545'
+                  'rgba(255,255,255,0.2)'
                 }`
               }}></span>
               {waStatus === 'CONNECTED' ? 'Connected' :
                waStatus === 'QR_READY' ? 'Scan QR Code' :
-               waStatus === 'INITIALIZING' ? 'Initializing...' :
-               waStatus === 'LOADING' ? 'Checking...' :
-               'Disconnected'}
+               waStatus === 'INITIALIZING' ? 'Initializing' :
+               'Standby (Offline)'}
             </span>
 
             {waStatus === 'CONNECTED' && (
