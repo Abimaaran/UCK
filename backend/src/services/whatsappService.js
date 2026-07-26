@@ -1,20 +1,112 @@
-let connectionStatus = 'DISCONNECTED';
+const { Client, LocalAuth } = require('whatsapp-web.js');
+const QRCode = require('qrcode');
+
+let client = null;
 let qrCodeData = null;
+let connectionStatus = 'DISCONNECTED';
 
 const initialize = () => {
-  console.log('🤖 WhatsApp: Service running in safe mode.');
+  if (client) return;
+
+  connectionStatus = 'INITIALIZING';
+  console.log('\n🤖 WhatsApp: Starting client initialization...');
+
+  const puppeteerOpts = {
+    headless: true,
+    protocolTimeout: 180000,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--disable-software-rasterizer',
+      '--no-zygote',
+      '--single-process'
+    ]
+  };
+
+  if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+    puppeteerOpts.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+  }
+
+  try {
+    client = new Client({
+      authStrategy: new LocalAuth({
+        dataPath: './.wwebjs_auth'
+      }),
+      puppeteer: puppeteerOpts
+    });
+
+    client.on('qr', async (qr) => {
+      console.log('🤖 WhatsApp: QR Code generated. Ready for scanning.');
+      connectionStatus = 'QR_READY';
+      try {
+        qrCodeData = await QRCode.toDataURL(qr);
+      } catch (err) {
+        console.error('❌ WhatsApp: QR Code generation error:', err);
+      }
+    });
+
+    client.on('ready', () => {
+      connectionStatus = 'CONNECTED';
+      qrCodeData = null;
+      console.log('🤖 WhatsApp: Connection established! Client is READY.');
+    });
+
+    client.on('authenticated', () => {
+      console.log('🤖 WhatsApp: Authenticated successfully.');
+    });
+
+    client.on('auth_failure', (msg) => {
+      console.error('❌ WhatsApp: Authentication failure:', msg);
+      connectionStatus = 'DISCONNECTED';
+      qrCodeData = null;
+    });
+
+    client.on('disconnected', (reason) => {
+      console.error('⚠️ WhatsApp: Client was disconnected. Reason:', reason);
+      connectionStatus = 'DISCONNECTED';
+      qrCodeData = null;
+    });
+
+    client.initialize().catch(err => {
+      console.error('❌ WhatsApp: Initialization error:', err.message);
+      connectionStatus = 'DISCONNECTED';
+    });
+  } catch (err) {
+    console.error('❌ WhatsApp setup error:', err.message);
+    connectionStatus = 'DISCONNECTED';
+  }
 };
 
 const getStatus = () => connectionStatus;
 const getQR = () => qrCodeData;
 
 const sendReminder = async (phone, message) => {
-  throw new Error('WhatsApp reminder service is currently offline on cloud hosting.');
+  if (connectionStatus !== 'CONNECTED' || !client) {
+    throw new Error('WhatsApp client is not connected');
+  }
+
+  let formattedNumber = phone.replace(/\D/g, '');
+  if (!formattedNumber.startsWith('91') && formattedNumber.length === 10) {
+    formattedNumber = '94' + formattedNumber; // Default country prefix if needed
+  }
+  
+  const chatId = `${formattedNumber}@c.us`;
+  await client.sendMessage(chatId, message);
 };
 
 const logout = async () => {
+  if (client) {
+    try {
+      await client.logout();
+    } catch (e) {
+      console.error('Logout error:', e.message);
+    }
+  }
   connectionStatus = 'DISCONNECTED';
   qrCodeData = null;
+  client = null;
 };
 
 module.exports = {
