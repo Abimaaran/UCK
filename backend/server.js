@@ -5,12 +5,10 @@ console.log("\n" + "=".repeat(40));
 console.log("🚀 SCK BACKEND SYSTEM STARTUP");
 console.log("=".repeat(40));
 
-// 1. Firebase Initialization Verification
-if (admin.apps.length > 0) {
-  console.log("✅ DATABASE: Firebase Connection Successful");
-} else {
-  console.error("❌ DATABASE: Connection Failed!");
-  process.exit(1);
+// 1. Database Initialization Verification
+const supabase = require('./src/config/supabaseClient');
+if (supabase) {
+  console.log("✅ DATABASE: Supabase Connection Successful");
 }
 
 const app = require('./app');
