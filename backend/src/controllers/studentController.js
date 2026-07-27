@@ -20,9 +20,10 @@ exports.register = async (req, res) => {
       level: data.level || 'Beginner',
       chess_experience: data.chessExperience || null,
       preferred_schedule: data.preferredSchedule || null,
-      status: 'Pending',
+      status: data.status || 'Pending',
       is_paused: false,
-      applied_date: new Date().toISOString()
+      applied_date: new Date().toISOString(),
+      approved_date: data.approvedDate || null
     };
 
     const { data: inserted, error } = await supabase
