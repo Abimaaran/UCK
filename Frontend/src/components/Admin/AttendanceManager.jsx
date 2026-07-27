@@ -49,7 +49,7 @@ const AttendanceManager = () => {
       // 1. Fetch Students
       try {
         const studentData = await getCollection('students');
-        setApprovedStudents(Array.isArray(studentData) ? studentData.filter(s => s.status === 'Approved') : []);
+        setApprovedStudents(Array.isArray(studentData) ? studentData.filter(s => s.status === 'Approved' && !s.isPaused) : []);
       } catch (err) {
         console.warn("Failed to fetch students:", err.message);
         setApprovedStudents([]);
