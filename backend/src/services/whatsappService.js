@@ -23,10 +23,13 @@ const initialize = () => {
   wppconnect
     .create({
       session: 'uck-session',
+      logQR: false,
       catchQR: (base64Qr, asciiQR) => {
         console.log('🤖 WhatsApp: QR Code generated. Ready for scanning.');
         connectionStatus = 'QR_READY';
-        qrCodeData = base64Qr; // This is already a base64 string Data URI
+        if (base64Qr) {
+          qrCodeData = base64Qr.startsWith('data:') ? base64Qr : `data:image/png;base64,${base64Qr}`;
+        }
       },
       statusFind: (statusSession, session) => {
         console.log('🤖 WhatsApp Status:', statusSession);
