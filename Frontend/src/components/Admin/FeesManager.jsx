@@ -43,6 +43,18 @@ const FeesManager = () => {
   const [logModalType, setLogModalType] = useState(null); // 'SUCCESS' | 'FAILED' | 'ALL' | null
   const [logModalSearch, setLogModalSearch] = useState('');
 
+  // Lock background page scroll when modal is open
+  useEffect(() => {
+    if (logModalType || selectedStudentForView) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [logModalType, selectedStudentForView]);
+
   const fetchLatestReminderStatus = async () => {
     try {
       const response = await api.get(`/fees/reminder-status/latest`, {
@@ -1064,98 +1076,164 @@ const FeesManager = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(8px)',
+            background: 'rgba(0, 0, 0, 0.82)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             zIndex: 10001,
-            padding: '1rem'
+            padding: '1.25rem'
           }}
         >
           <div 
             onClick={e => e.stopPropagation()}
             style={{
-              background: '#15151a',
+              background: '#121318',
               border: `1px solid ${
-                logModalType === 'SUCCESS' ? 'rgba(40, 167, 69, 0.4)' :
+                logModalType === 'SUCCESS' ? 'rgba(37, 211, 102, 0.4)' :
                 logModalType === 'FAILED' ? 'rgba(220, 53, 69, 0.4)' :
                 'rgba(212, 175, 55, 0.4)'
               }`,
-              borderRadius: '16px',
-              width: '100%',
-              maxWidth: '680px',
-              maxHeight: '85vh',
+              borderRadius: '18px',
+              width: '92%',
+              maxWidth: '920px',
+              height: '86vh',
+              maxHeight: '750px',
               display: 'flex',
               flexDirection: 'column',
-              boxShadow: '0 20px 50px rgba(0,0,0,0.6)',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.75)',
               overflow: 'hidden'
             }}
           >
             {/* Modal Header */}
             <div style={{
-              padding: '1.25rem 1.5rem',
+              padding: '1.25rem 1.75rem',
               borderBottom: '1px solid rgba(255,255,255,0.08)',
               display: 'flex',
               justify: 'space-between',
               alignItems: 'center',
               background: 
-                logModalType === 'SUCCESS' ? 'rgba(40, 167, 69, 0.08)' :
-                logModalType === 'FAILED' ? 'rgba(220, 53, 69, 0.08)' :
-                'rgba(212, 175, 55, 0.08)'
+                logModalType === 'SUCCESS' ? 'linear-gradient(135deg, rgba(37,211,102,0.12), rgba(0,0,0,0))' :
+                logModalType === 'FAILED' ? 'linear-gradient(135deg, rgba(220,53,69,0.12), rgba(0,0,0,0))' :
+                'linear-gradient(135deg, rgba(212,175,55,0.12), rgba(0,0,0,0))'
             }}>
               <div>
-                <h3 style={{ margin: 0, color: '#fff', fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <h3 style={{ margin: 0, color: '#fff', fontSize: '1.25rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '10px' }}>
                   {logModalType === 'SUCCESS' && <span>✅ Sent WhatsApp Reminders ({reminderLog.successCount})</span>}
                   {logModalType === 'FAILED' && <span>❌ Failed WhatsApp Deliveries ({reminderLog.failCount})</span>}
                   {logModalType === 'ALL' && <span>📢 All Targeted Recipients ({reminderLog.totalRecipients})</span>}
                 </h3>
-                <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: '#aaa' }}>
-                  Month: {getMonthName(reminderLog.month)} | Status: {reminderLog.status}
+                <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.82rem', color: '#aaa', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span>Month: <strong style={{ color: '#d4af37' }}>{getMonthName(reminderLog.month)}</strong></span>
+                  <span>|</span>
+                  <span>Started: <strong style={{ color: '#fff' }}>{new Date(reminderLog.startedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}</strong></span>
+                  <span>|</span>
+                  <span>Status: <strong style={{ color: reminderLog.status === 'PROCESSING' ? '#007BFF' : '#25D366' }}>{reminderLog.status}</strong></span>
                 </p>
               </div>
 
               <button 
                 onClick={() => setLogModalType(null)}
                 style={{
-                  background: 'rgba(255,255,255,0.1)',
-                  border: 'none',
+                  background: 'rgba(255,255,255,0.08)',
+                  border: '1px solid rgba(255,255,255,0.15)',
                   color: '#fff',
-                  width: '32px',
-                  height: '32px',
+                  width: '36px',
+                  height: '36px',
                   borderRadius: '50%',
-                  fontSize: '1.1rem',
+                  fontSize: '1.2rem',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  transition: 'all 0.2s ease'
                 }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(220,53,69,0.3)'; e.currentTarget.style.borderColor = '#dc3545'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; }}
               >
                 ✕
               </button>
             </div>
 
-            {/* Modal Search Bar */}
-            <div style={{ padding: '1rem 1.5rem 0.5rem 1.5rem' }}>
-              <input 
-                type="text"
-                placeholder="🔍 Search student name, ID or phone..."
-                value={logModalSearch}
-                onChange={e => setLogModalSearch(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.6rem 1rem',
-                  borderRadius: '8px',
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  color: '#fff',
-                  fontSize: '0.85rem'
-                }}
-              />
+            {/* Sub-filter Tabs & Search Bar Header */}
+            <div style={{ padding: '1rem 1.75rem 0.5rem 1.75rem', background: 'rgba(255,255,255,0.01)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+              {/* Inner Filter Tabs */}
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                {[
+                  { key: 'ALL', label: 'All Recipients', count: reminderLog.totalRecipients },
+                  { key: 'SUCCESS', label: '✅ Sent', count: reminderLog.successCount },
+                  { key: 'FAILED', label: '❌ Failed', count: reminderLog.failCount }
+                ].map(tab => {
+                  const isActive = logModalType === tab.key;
+                  return (
+                    <button
+                      key={tab.key}
+                      onClick={() => setLogModalType(tab.key)}
+                      style={{
+                        padding: '0.4rem 0.85rem',
+                        borderRadius: '6px',
+                        fontSize: '0.8rem',
+                        fontWeight: isActive ? '700' : '500',
+                        border: `1px solid ${isActive ? '#d4af37' : 'rgba(255,255,255,0.1)'}`,
+                        background: isActive ? 'rgba(212,175,55,0.18)' : 'rgba(255,255,255,0.03)',
+                        color: isActive ? '#d4af37' : '#aaa',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      {tab.label} ({tab.count})
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Search Box */}
+              <div style={{ position: 'relative', width: '280px' }}>
+                <input 
+                  type="text"
+                  placeholder="🔍 Search student name, ID or phone..."
+                  value={logModalSearch}
+                  onChange={e => setLogModalSearch(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.45rem 2rem 0.45rem 0.85rem',
+                    borderRadius: '7px',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    color: '#fff',
+                    fontSize: '0.82rem'
+                  }}
+                />
+                {logModalSearch && (
+                  <button 
+                    onClick={() => setLogModalSearch('')}
+                    style={{
+                      position: 'absolute',
+                      right: '8px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      color: '#aaa',
+                      fontSize: '0.9rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
             </div>
 
-            {/* Modal Table Content */}
-            <div style={{ padding: '0.5rem 1.5rem 1.5rem 1.5rem', overflowY: 'auto', flex: 1 }}>
+            {/* Modal Scrollable Content Container */}
+            <div 
+              style={{ 
+                padding: '1rem 1.75rem 1.5rem 1.75rem', 
+                overflowY: 'auto', 
+                flex: 1 
+              }}
+            >
               {(() => {
                 let list = [];
                 if (logModalType === 'SUCCESS') list = reminderLog.successList || [];
@@ -1178,38 +1256,59 @@ const FeesManager = () => {
 
                 if (list.length === 0) {
                   return (
-                    <div style={{ padding: '3rem 1rem', textAlign: 'center', color: '#888' }}>
-                      <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📭</div>
-                      <p style={{ margin: 0 }}>No records found for this view.</p>
+                    <div style={{ padding: '4rem 1rem', textAlign: 'center', color: '#777' }}>
+                      <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>📭</div>
+                      <h4 style={{ margin: '0 0 0.25rem 0', color: '#aaa' }}>No Records Found</h4>
+                      <p style={{ margin: 0, fontSize: '0.85rem' }}>No student delivery records match the current filter criteria.</p>
                     </div>
                   );
                 }
 
                 return (
-                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                  <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 4px', textAlign: 'left' }}>
                     <thead>
-                      <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.02)' }}>
-                        <th style={{ padding: '0.65rem 0.75rem', fontSize: '0.75rem', color: '#aaa', textTransform: 'uppercase' }}>ID</th>
-                        <th style={{ padding: '0.65rem 0.75rem', fontSize: '0.75rem', color: '#aaa', textTransform: 'uppercase' }}>Student Name</th>
-                        <th style={{ padding: '0.65rem 0.75rem', fontSize: '0.75rem', color: '#aaa', textTransform: 'uppercase' }}>Phone Number</th>
-                        <th style={{ padding: '0.65rem 0.75rem', fontSize: '0.75rem', color: '#aaa', textTransform: 'uppercase' }}>Status</th>
+                      <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
+                        <th style={{ padding: '0.75rem 0.85rem', fontSize: '0.75rem', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>ID</th>
+                        <th style={{ padding: '0.75rem 0.85rem', fontSize: '0.75rem', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Student Name</th>
+                        <th style={{ padding: '0.75rem 0.85rem', fontSize: '0.75rem', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Phone Number</th>
+                        <th style={{ padding: '0.75rem 0.85rem', fontSize: '0.75rem', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Sent Time</th>
+                        <th style={{ padding: '0.75rem 0.85rem', fontSize: '0.75rem', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Delivery Status</th>
                       </tr>
                     </thead>
                     <tbody>
                       {list.map((item, idx) => {
                         const isSuccess = logModalType === 'SUCCESS' || (logModalType === 'ALL' && item.isSuccess);
+                        const sentTimestamp = item.time || (reminderLog.startedAt ? new Date(reminderLog.startedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : 'N/A');
+                        
                         return (
-                          <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                            <td style={{ padding: '0.65rem 0.75rem', fontSize: '0.85rem', color: '#d4af37', fontWeight: 'bold' }}>#{item.studentId}</td>
-                            <td style={{ padding: '0.65rem 0.75rem', fontSize: '0.85rem', color: '#fff', fontWeight: '500' }}>{item.name}</td>
-                            <td style={{ padding: '0.65rem 0.75rem', fontSize: '0.85rem', color: '#aaa' }}>{item.phone || 'N/A'}</td>
-                            <td style={{ padding: '0.65rem 0.75rem', fontSize: '0.8rem' }}>
+                          <tr 
+                            key={idx} 
+                            style={{ 
+                              background: 'rgba(255,255,255,0.02)',
+                              transition: 'background 0.2s ease'
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
+                          >
+                            <td style={{ padding: '0.75rem 0.85rem', fontSize: '0.85rem', color: '#d4af37', fontWeight: 'bold', borderRadius: '8px 0 0 8px' }}>
+                              #{item.studentId}
+                            </td>
+                            <td style={{ padding: '0.75rem 0.85rem', fontSize: '0.88rem', color: '#fff', fontWeight: '600' }}>
+                              {item.name}
+                            </td>
+                            <td style={{ padding: '0.75rem 0.85rem', fontSize: '0.85rem', color: '#bbb' }}>
+                              {formatDisplayPhone(item.phone)}
+                            </td>
+                            <td style={{ padding: '0.75rem 0.85rem', fontSize: '0.82rem', color: '#25D366', fontWeight: '500', fontFamily: 'monospace' }}>
+                              ⏰ {sentTimestamp}
+                            </td>
+                            <td style={{ padding: '0.75rem 0.85rem', fontSize: '0.8rem', borderRadius: '0 8px 8px 0' }}>
                               {isSuccess ? (
-                                <span style={{ color: '#25D366', background: 'rgba(37,211,102,0.12)', padding: '3px 8px', borderRadius: '4px', border: '1px solid rgba(37,211,102,0.2)', fontWeight: '600' }}>
-                                  ✅ Delivered
+                                <span style={{ color: '#25D366', background: 'rgba(37,211,102,0.12)', padding: '4px 10px', borderRadius: '6px', border: '1px solid rgba(37,211,102,0.3)', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                  ✅ Sent Successfully
                                 </span>
                               ) : (
-                                <span style={{ color: '#ff6b6b', background: 'rgba(220,53,69,0.12)', padding: '3px 8px', borderRadius: '4px', border: '1px solid rgba(220,53,69,0.2)', fontWeight: '600' }}>
+                                <span style={{ color: '#ff6b6b', background: 'rgba(220,53,69,0.12)', padding: '4px 10px', borderRadius: '6px', border: '1px solid rgba(220,53,69,0.3)', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                                   ❌ Failed: {item.error || 'Failed'}
                                 </span>
                               )}

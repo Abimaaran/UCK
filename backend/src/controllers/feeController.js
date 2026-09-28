@@ -190,16 +190,19 @@ const processRemindersInBackground = async (unpaidStudents, month, runType = 'Ma
         }
       }
 
+      const currentTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+
       if (sent) {
         successCount++;
-        successList.push({ studentId, name, phone });
+        successList.push({ studentId, name, phone, time: currentTime });
       } else {
         failCount++;
-        failList.push({ studentId, name, phone, error: lastError?.message || 'Failed after 3 attempts' });
+        failList.push({ studentId, name, phone, error: lastError?.message || 'Failed after 3 attempts', time: currentTime });
       }
     } catch (err) {
+      const currentTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
       failCount++;
-      failList.push({ studentId, name, phone, error: err.message });
+      failList.push({ studentId, name, phone, error: err.message, time: currentTime });
     }
 
     if (logId) {
