@@ -25,8 +25,21 @@ const AdminDashboard = () => {
 
   if (!isAdmin) return null; // Prevent UI flash during redirect
 
-  const [activeTab, setActiveTab] = useState('students');
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('adminActiveTab') || 'students';
+  });
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [tabRefreshKey, setTabRefreshKey] = useState(0);
+
+  const handleTabChange = (tabKey) => {
+    setActiveTab(tabKey);
+    localStorage.setItem('adminActiveTab', tabKey);
+    setIsSidebarOpen(false);
+  };
+
+  const handleRefreshCurrentTab = () => {
+    setTabRefreshKey(prev => prev + 1);
+  };
 
   // Lock body scroll when sidebar drawer is open on mobile
   useEffect(() => {
@@ -80,10 +93,11 @@ const AdminDashboard = () => {
       ]);
     };
     loadAll();
-  }, []);
+  }, [tabRefreshKey]);
 
   const handleLogout = () => {
     localStorage.removeItem('isAdminLoggedIn');
+    localStorage.removeItem('adminActiveTab');
     window.dispatchEvent(new Event('adminLogin')); // Notify other components
     window.location.href = '/';
   };
@@ -91,26 +105,26 @@ const AdminDashboard = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'coaches':
-        return <CoachManager coaches={coaches} setCoaches={setCoaches} />;
+        return <CoachManager key={tabRefreshKey} coaches={coaches} setCoaches={setCoaches} />;
       case 'tournaments':
-        return <TournamentManager tournaments={tournaments} setTournaments={setTournaments} />;
+        return <TournamentManager key={tabRefreshKey} tournaments={tournaments} setTournaments={setTournaments} />;
       case 'achievements':
-        return <AchievementManager achievements={achievements} setAchievements={setAchievements} />;
+        return <AchievementManager key={tabRefreshKey} achievements={achievements} setAchievements={setAchievements} />;
       case 'timetable':
-        return <TimetableManager timetable={timetable} setTimetable={setTimetable} />;
+        return <TimetableManager key={tabRefreshKey} timetable={timetable} setTimetable={setTimetable} />;
       case 'attendance':
-        return <AttendanceManager />;
+        return <AttendanceManager key={tabRefreshKey} />;
       case 'fees':
-        return <FeesManager />;
+        return <FeesManager key={tabRefreshKey} />;
       case 'reviews':
-        return <StudentReviewManager />;
+        return <StudentReviewManager key={tabRefreshKey} />;
       case 'user-feedbacks':
-        return <UserReviewManager />;
+        return <UserReviewManager key={tabRefreshKey} />;
       case 'settings':
-        return <AdminSettings />;
+        return <AdminSettings key={tabRefreshKey} />;
       case 'students':
       default:
-        return <StudentApprovalManager students={pendingStudents} setStudents={setPendingStudents} />;
+        return <StudentApprovalManager key={tabRefreshKey} students={pendingStudents} setStudents={setPendingStudents} />;
     }
   };
 
@@ -147,63 +161,63 @@ const AdminDashboard = () => {
           </button>
           <button
             className={`nav-item ${activeTab === 'students' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('students'); setIsSidebarOpen(false); }}
+            onClick={() => handleTabChange('students')}
           >
             <span className="nav-icon">👥</span>
             Student Management
           </button>
           <button
             className={`nav-item ${activeTab === 'coaches' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('coaches'); setIsSidebarOpen(false); }}
+            onClick={() => handleTabChange('coaches')}
           >
             <span className="nav-icon">👤</span>
             Coaches
           </button>
           <button
             className={`nav-item ${activeTab === 'tournaments' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('tournaments'); setIsSidebarOpen(false); }}
+            onClick={() => handleTabChange('tournaments')}
           >
             <span className="nav-icon">🏆</span>
             Tournaments
           </button>
           <button
             className={`nav-item ${activeTab === 'achievements' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('achievements'); setIsSidebarOpen(false); }}
+            onClick={() => handleTabChange('achievements')}
           >
             <span className="nav-icon">🎖️</span>
             Achievements
           </button>
           <button
             className={`nav-item ${activeTab === 'timetable' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('timetable'); setIsSidebarOpen(false); }}
+            onClick={() => handleTabChange('timetable')}
           >
             <span className="nav-icon">📅</span>
             Timetable
           </button>
           <button
             className={`nav-item ${activeTab === 'attendance' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('attendance'); setIsSidebarOpen(false); }}
+            onClick={() => handleTabChange('attendance')}
           >
             <span className="nav-icon">📅</span>
             Attendance
           </button>
           <button
             className={`nav-item ${activeTab === 'fees' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('fees'); setIsSidebarOpen(false); }}
+            onClick={() => handleTabChange('fees')}
           >
             <span className="nav-icon">💰</span>
             Fees System
           </button>
           <button
             className={`nav-item ${activeTab === 'reviews' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('reviews'); setIsSidebarOpen(false); }}
+            onClick={() => handleTabChange('reviews')}
           >
             <span className="nav-icon">📝</span>
             Reviews Management
           </button>
           <button
             className={`nav-item ${activeTab === 'user-feedbacks' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('user-feedbacks'); setIsSidebarOpen(false); }}
+            onClick={() => handleTabChange('user-feedbacks')}
           >
             <span className="nav-icon">💬</span>
             User Feedbacks
@@ -211,7 +225,7 @@ const AdminDashboard = () => {
 
           <button
             className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('settings'); setIsSidebarOpen(false); }}
+            onClick={() => handleTabChange('settings')}
           >
             <span className="nav-icon">⚙️</span>
             Settings
@@ -234,10 +248,36 @@ const AdminDashboard = () => {
             </button>
             <h1>{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Management</h1>
           </div>
-          <button className="header-logout-btn" onClick={handleLogout}>
-            <span className="nav-icon">🚪</span>
-            <span className="logout-label-desktop">Logout</span>
-          </button>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <button 
+              onClick={handleRefreshCurrentTab} 
+              style={{
+                background: 'rgba(212,175,55,0.12)',
+                border: '1px solid rgba(212,175,55,0.35)',
+                color: '#d4af37',
+                padding: '0.45rem 0.85rem',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '0.85rem',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(212,175,55,0.22)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(212,175,55,0.12)'}
+              title="Refresh data for this section without reloading page"
+            >
+              <span>🔄</span> Refresh Section
+            </button>
+            
+            <button className="header-logout-btn" onClick={handleLogout}>
+              <span className="nav-icon">🚪</span>
+              <span className="logout-label-desktop">Logout</span>
+            </button>
+          </div>
         </header>
         <div className="content-body">
           {renderContent()}
