@@ -656,37 +656,46 @@ tr:hover {
   background-color: #f1f5f9;
 }
 
-/* ── ACTION BUTTONS VERTICAL STACKED COLUMN ("ONDUKU KLEA KELA") ── */
+/* ── ACTION BUTTONS VERTICAL STACKED COLUMN & UNIFORM SIZE ("OREY MAREE SIZE") ── */
 .action-btns {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: stretch;
-  min-width: 110px;
-  width: 100%;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 105px !important;
+  width: 100% !important;
 }
 
-.action-btns button {
-  width: 100%;
-  justify-content: center;
-  text-align: center;
-  padding: 0.45rem 0.75rem;
-}
-
+.action-btns button,
 .view-btn,
 .edit-btn,
 .delete-btn,
-.approve-btn {
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  border: 1px solid transparent;
-  text-transform: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+.approve-btn,
+.decline-btn,
+.restore-btn,
+.purge-btn,
+.pay-btn,
+.whatsapp-btn {
+  width: 100px !important;
+  min-width: 100px !important;
+  max-width: 100px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  max-height: 34px !important;
+  padding: 0 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  font-size: 0.8rem !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+  box-sizing: border-box !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  line-height: 1 !important;
 }
 
 .view-btn {
