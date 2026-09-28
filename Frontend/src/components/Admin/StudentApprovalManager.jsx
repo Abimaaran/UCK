@@ -13,6 +13,29 @@ const declineStudentApi = async (studentId) => {
   return await updateItem('students', studentId, { status: 'Declined', declinedDate: new Date().toISOString().split('T')[0] });
 };
 
+const formatDisplayPhone = (phone) => {
+  if (!phone) return 'N/A';
+  let str = String(phone).trim();
+  if (str.startsWith('+94')) {
+    str = '0' + str.slice(3).trim();
+  } else if (str.startsWith('94') && str.length === 11) {
+    str = '0' + str.slice(2).trim();
+  }
+  return str;
+};
+
+const formatDOB = (dobStr) => {
+  if (!dobStr) return 'N/A';
+  const str = String(dobStr).trim();
+  if (str.includes('-')) {
+    const parts = str.split('T')[0].split('-');
+    if (parts.length === 3 && parts[0].length === 4) {
+      return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+    }
+  }
+  return str;
+};
+
 /* ═══════════════════════════════════════════════════════════
    MAIN COMPONENT
    ═══════════════════════════════════════════════════════════ */
@@ -321,7 +344,7 @@ const PendingTab = ({ students, setStudents, onRefresh, setViewingStudent }) => 
                 <tr key={student.id}>
                   <td style={{ fontWeight: '600', minWidth: '140px' }}>{highlightMatch(student.studentName || student.name || 'N/A', searchTerm)}</td>
                   <td style={{ minWidth: '180px' }}>{student.email}</td>
-                  <td style={{ minWidth: '110px' }}>{student.phoneNumber || student.whatsappNo || student.phone || 'N/A'}</td>
+                  <td style={{ minWidth: '110px' }}>{formatDisplayPhone(student.phoneNumber || student.whatsappNo || student.phone)}</td>
                   <td style={{ fontSize: '0.85rem', minWidth: '220px', whiteSpace: 'normal', lineHeight: '1.4' }}>{student.address || 'N/A'}</td>
                   <td style={{ minWidth: '110px' }}>{getStudentLevel(student)}</td>
                   <td style={{ fontSize: '0.85rem', minWidth: '100px' }}>{student.createdAt ? new Date(student.createdAt).toLocaleDateString() : (student.appliedDate || 'N/A')}</td>
@@ -474,15 +497,15 @@ const ManualAddTab = ({ onRefresh }) => {
         <div>
           <label style={labelStyle}>Phone Number</label>
           <input name="phone" value={form.phone} onChange={handle}
-            placeholder="+94" style={inputStyle} />
+            placeholder="e.g. 0771234567" style={inputStyle} />
         </div>
 
         {/* DOB — password */}
         <div>
           <label style={labelStyle}>
-            🔑 Date of Birth <span style={{ color: '#d4af37' }}>(becomes portal password)</span>
+            🔑 Date of Birth (DD/MM/YYYY) <span style={{ color: '#d4af37' }}>(becomes portal password)</span>
           </label>
-          <input name="dob" type="date" value={form.dob} onChange={handle} style={inputStyle} required />
+          <input name="dob" type="text" value={form.dob} onChange={handle} placeholder="DD/MM/YYYY" style={inputStyle} required />
         </div>
 
         {/* Level */}
@@ -896,12 +919,12 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
                     <td>
                       {isEditing ? (
                         <input name="phoneNumber" value={editForm.phoneNumber || editForm.phone} onChange={handleEditChange} style={{ ...miniInput, color: '#FFC107', fontWeight: 'bold' }} />
-                      ) : <span style={{ color: '#FFC107', fontWeight: '600' }}>{s.phoneNumber || s.phone || s.whatsappNo || 'N/A'}</span>}
+                      ) : <span style={{ color: '#FFC107', fontWeight: '600' }}>{formatDisplayPhone(s.phoneNumber || s.phone || s.whatsappNo)}</span>}
                     </td>
                     <td>
                       {isEditing ? (
                         <input name="dob" value={editForm.dateOfBirth || editForm.dob} onChange={handleEditChange} style={miniInput} />
-                      ) : <span style={{ fontFamily: 'monospace', color: '#a0e4a0' }}>{s.dateOfBirth || s.dob || 'N/A'}</span>}
+                      ) : <span style={{ fontFamily: 'monospace', color: '#a0e4a0' }}>{formatDOB(s.dateOfBirth || s.dob)}</span>}
                     </td>
                     <td>
                       {isEditing ? (
@@ -1274,8 +1297,8 @@ const StudentDetailsModal = ({ student, onClose }) => {
           
           {detailRow('Full Name', student.studentName || student.name)}
           {detailRow('Email Address', student.email)}
-          {detailRow('Phone Number', student.phoneNumber || student.phone || student.whatsappNo)}
-          {detailRow('Date of Birth', student.dateOfBirth || student.dob)}
+          {detailRow('Phone Number', formatDisplayPhone(student.phoneNumber || student.phone || student.whatsappNo))}
+          {detailRow('Date of Birth', formatDOB(student.dateOfBirth || student.dob))}
           {detailRow('Chess Level', student.chessExperience || student.level)}
           {detailRow('Registration Date', student.approvedDate || (student.createdAt ? new Date(student.createdAt).toLocaleDateString() : 'N/A'))}
           {detailRow('School / College', student.school)}

@@ -1,6 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import api, { getCollection, updateItem } from '../../services/api';
 
+const formatDisplayPhone = (phone) => {
+  if (!phone) return 'N/A';
+  let str = String(phone).trim();
+  if (str.startsWith('+94')) {
+    str = '0' + str.slice(3).trim();
+  } else if (str.startsWith('94') && str.length === 11) {
+    str = '0' + str.slice(2).trim();
+  }
+  return str;
+};
+
+const formatDOB = (dobStr) => {
+  if (!dobStr) return 'N/A';
+  const str = String(dobStr).trim();
+  if (str.includes('-')) {
+    const parts = str.split('T')[0].split('-');
+    if (parts.length === 3 && parts[0].length === 4) {
+      return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+    }
+  }
+  return str;
+};
+
 const FeesManager = () => {
   const [approvedStudents, setApprovedStudents] = useState([]);
   const [fees, setFees] = useState({});
@@ -1002,8 +1025,8 @@ const FeesManager = () => {
                 
                 {detailRow('Full Name', selectedStudentForView.studentName || selectedStudentForView.name)}
                 {detailRow('Email Address', selectedStudentForView.email)}
-                {detailRow('Phone Number', selectedStudentForView.phoneNumber || selectedStudentForView.phone || selectedStudentForView.whatsappNo)}
-                {detailRow('Date of Birth', selectedStudentForView.dateOfBirth || selectedStudentForView.dob)}
+                {detailRow('Phone Number', formatDisplayPhone(selectedStudentForView.phoneNumber || selectedStudentForView.phone || selectedStudentForView.whatsappNo))}
+                {detailRow('Date of Birth', formatDOB(selectedStudentForView.dateOfBirth || selectedStudentForView.dob))}
                 {detailRow('Chess Level', selectedStudentForView.chessExperience || selectedStudentForView.level)}
                 {detailRow('Registration Date', selectedStudentForView.approvedDate || (selectedStudentForView.createdAt ? new Date(selectedStudentForView.createdAt).toLocaleDateString() : 'N/A'))}
                 {detailRow('School / College', selectedStudentForView.school)}
