@@ -64,10 +64,10 @@ const StudentApprovalManager = ({ students, setStudents, targetItem }) => {
       {/* Sub-nav */}
       <div style={{ display: 'flex', gap: '0.6rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
         {[
-          { key: 'approved', label: '✅ Approved Students' },
-          { key: 'pending', label: '⏳ Pending Approvals', count: students.length },
-          { key: 'declined', label: '❌ Declined Registrations' },
-          { key: 'add', label: '➕ Add Student Manually' },
+          { key: 'approved', label: 'Approved Students' },
+          { key: 'pending', label: 'Pending Approvals', count: students.length },
+          { key: 'declined', label: 'Declined Registrations' },
+          { key: 'add', label: 'Add Student Manually' },
         ].map(({ key, label, count }) => (
           <button
             key={key}
