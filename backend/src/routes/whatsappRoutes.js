@@ -15,7 +15,11 @@ router.get('/status', verifyAdmin, (req, res) => {
   if (currentStatus === 'DISCONNECTED') {
     whatsappService.initialize();
   }
-  res.status(200).json({ status: whatsappService.getStatus(), error: whatsappService.getError() });
+  res.status(200).json({ 
+    status: whatsappService.getStatus(), 
+    qr: whatsappService.getQR(), 
+    error: whatsappService.getError() 
+  });
 });
 
 // Get QR code data URL (Protected to Admin)

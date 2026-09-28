@@ -390,9 +390,9 @@ const FeesManager = () => {
                           setWaErrorMsg(res.data.error);
                         }
                         if (res.data.status === 'QR_READY') {
-                          const qrRes = await api.get('/whatsapp/qr');
-                          if (qrRes.data.qr) {
-                            setWaQr(qrRes.data.qr);
+                          const qrData = res.data.qr || (await api.get('/whatsapp/qr').catch(() => ({})))?.data?.qr;
+                          if (qrData) {
+                            setWaQr(qrData);
                             setWaErrorMsg(null);
                             return true;
                           }
@@ -409,11 +409,11 @@ const FeesManager = () => {
                       const interval = setInterval(async () => {
                         attempts++;
                         const ready = await pollQr();
-                        if (ready || attempts > 15) {
+                        if (ready || attempts > 30) {
                           clearInterval(interval);
                           if (!ready) {
                             setWaStatus('DISCONNECTED');
-                            setWaErrorMsg('QR Code generation timed out. Click Connect WhatsApp QR to try again.');
+                            setWaErrorMsg('QR Code generation timed out (90s). Click Connect WhatsApp QR to try again.');
                           }
                         }
                       }, 3000);
