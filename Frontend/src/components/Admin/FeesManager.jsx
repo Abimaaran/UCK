@@ -42,6 +42,8 @@ const FeesManager = () => {
   const [reminderLog, setReminderLog] = useState(null);
   const [logModalType, setLogModalType] = useState(null); // 'SUCCESS' | 'FAILED' | 'ALL' | null
   const [logModalSearch, setLogModalSearch] = useState('');
+  const [embeddedFilter, setEmbeddedFilter] = useState('ALL'); // 'ALL' | 'SUCCESS' | 'FAILED'
+  const [embeddedSearch, setEmbeddedSearch] = useState('');
 
   // Lock background page scroll when modal is open
   useEffect(() => {
@@ -532,176 +534,249 @@ const FeesManager = () => {
         )}
       </div>
 
-      {/* WhatsApp Reminder Logs / Status Feed */}
+      {/* WhatsApp Reminder Logs / Full Live Status Report Feed */}
       {reminderLog && (
         <div 
           style={{
-            background: 'rgba(255, 255, 255, 0.03)',
+            background: 'rgba(18, 19, 24, 0.95)',
             border: `1px solid ${
-              reminderLog.status === 'PROCESSING' ? 'rgba(0, 123, 255, 0.3)' :
-              reminderLog.failCount > 0 ? 'rgba(220, 53, 69, 0.3)' :
-              'rgba(40, 167, 69, 0.3)'
+              reminderLog.status === 'PROCESSING' ? 'rgba(0, 123, 255, 0.4)' :
+              reminderLog.failCount > 0 ? 'rgba(220, 53, 69, 0.4)' :
+              'rgba(40, 167, 69, 0.4)'
             }`,
-            borderRadius: '12px',
-            padding: '1.5rem',
-            marginBottom: '2rem',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
+            borderRadius: '16px',
+            padding: '1.75rem',
+            marginBottom: '2.5rem',
+            boxShadow: '0 12px 40px rgba(0, 0, 0, 0.35)',
+            transition: 'all 0.3s ease'
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
+          {/* Top Header Bar */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem' }}>
             <div>
-              <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span>📢</span> Monthly Fee Reminders Status ({getMonthName(reminderLog.month)})
+              <h4 style={{ margin: 0, fontSize: '1.25rem', color: '#fff', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span>📢</span> Monthly Fee Reminders Report ({getMonthName(reminderLog.month)})
               </h4>
-              <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: '#888' }}>
-                Started at: {new Date(reminderLog.startedAt).toLocaleTimeString()} | Mode: {reminderLog.runType || 'Manual'}
+              <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.82rem', color: '#aaa', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                <span>Started: <strong style={{ color: '#fff' }}>{new Date(reminderLog.startedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}</strong></span>
+                <span>|</span>
+                <span>Mode: <strong style={{ color: '#d4af37' }}>{reminderLog.runType || 'Manual'}</strong></span>
               </p>
             </div>
             
             <span style={{
-              padding: '4px 10px',
-              borderRadius: '6px',
-              fontSize: '0.75rem',
-              fontWeight: 'bold',
+              padding: '6px 14px',
+              borderRadius: '20px',
+              fontSize: '0.8rem',
+              fontWeight: '700',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
               background: 
                 reminderLog.status === 'PROCESSING' ? 'rgba(0, 123, 255, 0.15)' :
                 'rgba(40, 167, 69, 0.15)',
               color: 
                 reminderLog.status === 'PROCESSING' ? '#007BFF' :
-                '#28a745',
+                '#25D366',
               border: `1px solid ${
                 reminderLog.status === 'PROCESSING' ? '#007BFF' :
-                '#28a745'
+                '#25D366'
               }`
             }}>
-              {reminderLog.status}
+              ● {reminderLog.status}
             </span>
           </div>
 
-          {/* Progress Bar / Counters */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1rem', marginBottom: '1.25rem' }}>
+          {/* Summary Filter Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
             <div 
-              onClick={() => { setLogModalType('ALL'); setLogModalSearch(''); }}
+              onClick={() => setEmbeddedFilter('ALL')}
               style={{ 
-                background: 'rgba(255,255,255,0.03)', 
-                padding: '0.85rem', 
-                borderRadius: '10px', 
+                background: embeddedFilter === 'ALL' ? 'rgba(212,175,55,0.15)' : 'rgba(255,255,255,0.02)', 
+                padding: '1rem', 
+                borderRadius: '12px', 
                 textAlign: 'center', 
                 cursor: 'pointer',
-                border: '1px solid rgba(255,255,255,0.08)',
+                border: `1px solid ${embeddedFilter === 'ALL' ? '#d4af37' : 'rgba(255,255,255,0.08)'}`,
                 transition: 'all 0.2s ease'
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'; e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
             >
-              <div style={{ fontSize: '0.72rem', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Unpaid</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#fff', margin: '2px 0' }}>{reminderLog.totalRecipients}</div>
-              <span style={{ fontSize: '0.72rem', color: '#888', fontWeight: '500' }}>🔍 Click for List</span>
+              <div style={{ fontSize: '0.75rem', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Targeted</div>
+              <div style={{ fontSize: '1.6rem', fontWeight: '800', color: '#fff', margin: '2px 0' }}>{reminderLog.totalRecipients}</div>
+              <span style={{ fontSize: '0.72rem', color: embeddedFilter === 'ALL' ? '#d4af37' : '#888', fontWeight: '600' }}>Show All List</span>
             </div>
 
             <div 
-              onClick={() => { setLogModalType('SUCCESS'); setLogModalSearch(''); }}
+              onClick={() => setEmbeddedFilter('SUCCESS')}
               style={{ 
-                background: 'rgba(40, 167, 69, 0.08)', 
-                padding: '0.85rem', 
-                borderRadius: '10px', 
+                background: embeddedFilter === 'SUCCESS' ? 'rgba(37,211,102,0.18)' : 'rgba(40, 167, 69, 0.08)', 
+                padding: '1rem', 
+                borderRadius: '12px', 
                 textAlign: 'center', 
                 cursor: 'pointer',
-                border: '1px solid rgba(40,167,69,0.3)',
+                border: `1px solid ${embeddedFilter === 'SUCCESS' ? '#25D366' : 'rgba(40,167,69,0.3)'}`,
                 transition: 'all 0.2s ease'
               }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(40,167,69,0.2)'; e.currentTarget.style.borderColor = '#28a745'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(40,167,69,0.08)'; e.currentTarget.style.borderColor = 'rgba(40,167,69,0.3)'; }}
             >
-              <div style={{ fontSize: '0.72rem', color: '#28a745', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 'bold' }}>✅ Sent Success</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#28a745', margin: '2px 0' }}>{reminderLog.successCount}</div>
-              <span style={{ fontSize: '0.72rem', color: '#28a745', fontWeight: 'bold' }}>👁️ View ({reminderLog.successCount})</span>
+              <div style={{ fontSize: '0.75rem', color: '#25D366', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 'bold' }}>✅ Delivered</div>
+              <div style={{ fontSize: '1.6rem', fontWeight: '800', color: '#25D366', margin: '2px 0' }}>{reminderLog.successCount}</div>
+              <span style={{ fontSize: '0.72rem', color: '#25D366', fontWeight: '600' }}>Show Delivered ({reminderLog.successCount})</span>
             </div>
 
             <div 
-              onClick={() => { setLogModalType('FAILED'); setLogModalSearch(''); }}
+              onClick={() => setEmbeddedFilter('FAILED')}
               style={{ 
-                background: 'rgba(220, 53, 69, 0.08)', 
-                padding: '0.85rem', 
-                borderRadius: '10px', 
+                background: embeddedFilter === 'FAILED' ? 'rgba(220,53,69,0.18)' : 'rgba(220, 53, 69, 0.08)', 
+                padding: '1rem', 
+                borderRadius: '12px', 
                 textAlign: 'center', 
                 cursor: 'pointer',
-                border: '1px solid rgba(220,53,69,0.3)',
+                border: `1px solid ${embeddedFilter === 'FAILED' ? '#dc3545' : 'rgba(220,53,69,0.3)'}`,
                 transition: 'all 0.2s ease'
               }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(220,53,69,0.2)'; e.currentTarget.style.borderColor = '#dc3545'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(220,53,69,0.08)'; e.currentTarget.style.borderColor = 'rgba(220,53,69,0.3)'; }}
             >
-              <div style={{ fontSize: '0.72rem', color: '#dc3545', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 'bold' }}>❌ Failed</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#dc3545', margin: '2px 0' }}>{reminderLog.failCount}</div>
-              <span style={{ fontSize: '0.72rem', color: '#dc3545', fontWeight: 'bold' }}>👁️ View ({reminderLog.failCount})</span>
+              <div style={{ fontSize: '0.75rem', color: '#dc3545', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 'bold' }}>❌ Failed</div>
+              <div style={{ fontSize: '1.6rem', fontWeight: '800', color: '#dc3545', margin: '2px 0' }}>{reminderLog.failCount}</div>
+              <span style={{ fontSize: '0.72rem', color: '#dc3545', fontWeight: '600' }}>Show Failed ({reminderLog.failCount})</span>
             </div>
           </div>
 
-          {/* Processing State */}
+          {/* Processing Progress Indicator */}
           {reminderLog.status === 'PROCESSING' && (
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#aaa', marginBottom: '0.4rem' }}>
-                <span>Sending in progress...</span>
+            <div style={{ marginBottom: '1.5rem', background: 'rgba(0, 123, 255, 0.08)', padding: '1rem', borderRadius: '10px', border: '1px solid rgba(0, 123, 255, 0.2)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#64B5F6', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+                <span>🚀 Live Progress: Sending WhatsApp Messages...</span>
                 <span>{Math.round(((reminderLog.successCount + reminderLog.failCount) / reminderLog.totalRecipients) * 100)}%</span>
               </div>
               <div style={{ height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', overflow: 'hidden' }}>
                 <div style={{ 
                   width: `${((reminderLog.successCount + reminderLog.failCount) / reminderLog.totalRecipients) * 100}%`, 
                   height: '100%', 
-                  background: 'linear-gradient(90deg, #d4af37, #aa8422)', 
+                  background: 'linear-gradient(90deg, #007BFF, #25D366)', 
                   transition: 'width 0.3s ease-in-out' 
                 }}/>
               </div>
-              <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8rem', color: '#bbb', fontStyle: 'italic' }}>
-                * Delays are applied between reminders to comply with spam filters. Feel free to navigate away; reminders will continue in the background.
-              </p>
             </div>
           )}
 
-          {/* Completed State */}
-          {reminderLog.status === 'COMPLETED' && (
-            <div>
-              {reminderLog.failCount === 0 ? (
-                <div style={{ background: 'rgba(40, 167, 69, 0.1)', border: '1px solid rgba(40, 167, 69, 0.2)', padding: '0.8rem 1.2rem', borderRadius: '8px', color: '#28a745', fontWeight: '600', fontSize: '0.88rem' }}>
-                  🎉 Success! All messages have been sent successfully.
-                </div>
-              ) : (
-                <div>
-                  <div style={{ background: 'rgba(220, 53, 69, 0.1)', border: '1px solid rgba(220, 53, 69, 0.2)', padding: '0.8rem 1.2rem', borderRadius: '8px', color: '#ff6b6b', fontWeight: '600', fontSize: '0.88rem', marginBottom: '1rem' }}>
-                    ⚠️ Send Complete: {reminderLog.successCount} sent successfully. {reminderLog.failCount} messages failed to send. See details below.
-                  </div>
+          {/* Table Header Controls */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            <h5 style={{ margin: 0, color: '#fff', fontSize: '1rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span>📋</span> Delivery Details ({embeddedFilter === 'ALL' ? 'All Students' : embeddedFilter})
+            </h5>
 
-                  {/* Failed Recipients details */}
-                  <h5 style={{ margin: '0 0 0.5rem 0', color: '#fff', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Failed Deliveries ({reminderLog.failCount})
-                  </h5>
-                  <div style={{ maxHeight: '180px', overflowY: 'auto', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', background: 'rgba(0,0,0,0.2)' }}>
-                    <table style={{ minWidth: '100%', tableLayout: 'fixed' }}>
-                      <thead>
-                        <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
-                          <th style={{ padding: '0.5rem 0.75rem', fontSize: '0.75rem', color: '#aaa', width: '25%' }}>Student ID</th>
-                          <th style={{ padding: '0.5rem 0.75rem', fontSize: '0.75rem', color: '#aaa', width: '35%' }}>Student Name</th>
-                          <th style={{ padding: '0.5rem 0.75rem', fontSize: '0.75rem', color: '#aaa', width: '40%' }}>Reason for Failure</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {reminderLog.failList.map((fail, fIdx) => (
-                          <tr key={fIdx} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                            <td style={{ padding: '0.5rem 0.75rem', fontSize: '0.8rem', color: '#ff6b6b', fontWeight: 'bold' }}>#{fail.studentId}</td>
-                            <td style={{ padding: '0.5rem 0.75rem', fontSize: '0.8rem', color: '#ddd' }}>{fail.name}</td>
-                            <td style={{ padding: '0.5rem 0.75rem', fontSize: '0.8rem', color: '#aaa', wordBreak: 'break-word' }}>
-                              ⚠️ {fail.error || 'Unknown failure'}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+            <div style={{ position: 'relative', minWidth: '260px' }}>
+              <input 
+                type="text"
+                placeholder="🔍 Search student name or phone..."
+                value={embeddedSearch}
+                onChange={e => setEmbeddedSearch(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.5rem 2rem 0.5rem 0.85rem',
+                  borderRadius: '8px',
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  color: '#fff',
+                  fontSize: '0.85rem'
+                }}
+              />
+              {embeddedSearch && (
+                <button 
+                  onClick={() => setEmbeddedSearch('')}
+                  style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#888', cursor: 'pointer' }}
+                >✕</button>
               )}
             </div>
-          )}
+          </div>
+
+          {/* Embedded Full Table (No Height Restrictions, Clean Display) */}
+          <div style={{ overflowX: 'auto' }}>
+            {(() => {
+              let list = [];
+              if (embeddedFilter === 'SUCCESS') list = reminderLog.successList || [];
+              else if (embeddedFilter === 'FAILED') list = reminderLog.failList || [];
+              else {
+                list = [
+                  ...(reminderLog.successList || []).map(item => ({ ...item, isSuccess: true })),
+                  ...(reminderLog.failList || []).map(item => ({ ...item, isSuccess: false }))
+                ];
+              }
+
+              if (embeddedSearch.trim()) {
+                const query = embeddedSearch.toLowerCase();
+                list = list.filter(item => 
+                  (item.name || '').toLowerCase().includes(query) ||
+                  (item.studentId || '').toString().toLowerCase().includes(query) ||
+                  (item.phone || '').includes(query)
+                );
+              }
+
+              if (list.length === 0) {
+                return (
+                  <div style={{ padding: '3rem 1rem', textAlign: 'center', color: '#777' }}>
+                    <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📭</div>
+                    <p style={{ margin: 0 }}>No delivery records match your selection.</p>
+                  </div>
+                );
+              }
+
+              return (
+                <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 6px', textAlign: 'left' }}>
+                  <thead>
+                    <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.78rem', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Student ID</th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.78rem', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Student Name</th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.78rem', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Phone Number</th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.78rem', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Sent Time</th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.78rem', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Delivery Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {list.map((item, idx) => {
+                      const isSuccess = embeddedFilter === 'SUCCESS' || (embeddedFilter === 'ALL' && item.isSuccess);
+                      const sentTimestamp = item.time || (reminderLog.startedAt ? new Date(reminderLog.startedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : 'N/A');
+                      
+                      return (
+                        <tr 
+                          key={idx}
+                          style={{ 
+                            background: 'rgba(255,255,255,0.025)',
+                            transition: 'all 0.2s ease'
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.025)'}
+                        >
+                          <td style={{ padding: '0.85rem 1rem', fontSize: '0.88rem', color: '#d4af37', fontWeight: 'bold', borderRadius: '8px 0 0 8px' }}>
+                            #{item.studentId}
+                          </td>
+                          <td style={{ padding: '0.85rem 1rem', fontSize: '0.9rem', color: '#fff', fontWeight: '600' }}>
+                            {item.name}
+                          </td>
+                          <td style={{ padding: '0.85rem 1rem', fontSize: '0.88rem', color: '#ccc' }}>
+                            {formatDisplayPhone(item.phone)}
+                          </td>
+                          <td style={{ padding: '0.85rem 1rem', fontSize: '0.85rem', color: '#25D366', fontWeight: '600', fontFamily: 'monospace' }}>
+                            ⏰ {sentTimestamp}
+                          </td>
+                          <td style={{ padding: '0.85rem 1rem', fontSize: '0.82rem', borderRadius: '0 8px 8px 0' }}>
+                            {isSuccess ? (
+                              <span style={{ color: '#25D366', background: 'rgba(37,211,102,0.12)', padding: '5px 12px', borderRadius: '6px', border: '1px solid rgba(37,211,102,0.3)', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                ✅ Sent Successfully
+                              </span>
+                            ) : (
+                              <span style={{ color: '#ff6b6b', background: 'rgba(220,53,69,0.12)', padding: '5px 12px', borderRadius: '6px', border: '1px solid rgba(220,53,69,0.3)', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                ❌ Failed: {item.error || 'Failed'}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              );
+            })()}
+          </div>
         </div>
       )}
 
