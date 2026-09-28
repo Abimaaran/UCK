@@ -1,6 +1,10 @@
 const wppconnect = require('@wppconnect-team/wppconnect');
 const QRCode = require('qrcode');
 
+let client = null;
+let qrCodeData = null;
+let connectionStatus = 'DISCONNECTED';
+let initTimeout = null;
 let lastError = null;
 
 const initialize = (force = false) => {
