@@ -140,145 +140,159 @@ const AdminDashboard = () => {
 
       <div className={`admin-sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+          <div className="brand-wrapper">
             <span className="sidebar-logo">♔</span>
-            <h2>Admin Panel</h2>
+            <div className="brand-text">
+              <h2>UCK Admin</h2>
+              <span className="brand-badge">SaaS Control</span>
+            </div>
           </div>
           <button 
             className="sidebar-close-btn" 
             onClick={() => setIsSidebarOpen(false)}
+            title="Close sidebar"
           >
             ✕
           </button>
         </div>
+
         <nav className="sidebar-nav">
           <button
             className="nav-item"
             onClick={() => { window.location.href = '/'; }}
+            title="Web Demo"
           >
             <span className="nav-icon">🌐</span>
-            Web Demo
+            <span className="nav-label">Web Demo</span>
           </button>
           <button
             className={`nav-item ${activeTab === 'students' ? 'active' : ''}`}
             onClick={() => handleTabChange('students')}
+            title="Student Management"
           >
             <span className="nav-icon">👥</span>
-            Student Management
+            <span className="nav-label">Student Approval</span>
           </button>
           <button
             className={`nav-item ${activeTab === 'coaches' ? 'active' : ''}`}
             onClick={() => handleTabChange('coaches')}
+            title="Coaches"
           >
             <span className="nav-icon">👤</span>
-            Coaches
+            <span className="nav-label">Coaches</span>
           </button>
           <button
             className={`nav-item ${activeTab === 'tournaments' ? 'active' : ''}`}
             onClick={() => handleTabChange('tournaments')}
+            title="Tournaments"
           >
             <span className="nav-icon">🏆</span>
-            Tournaments
+            <span className="nav-label">Tournaments</span>
           </button>
           <button
             className={`nav-item ${activeTab === 'achievements' ? 'active' : ''}`}
             onClick={() => handleTabChange('achievements')}
+            title="Achievements"
           >
             <span className="nav-icon">🎖️</span>
-            Achievements
+            <span className="nav-label">Achievements</span>
           </button>
           <button
             className={`nav-item ${activeTab === 'timetable' ? 'active' : ''}`}
             onClick={() => handleTabChange('timetable')}
+            title="Timetable"
           >
             <span className="nav-icon">📅</span>
-            Timetable
+            <span className="nav-label">Timetable</span>
           </button>
           <button
             className={`nav-item ${activeTab === 'attendance' ? 'active' : ''}`}
             onClick={() => handleTabChange('attendance')}
+            title="Attendance"
           >
-            <span className="nav-icon">📅</span>
-            Attendance
+            <span className="nav-icon">📋</span>
+            <span className="nav-label">Attendance</span>
           </button>
           <button
             className={`nav-item ${activeTab === 'fees' ? 'active' : ''}`}
             onClick={() => handleTabChange('fees')}
+            title="Fees System"
           >
             <span className="nav-icon">💰</span>
-            Fees System
+            <span className="nav-label">Fees System</span>
           </button>
           <button
             className={`nav-item ${activeTab === 'reviews' ? 'active' : ''}`}
             onClick={() => handleTabChange('reviews')}
+            title="Reviews Management"
           >
             <span className="nav-icon">📝</span>
-            Reviews Management
+            <span className="nav-label">Reviews</span>
           </button>
           <button
             className={`nav-item ${activeTab === 'user-feedbacks' ? 'active' : ''}`}
             onClick={() => handleTabChange('user-feedbacks')}
+            title="User Feedbacks"
           >
             <span className="nav-icon">💬</span>
-            User Feedbacks
+            <span className="nav-label">User Feedbacks</span>
           </button>
-
           <button
             className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
             onClick={() => handleTabChange('settings')}
+            title="Settings"
           >
             <span className="nav-icon">⚙️</span>
-            Settings
+            <span className="nav-label">Settings</span>
           </button>
         </nav>
+
         <div className="sidebar-footer">
-          <button className="logout-btn" onClick={handleLogout}>
-            Exit Admin
+          <button className="logout-btn" onClick={handleLogout} title="Exit Admin">
+            <span className="nav-icon">🚪</span>
+            <span className="nav-label">Exit Admin</span>
           </button>
         </div>
       </div>
+
       <main className="admin-content">
         <header className="content-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+          <div className="header-left">
             <button 
               className="hamburger-menu-btn" 
               onClick={() => setIsSidebarOpen(true)}
             >
               ☰
             </button>
-            <h1>{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Management</h1>
+            <div className="header-title-box">
+              <span className="header-breadcrumb">Admin / Overview</span>
+              <h1>{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Management</h1>
+            </div>
           </div>
           
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div className="header-right">
+            <div className="header-search-wrapper">
+              <span className="search-icon">🔍</span>
+              <input type="text" placeholder="Search data..." className="header-search-input" />
+              <kbd className="search-shortcut">⌘F</kbd>
+            </div>
+
             <button 
               onClick={handleRefreshCurrentTab} 
-              style={{
-                background: 'rgba(212,175,55,0.12)',
-                border: '1px solid rgba(212,175,55,0.35)',
-                color: '#d4af37',
-                padding: '0.45rem 0.85rem',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '0.85rem',
-                fontWeight: '600',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(212,175,55,0.22)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'rgba(212,175,55,0.12)'}
+              className="header-refresh-btn"
               title="Refresh data for this section without reloading page"
             >
-              <span>🔄</span> Refresh Section
+              <span className="refresh-spin">🔄</span>
+              <span className="btn-text">Refresh Section</span>
             </button>
             
-            <button className="header-logout-btn" onClick={handleLogout}>
+            <button className="header-logout-btn" onClick={handleLogout} title="Logout">
               <span className="nav-icon">🚪</span>
               <span className="logout-label-desktop">Logout</span>
             </button>
           </div>
         </header>
+
         <div className="content-body">
           {renderContent()}
         </div>
