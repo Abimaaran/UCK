@@ -13,6 +13,7 @@ const FeesManager = () => {
   const [waStatus, setWaStatus] = useState('LOADING');
   const [waQr, setWaQr] = useState(null);
   const [waErrorMsg, setWaErrorMsg] = useState(null);
+  const [waSeconds, setWaSeconds] = useState(0);
   const [sendingReminders, setSendingReminders] = useState(false);
   const [selectedStudentForView, setSelectedStudentForView] = useState(null);
   const [reminderLog, setReminderLog] = useState(null);
@@ -374,7 +375,14 @@ const FeesManager = () => {
                   try {
                     setWaStatus('LOADING');
                     setWaErrorMsg(null);
-                    const connRes = await api.post('/whatsapp/connect').catch(err => {
+                    setWaSeconds(0);
+                    
+                    // Start live 1-second timer
+                    const secTimer = setInterval(() => {
+                      setWaSeconds(prev => prev + 1);
+                    }, 1000);
+
+                    await api.post('/whatsapp/connect').catch(err => {
                       if (err.response?.data?.error) {
                         setWaErrorMsg(err.response.data.error);
                       }
@@ -394,6 +402,7 @@ const FeesManager = () => {
                           if (qrData) {
                             setWaQr(qrData);
                             setWaErrorMsg(null);
+                            clearInterval(secTimer);
                             return true;
                           }
                         }
@@ -411,6 +420,7 @@ const FeesManager = () => {
                         const ready = await pollQr();
                         if (ready || attempts > 30) {
                           clearInterval(interval);
+                          clearInterval(secTimer);
                           if (!ready) {
                             setWaStatus('DISCONNECTED');
                             setWaErrorMsg('QR Code generation timed out (90s). Click Connect WhatsApp QR to try again.');
@@ -452,9 +462,29 @@ const FeesManager = () => {
           </div>
         )}
 
-        {waStatus === 'LOADING' && (
-          <div style={{ marginTop: '1rem', color: '#aaa', fontSize: '0.9rem' }}>
-            🤖 Preparing browser context and connecting to WhatsApp Web. This might take up to a minute...
+        {(waStatus === 'LOADING' || waStatus === 'INITIALIZING') && (
+          <div style={{ marginTop: '1.25rem', padding: '1.25rem', background: 'rgba(0, 123, 255, 0.08)', border: '1px solid rgba(0, 123, 255, 0.25)', borderRadius: '10px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <span style={{ color: '#64B5F6', fontSize: '0.9rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ display: 'inline-block', animation: 'spin 1.5s linear infinite' }}>🤖</span>
+                Starting WhatsApp Web Chromium...
+              </span>
+              <span style={{ background: '#007BFF', color: '#fff', padding: '3px 10px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                {waSeconds}s / 90s
+              </span>
+            </div>
+            
+            {/* Live Progress Bar */}
+            <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
+              <div 
+                style={{ 
+                  height: '100%', 
+                  width: `${Math.min(100, Math.round((waSeconds / 90) * 100))}%`, 
+                  background: 'linear-gradient(90deg, #007BFF, #00E5FF)', 
+                  transition: 'width 0.3s ease-in-out' 
+                }} 
+              />
+            </div>
           </div>
         )}
 
