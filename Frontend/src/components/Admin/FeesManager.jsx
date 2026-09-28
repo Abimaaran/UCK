@@ -44,6 +44,7 @@ const FeesManager = () => {
   const [logModalSearch, setLogModalSearch] = useState('');
   const [embeddedFilter, setEmbeddedFilter] = useState('ALL'); // 'ALL' | 'SUCCESS' | 'FAILED'
   const [embeddedSearch, setEmbeddedSearch] = useState('');
+  const [showReportTable, setShowReportTable] = useState(true);
 
   // Lock background page scroll when modal is open
   useEffect(() => {
@@ -564,26 +565,52 @@ const FeesManager = () => {
               </p>
             </div>
             
-            <span style={{
-              padding: '6px 14px',
-              borderRadius: '20px',
-              fontSize: '0.8rem',
-              fontWeight: '700',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-              background: 
-                reminderLog.status === 'PROCESSING' ? 'rgba(0, 123, 255, 0.15)' :
-                'rgba(40, 167, 69, 0.15)',
-              color: 
-                reminderLog.status === 'PROCESSING' ? '#007BFF' :
-                '#25D366',
-              border: `1px solid ${
-                reminderLog.status === 'PROCESSING' ? '#007BFF' :
-                '#25D366'
-              }`
-            }}>
-              ● {reminderLog.status}
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <span style={{
+                padding: '6px 14px',
+                borderRadius: '20px',
+                fontSize: '0.8rem',
+                fontWeight: '700',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                background: 
+                  reminderLog.status === 'PROCESSING' ? 'rgba(0, 123, 255, 0.15)' :
+                  'rgba(40, 167, 69, 0.15)',
+                color: 
+                  reminderLog.status === 'PROCESSING' ? '#007BFF' :
+                  '#25D366',
+                border: `1px solid ${
+                  reminderLog.status === 'PROCESSING' ? '#007BFF' :
+                  '#25D366'
+                }`
+              }}>
+                ● {reminderLog.status}
+              </span>
+
+              {/* Close ✕ Button */}
+              <button 
+                onClick={() => setReminderLog(null)}
+                style={{
+                  background: 'rgba(255,255,255,0.08)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  color: '#fff',
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  fontSize: '1.1rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(220,53,69,0.3)'; e.currentTarget.style.borderColor = '#dc3545'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; }}
+                title="Close Report"
+              >
+                ✕
+              </button>
+            </div>
           </div>
 
           {/* Summary Filter Cards */}
