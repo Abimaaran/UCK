@@ -1,110 +1,92 @@
-const wppconnect = require('@wppconnect-team/wppconnect');
+const { makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
 const QRCode = require('qrcode');
+const path = require('path');
+const fs = require('fs');
+const pino = require('pino');
 
-let client = null;
+let sock = null;
 let qrCodeData = null;
 let connectionStatus = 'DISCONNECTED';
-let initTimeout = null;
 let lastError = null;
+let isInitializing = false;
 
-const initialize = (force = false) => {
-  if (client && !force) return;
+const initialize = async (force = false) => {
+  if (isInitializing) return;
+  if (sock && !force && connectionStatus !== 'DISCONNECTED') return;
 
   if (force) {
-    client = null;
-    qrCodeData = null;
-    lastError = null;
+    await logout();
   }
 
+  isInitializing = true;
   connectionStatus = 'INITIALIZING';
   lastError = null;
-  console.log('\n🤖 WhatsApp: Starting client initialization with WPPConnect...');
+  qrCodeData = null;
+  console.log('\n🤖 WhatsApp: Starting client initialization with Baileys...');
 
-  if (initTimeout) clearTimeout(initTimeout);
-  initTimeout = setTimeout(() => {
-    if (connectionStatus === 'INITIALIZING') {
-      console.warn('⚠️ WhatsApp initialization timed out after 30s. Resetting status to DISCONNECTED.');
-      connectionStatus = 'DISCONNECTED';
-      lastError = 'Initialization timed out (30s). Please click Connect again.';
-      client = null;
-      qrCodeData = null;
+  try {
+    const authDir = path.join(__dirname, '../../.baileys_auth');
+    if (!fs.existsSync(authDir)) {
+      fs.mkdirSync(authDir, { recursive: true });
     }
-  }, 30000);
 
-  wppconnect
-    .create({
-      session: 'uck-session',
-      logQR: false,
-      catchQR: async (base64Qr, asciiQR, attempts, urlCode) => {
-        console.log('🤖 WhatsApp: QR Code generated. Ready for scanning. Attempt:', attempts);
-        connectionStatus = 'QR_READY';
-        lastError = null;
-        if (base64Qr && base64Qr.length > 50) {
-          qrCodeData = base64Qr.startsWith('data:') ? base64Qr : `data:image/png;base64,${base64Qr}`;
-        } else if (urlCode || asciiQR) {
-          try {
-            qrCodeData = await QRCode.toDataURL(urlCode || asciiQR);
-          } catch (err) {
-            console.error('QRCode conversion error:', err);
-          }
-        }
-      },
-      statusFind: (statusSession, session) => {
-        console.log('🤖 WhatsApp Status:', statusSession);
-        if (statusSession === 'isLogged' || statusSession === 'inChat' || statusSession === 'successChat') {
-            connectionStatus = 'CONNECTED';
-            qrCodeData = null;
-            lastError = null;
-        }
-        if (statusSession === 'notLogged' || statusSession === 'browserClose' || statusSession === 'desconnectedMobile' || statusSession === 'autocloseCalled') {
-            connectionStatus = 'DISCONNECTED';
-            qrCodeData = null;
-        }
-      },
-      headless: true,
-      autoClose: 0,
-      puppeteerOptions: {
-        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
-        userDataDir: './.wppconnect_auth',
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-accelerated-2d-canvas',
-          '--no-first-run',
-          '--no-zygote',
-          '--disable-gpu',
-          '--disable-web-security',
-          '--disable-features=IsolateOrigins,site-per-process',
-          '--disable-site-isolation-trials',
-          '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
-        ]
-      }
-    })
-    .then((createdClient) => {
-      client = createdClient;
-      connectionStatus = 'CONNECTED';
-      qrCodeData = null;
-      lastError = null;
-      console.log('🤖 WhatsApp: Connection established! WPPConnect is READY.');
-      
-      createdClient.onStateChange((state) => {
-        console.log('🤖 WhatsApp State Change:', state);
-        if (state === 'CONNECTED') {
-           connectionStatus = 'CONNECTED';
-        } else if (state === 'CONFLICT' || state === 'UNPAIRED' || state === 'UNLAUNCHED') {
-           connectionStatus = 'DISCONNECTED';
-           qrCodeData = null;
-        }
-      });
-    })
-    .catch((error) => {
-      console.error('❌ WhatsApp setup error:', error.message);
-      lastError = error.message;
-      connectionStatus = 'DISCONNECTED';
-      qrCodeData = null;
-      client = null;
+    const { state, saveCreds } = await useMultiFileAuthState(authDir);
+
+    sock = makeWASocket({
+      auth: state,
+      printQRInTerminal: false,
+      logger: pino({ level: 'silent' }),
+      browser: ['UCK Academy', 'Chrome', '1.0.0'],
+      connectTimeoutMs: 60000,
+      defaultQueryTimeoutMs: 60000,
+      keepAliveIntervalMs: 25000,
     });
+
+    sock.ev.on('creds.update', saveCreds);
+
+    sock.ev.on('connection.update', async (update) => {
+      const { connection, lastDisconnect, qr } = update;
+
+      if (qr) {
+        console.log('🤖 WhatsApp: QR Code generated by Baileys!');
+        try {
+          qrCodeData = await QRCode.toDataURL(qr);
+          connectionStatus = 'QR_READY';
+          lastError = null;
+        } catch (qrErr) {
+          console.error('QR code conversion error:', qrErr);
+        }
+      }
+
+      if (connection === 'close') {
+        const statusCode = lastDisconnect?.error?.output?.statusCode;
+        const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+        console.log(`🤖 WhatsApp Connection closed. Reason code: ${statusCode}. Reconnecting: ${shouldReconnect}`);
+
+        if (statusCode === DisconnectReason.loggedOut) {
+          console.log('🤖 WhatsApp: User logged out. Clearing session files.');
+          await logout();
+        } else {
+          connectionStatus = 'DISCONNECTED';
+          qrCodeData = null;
+          sock = null;
+        }
+      } else if (connection === 'open') {
+        console.log('🤖 WhatsApp: Connection established! Baileys is READY.');
+        connectionStatus = 'CONNECTED';
+        qrCodeData = null;
+        lastError = null;
+      }
+    });
+  } catch (err) {
+    console.error('❌ WhatsApp Baileys setup error:', err);
+    connectionStatus = 'DISCONNECTED';
+    lastError = err.message || 'Failed to initialize WhatsApp';
+    qrCodeData = null;
+    sock = null;
+  } finally {
+    isInitializing = false;
+  }
 };
 
 const getStatus = () => connectionStatus;
@@ -112,7 +94,7 @@ const getQR = () => qrCodeData;
 const getError = () => lastError;
 
 const sendReminder = async (phone, message) => {
-  if (connectionStatus !== 'CONNECTED' || !client) {
+  if (connectionStatus !== 'CONNECTED' || !sock) {
     throw new Error('WhatsApp client is not connected');
   }
 
@@ -124,44 +106,39 @@ const sendReminder = async (phone, message) => {
   } else if (formattedNumber.length === 9) {
     formattedNumber = '94' + formattedNumber;
   }
-  
-  const chatId = `${formattedNumber}@c.us`;
-  
-  // 30-second timeout to prevent infinite hanging
-  const timeoutPromise = new Promise((_, reject) => {
-    setTimeout(() => reject(new Error('WhatsApp message dispatch timed out (30s)')), 30000);
-  });
 
-  const sendPromise = async () => {
-    try {
-      console.log(`🤖 WhatsApp: Attempting to send message to ${chatId}...`);
-      const result = await client.sendText(chatId, message);
-      console.log(`✅ WhatsApp: WPPConnect sendText result for ${chatId}:`, result.id || 'Success');
-      return result;
-    } catch (sendErr) {
-      console.error(`❌ WhatsApp: WPPConnect sendText failed for ${chatId}:`, sendErr);
-      throw sendErr;
-    }
-  };
-
-  await Promise.race([sendPromise(), timeoutPromise]);
+  const jid = `${formattedNumber}@s.whatsapp.net`;
+  
+  console.log(`🤖 WhatsApp: Sending message via Baileys to ${jid}...`);
+  const result = await sock.sendMessage(jid, { text: message });
+  console.log(`✅ WhatsApp: Sent message successfully to ${jid}`);
+  return result;
 };
 
 const logout = async () => {
-  if (client) {
+  if (sock) {
     try {
-      const logoutPromise = client.logout();
-      const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 10000));
-      await Promise.race([logoutPromise, timeoutPromise]);
-      await client.close(); // Also close the browser instance
-      console.log('🤖 WhatsApp: Session destroyed successfully.');
+      await sock.logout();
     } catch (e) {
-      console.error('Logout/destroy error:', e.message);
+      console.log('Baileys logout info:', e.message);
     }
+    try {
+      sock.end(undefined);
+    } catch (e) {}
   }
+  sock = null;
   connectionStatus = 'DISCONNECTED';
   qrCodeData = null;
-  client = null;
+
+  const authDir = path.join(__dirname, '../../.baileys_auth');
+  if (fs.existsSync(authDir)) {
+    try {
+      fs.rmSync(authDir, { recursive: true, force: true });
+      console.log('🤖 WhatsApp: Session folder removed successfully.');
+    } catch (e) {
+      console.error('Failed to remove auth dir:', e);
+    }
+  }
 };
 
 module.exports = {
@@ -172,3 +149,4 @@ module.exports = {
   sendReminder,
   logout
 };
+

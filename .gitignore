@@ -30,6 +30,8 @@ serviceAccountKey.json
 # WhatsApp sessions & auth
 .wwebjs_auth/
 .wwebjs_cache/
+.baileys_auth/
 backend/.wwebjs_auth/
 backend/.wwebjs_cache/
+backend/.baileys_auth/
 UCK Student Entry(Sheet1).csv
