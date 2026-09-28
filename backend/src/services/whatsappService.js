@@ -1,34 +1,47 @@
 const wppconnect = require('@wppconnect-team/wppconnect');
+const QRCode = require('qrcode');
 
 let client = null;
 let qrCodeData = null;
 let connectionStatus = 'DISCONNECTED';
+let initTimeout = null;
 
-const initialize = () => {
-  if (client) return;
+const initialize = (force = false) => {
+  if (client && !force) return;
+
+  if (force) {
+    client = null;
+    qrCodeData = null;
+  }
 
   connectionStatus = 'INITIALIZING';
   console.log('\n🤖 WhatsApp: Starting client initialization with WPPConnect...');
 
-  // Set a safety timeout to reset status if stuck initializing for > 35 seconds
-  setTimeout(() => {
+  if (initTimeout) clearTimeout(initTimeout);
+  initTimeout = setTimeout(() => {
     if (connectionStatus === 'INITIALIZING') {
-      console.warn('⚠️ WhatsApp initialization timed out after 35s. Resetting status to DISCONNECTED.');
+      console.warn('⚠️ WhatsApp initialization timed out after 30s. Resetting status to DISCONNECTED.');
       connectionStatus = 'DISCONNECTED';
       client = null;
       qrCodeData = null;
     }
-  }, 35000);
+  }, 30000);
 
   wppconnect
     .create({
       session: 'uck-session',
       logQR: false,
-      catchQR: (base64Qr, asciiQR) => {
-        console.log('🤖 WhatsApp: QR Code generated. Ready for scanning.');
+      catchQR: async (base64Qr, asciiQR, attempts, urlCode) => {
+        console.log('🤖 WhatsApp: QR Code generated. Ready for scanning. Attempt:', attempts);
         connectionStatus = 'QR_READY';
-        if (base64Qr) {
+        if (base64Qr && base64Qr.length > 50) {
           qrCodeData = base64Qr.startsWith('data:') ? base64Qr : `data:image/png;base64,${base64Qr}`;
+        } else if (urlCode || asciiQR) {
+          try {
+            qrCodeData = await QRCode.toDataURL(urlCode || asciiQR);
+          } catch (err) {
+            console.error('QRCode conversion error:', err);
+          }
         }
       },
       statusFind: (statusSession, session) => {
@@ -43,7 +56,7 @@ const initialize = () => {
         }
       },
       headless: true,
-      autoClose: 0, // Disable 60-second auto close
+      autoClose: 0,
       puppeteerOptions: {
         executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
         userDataDir: './.wppconnect_auth',

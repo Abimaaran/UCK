@@ -3,6 +3,12 @@ const router = express.Router();
 const whatsappService = require('../services/whatsappService');
 const { verifyAdmin } = require('../middleware/authMiddleware');
 
+// Force Connect / Re-initialize WhatsApp (Protected to Admin)
+router.post('/connect', verifyAdmin, (req, res) => {
+  whatsappService.initialize(true);
+  res.status(200).json({ status: whatsappService.getStatus() });
+});
+
 // Get connection status (Protected to Admin)
 router.get('/status', verifyAdmin, (req, res) => {
   const currentStatus = whatsappService.getStatus();

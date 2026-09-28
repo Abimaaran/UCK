@@ -372,6 +372,7 @@ const FeesManager = () => {
                 onClick={async () => {
                   try {
                     setWaStatus('LOADING');
+                    await api.post('/whatsapp/connect').catch(() => {});
                     let attempts = 0;
                     const pollQr = async () => {
                       try {
