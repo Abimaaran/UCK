@@ -17,6 +17,8 @@ const FeesManager = () => {
   const [sendingReminders, setSendingReminders] = useState(false);
   const [selectedStudentForView, setSelectedStudentForView] = useState(null);
   const [reminderLog, setReminderLog] = useState(null);
+  const [logModalType, setLogModalType] = useState(null); // 'SUCCESS' | 'FAILED' | 'ALL' | null
+  const [logModalSearch, setLogModalSearch] = useState('');
 
   const fetchLatestReminderStatus = async () => {
     try {
@@ -542,18 +544,62 @@ const FeesManager = () => {
           </div>
 
           {/* Progress Bar / Counters */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem', marginBottom: '1.25rem' }}>
-            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '0.75rem', borderRadius: '8px', textAlign: 'center' }}>
-              <div style={{ fontSize: '0.75rem', color: '#aaa', textTransform: 'uppercase' }}>Total Unpaid</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#fff' }}>{reminderLog.totalRecipients}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1rem', marginBottom: '1.25rem' }}>
+            <div 
+              onClick={() => { setLogModalType('ALL'); setLogModalSearch(''); }}
+              style={{ 
+                background: 'rgba(255,255,255,0.03)', 
+                padding: '0.85rem', 
+                borderRadius: '10px', 
+                textAlign: 'center', 
+                cursor: 'pointer',
+                border: '1px solid rgba(255,255,255,0.08)',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'; e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+            >
+              <div style={{ fontSize: '0.72rem', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Unpaid</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#fff', margin: '2px 0' }}>{reminderLog.totalRecipients}</div>
+              <span style={{ fontSize: '0.72rem', color: '#888', fontWeight: '500' }}>🔍 Click for List</span>
             </div>
-            <div style={{ background: 'rgba(40, 167, 69, 0.05)', padding: '0.75rem', borderRadius: '8px', textAlign: 'center', border: '1px solid rgba(40,167,69,0.1)' }}>
-              <div style={{ fontSize: '0.75rem', color: '#888', textTransform: 'uppercase' }}>✅ Sent</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#28a745' }}>{reminderLog.successCount}</div>
+
+            <div 
+              onClick={() => { setLogModalType('SUCCESS'); setLogModalSearch(''); }}
+              style={{ 
+                background: 'rgba(40, 167, 69, 0.08)', 
+                padding: '0.85rem', 
+                borderRadius: '10px', 
+                textAlign: 'center', 
+                cursor: 'pointer',
+                border: '1px solid rgba(40,167,69,0.3)',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(40,167,69,0.2)'; e.currentTarget.style.borderColor = '#28a745'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(40,167,69,0.08)'; e.currentTarget.style.borderColor = 'rgba(40,167,69,0.3)'; }}
+            >
+              <div style={{ fontSize: '0.72rem', color: '#28a745', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 'bold' }}>✅ Sent Success</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#28a745', margin: '2px 0' }}>{reminderLog.successCount}</div>
+              <span style={{ fontSize: '0.72rem', color: '#28a745', fontWeight: 'bold' }}>👁️ View ({reminderLog.successCount})</span>
             </div>
-            <div style={{ background: 'rgba(220, 53, 69, 0.05)', padding: '0.75rem', borderRadius: '8px', textAlign: 'center', border: '1px solid rgba(220,53,69,0.1)' }}>
-              <div style={{ fontSize: '0.75rem', color: '#888', textTransform: 'uppercase' }}>❌ Failed</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#dc3545' }}>{reminderLog.failCount}</div>
+
+            <div 
+              onClick={() => { setLogModalType('FAILED'); setLogModalSearch(''); }}
+              style={{ 
+                background: 'rgba(220, 53, 69, 0.08)', 
+                padding: '0.85rem', 
+                borderRadius: '10px', 
+                textAlign: 'center', 
+                cursor: 'pointer',
+                border: '1px solid rgba(220,53,69,0.3)',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(220,53,69,0.2)'; e.currentTarget.style.borderColor = '#dc3545'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(220,53,69,0.08)'; e.currentTarget.style.borderColor = 'rgba(220,53,69,0.3)'; }}
+            >
+              <div style={{ fontSize: '0.72rem', color: '#dc3545', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 'bold' }}>❌ Failed</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#dc3545', margin: '2px 0' }}>{reminderLog.failCount}</div>
+              <span style={{ fontSize: '0.72rem', color: '#dc3545', fontWeight: 'bold' }}>👁️ View ({reminderLog.failCount})</span>
             </div>
           </div>
 
@@ -981,9 +1027,177 @@ const FeesManager = () => {
                 }}>Close Details</button>
               </div>
             </div>
+      {/* WhatsApp Reminder Log Modal Popup */}
+      {logModalType && reminderLog && (
+        <div 
+          onClick={() => setLogModalType(null)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10001,
+            padding: '1rem'
+          }}
+        >
+          <div 
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: '#15151a',
+              border: `1px solid ${
+                logModalType === 'SUCCESS' ? 'rgba(40, 167, 69, 0.4)' :
+                logModalType === 'FAILED' ? 'rgba(220, 53, 69, 0.4)' :
+                'rgba(212, 175, 55, 0.4)'
+              }`,
+              borderRadius: '16px',
+              width: '100%',
+              maxWidth: '680px',
+              maxHeight: '85vh',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.6)',
+              overflow: 'hidden'
+            }}
+          >
+            {/* Modal Header */}
+            <div style={{
+              padding: '1.25rem 1.5rem',
+              borderBottom: '1px solid rgba(255,255,255,0.08)',
+              display: 'flex',
+              justify: 'space-between',
+              alignItems: 'center',
+              background: 
+                logModalType === 'SUCCESS' ? 'rgba(40, 167, 69, 0.08)' :
+                logModalType === 'FAILED' ? 'rgba(220, 53, 69, 0.08)' :
+                'rgba(212, 175, 55, 0.08)'
+            }}>
+              <div>
+                <h3 style={{ margin: 0, color: '#fff', fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {logModalType === 'SUCCESS' && <span>✅ Sent WhatsApp Reminders ({reminderLog.successCount})</span>}
+                  {logModalType === 'FAILED' && <span>❌ Failed WhatsApp Deliveries ({reminderLog.failCount})</span>}
+                  {logModalType === 'ALL' && <span>📢 All Targeted Recipients ({reminderLog.totalRecipients})</span>}
+                </h3>
+                <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: '#aaa' }}>
+                  Month: {getMonthName(reminderLog.month)} | Status: {reminderLog.status}
+                </p>
+              </div>
+
+              <button 
+                onClick={() => setLogModalType(null)}
+                style={{
+                  background: 'rgba(255,255,255,0.1)',
+                  border: 'none',
+                  color: '#fff',
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  fontSize: '1.1rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Search Bar */}
+            <div style={{ padding: '1rem 1.5rem 0.5rem 1.5rem' }}>
+              <input 
+                type="text"
+                placeholder="🔍 Search student name, ID or phone..."
+                value={logModalSearch}
+                onChange={e => setLogModalSearch(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.6rem 1rem',
+                  borderRadius: '8px',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  color: '#fff',
+                  fontSize: '0.85rem'
+                }}
+              />
+            </div>
+
+            {/* Modal Table Content */}
+            <div style={{ padding: '0.5rem 1.5rem 1.5rem 1.5rem', overflowY: 'auto', flex: 1 }}>
+              {(() => {
+                let list = [];
+                if (logModalType === 'SUCCESS') list = reminderLog.successList || [];
+                else if (logModalType === 'FAILED') list = reminderLog.failList || [];
+                else if (logModalType === 'ALL') {
+                  list = [
+                    ...(reminderLog.successList || []).map(item => ({ ...item, isSuccess: true })),
+                    ...(reminderLog.failList || []).map(item => ({ ...item, isSuccess: false }))
+                  ];
+                }
+
+                if (logModalSearch.trim()) {
+                  const query = logModalSearch.toLowerCase();
+                  list = list.filter(item => 
+                    (item.name || '').toLowerCase().includes(query) ||
+                    (item.studentId || '').toString().toLowerCase().includes(query) ||
+                    (item.phone || '').includes(query)
+                  );
+                }
+
+                if (list.length === 0) {
+                  return (
+                    <div style={{ padding: '3rem 1rem', textAlign: 'center', color: '#888' }}>
+                      <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📭</div>
+                      <p style={{ margin: 0 }}>No records found for this view.</p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.02)' }}>
+                        <th style={{ padding: '0.65rem 0.75rem', fontSize: '0.75rem', color: '#aaa', textTransform: 'uppercase' }}>ID</th>
+                        <th style={{ padding: '0.65rem 0.75rem', fontSize: '0.75rem', color: '#aaa', textTransform: 'uppercase' }}>Student Name</th>
+                        <th style={{ padding: '0.65rem 0.75rem', fontSize: '0.75rem', color: '#aaa', textTransform: 'uppercase' }}>Phone Number</th>
+                        <th style={{ padding: '0.65rem 0.75rem', fontSize: '0.75rem', color: '#aaa', textTransform: 'uppercase' }}>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {list.map((item, idx) => {
+                        const isSuccess = logModalType === 'SUCCESS' || (logModalType === 'ALL' && item.isSuccess);
+                        return (
+                          <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                            <td style={{ padding: '0.65rem 0.75rem', fontSize: '0.85rem', color: '#d4af37', fontWeight: 'bold' }}>#{item.studentId}</td>
+                            <td style={{ padding: '0.65rem 0.75rem', fontSize: '0.85rem', color: '#fff', fontWeight: '500' }}>{item.name}</td>
+                            <td style={{ padding: '0.65rem 0.75rem', fontSize: '0.85rem', color: '#aaa' }}>{item.phone || 'N/A'}</td>
+                            <td style={{ padding: '0.65rem 0.75rem', fontSize: '0.8rem' }}>
+                              {isSuccess ? (
+                                <span style={{ color: '#25D366', background: 'rgba(37,211,102,0.12)', padding: '3px 8px', borderRadius: '4px', border: '1px solid rgba(37,211,102,0.2)', fontWeight: '600' }}>
+                                  ✅ Delivered
+                                </span>
+                              ) : (
+                                <span style={{ color: '#ff6b6b', background: 'rgba(220,53,69,0.12)', padding: '3px 8px', borderRadius: '4px', border: '1px solid rgba(220,53,69,0.2)', fontWeight: '600' }}>
+                                  ❌ Failed: {item.error || 'Failed'}
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                );
+              })()}
+            </div>
           </div>
-        );
-      })()}
+        </div>
+      )}
     </div>
   );
 };
