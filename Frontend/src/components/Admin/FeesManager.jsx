@@ -1050,6 +1050,10 @@ const FeesManager = () => {
                 }}>Close Details</button>
               </div>
             </div>
+          </div>
+        );
+      })()}
+
       {/* WhatsApp Reminder Log Modal Popup */}
       {logModalType && reminderLog && (
         <div 
