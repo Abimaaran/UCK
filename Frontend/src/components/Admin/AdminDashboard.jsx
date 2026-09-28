@@ -28,13 +28,13 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState(() => {
     return localStorage.getItem('adminActiveTab') || 'students';
   });
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [tabRefreshKey, setTabRefreshKey] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
 
   const handleTabChange = (tabKey) => {
     setActiveTab(tabKey);
     localStorage.setItem('adminActiveTab', tabKey);
-    setIsSidebarOpen(false);
+    setIsSidebarOpen(false); // Mobile drawer close
+    setIsHovered(false);     // Instantly collapse desktop hover sidebar on click!
   };
 
   const handleRefreshCurrentTab = () => {
@@ -138,7 +138,11 @@ const AdminDashboard = () => {
         />
       )}
 
-      <div className={`admin-sidebar ${isSidebarOpen ? 'open' : ''}`}>
+      <div 
+        className={`admin-sidebar ${isSidebarOpen ? 'open' : ''} ${isHovered ? 'hover-expanded' : ''}`}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
         <div className="sidebar-header">
           <div className="brand-wrapper">
             <span className="sidebar-logo">♔</span>
