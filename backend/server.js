@@ -14,9 +14,9 @@ const app = require('./app');
 const PORT = process.env.PORT || 5000;
 
 // 2. Server Performance & Port Binding
-const server = app.listen(PORT, () => {
-  console.log(`✅ NETWORK: Server listening on PORT ${PORT}`);
-  console.log(`✅ STATUS: System Online (http://localhost:${PORT})`);
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ NETWORK: Server listening on PORT ${PORT} (0.0.0.0)`);
+  console.log(`✅ STATUS: System Online (http://0.0.0.0:${PORT})`);
   console.log("=".repeat(40) + "\n");
 });
 
