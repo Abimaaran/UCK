@@ -1,10 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createItem, updateItem, deleteItem } from '../../services/api';
 
-const CoachManager = ({ coaches, setCoaches }) => {
+const CoachManager = ({ coaches, setCoaches, targetItem }) => {
   const [editingCoach, setEditingCoach] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
   const [photoPreview, setPhotoPreview] = useState(null);
+
+  useEffect(() => {
+    if (targetItem) {
+      setEditingCoach(targetItem);
+    }
+  }, [targetItem]);
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this coach?')) {

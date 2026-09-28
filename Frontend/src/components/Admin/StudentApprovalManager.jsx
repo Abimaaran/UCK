@@ -39,10 +39,23 @@ const formatDOB = (dobStr) => {
 /* ═══════════════════════════════════════════════════════════
    MAIN COMPONENT
    ═══════════════════════════════════════════════════════════ */
-const StudentApprovalManager = ({ students, setStudents }) => {
+const StudentApprovalManager = ({ students, setStudents, targetItem }) => {
   const [view, setView] = useState('approved'); // 'approved' | 'pending' | 'declined' | 'add'
   const [refresh, setRefresh] = useState(0);
   const [viewingStudent, setViewingStudent] = useState(null);
+
+  useEffect(() => {
+    if (targetItem) {
+      if (targetItem.status === 'Pending') {
+        setView('pending');
+      } else if (targetItem.status === 'Declined') {
+        setView('declined');
+      } else {
+        setView('approved');
+      }
+      setViewingStudent(targetItem);
+    }
+  }, [targetItem]);
 
   const refresh_ = () => setRefresh(r => r + 1);
 

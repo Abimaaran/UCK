@@ -249,6 +249,7 @@ const AdminDashboard = () => {
 
   /* ── UNIVERSAL DEEP SYSTEM SEARCH (Like Android / iOS System Search) ── */
   const searchLower = searchQuery.toLowerCase().trim();
+  const [searchTargetItem, setSearchTargetItem] = useState(null);
 
   // 1. Pages & Features
   const matchedPages = navSections.filter(sec => 
@@ -267,7 +268,8 @@ const AdminDashboard = () => {
     label: `${s.fullName || s.name || 'Student'} (${s.studentId || 'ID'})`,
     desc: `Status: ${s.status || 'Active'} • Phone: ${s.phone || 'N/A'} • Skill: ${s.chessSkillLevel || 'Standard'}`,
     icon: <StudentIcon />,
-    category: 'Student Data'
+    category: 'Student Data',
+    targetData: s
   })) : [];
 
   // 3. Real Coaches Matches
@@ -279,7 +281,8 @@ const AdminDashboard = () => {
     label: `Coach ${c.name}`,
     desc: `Role: ${c.specialization || c.role || 'Instructor'} • FIDE Rating: ${c.rating || 'N/A'}`,
     icon: <CoachIcon />,
-    category: 'Coaches Data'
+    category: 'Coaches Data',
+    targetData: c
   })) : [];
 
   // 4. Real Tournaments Matches
@@ -291,7 +294,8 @@ const AdminDashboard = () => {
     label: `Tournament: ${t.title || t.name}`,
     desc: `Location: ${t.location || t.venue || 'Academy'} • Date: ${t.date || 'Upcoming'}`,
     icon: <TournamentIcon />,
-    category: 'Tournaments Data'
+    category: 'Tournaments Data',
+    targetData: t
   })) : [];
 
   // Combined Results List
@@ -301,6 +305,11 @@ const AdminDashboard = () => {
     ...matchedCoaches,
     ...matchedTournaments
   ];
+
+  const handleSearchResultClick = (sec) => {
+    setSearchTargetItem(sec.targetData || null);
+    handleTabChange(sec.key);
+  };
 
   const handleTabChange = (tabKey) => {
     if (tabKey === 'web-demo') {
@@ -344,26 +353,26 @@ const AdminDashboard = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'coaches':
-        return <CoachManager key={tabRefreshKey} coaches={coaches} setCoaches={setCoaches} />;
+        return <CoachManager key={tabRefreshKey} coaches={coaches} setCoaches={setCoaches} targetItem={searchTargetItem} />;
       case 'tournaments':
-        return <TournamentManager key={tabRefreshKey} tournaments={tournaments} setTournaments={setTournaments} />;
+        return <TournamentManager key={tabRefreshKey} tournaments={tournaments} setTournaments={setTournaments} targetItem={searchTargetItem} />;
       case 'achievements':
-        return <AchievementManager key={tabRefreshKey} achievements={achievements} setAchievements={setAchievements} />;
+        return <AchievementManager key={tabRefreshKey} achievements={achievements} setAchievements={setAchievements} targetItem={searchTargetItem} />;
       case 'timetable':
-        return <TimetableManager key={tabRefreshKey} timetable={timetable} setTimetable={setTimetable} />;
+        return <TimetableManager key={tabRefreshKey} timetable={timetable} setTimetable={setTimetable} targetItem={searchTargetItem} />;
       case 'attendance':
-        return <AttendanceManager key={tabRefreshKey} />;
+        return <AttendanceManager key={tabRefreshKey} targetItem={searchTargetItem} />;
       case 'fees':
-        return <FeesManager key={tabRefreshKey} />;
+        return <FeesManager key={tabRefreshKey} targetItem={searchTargetItem} />;
       case 'reviews':
-        return <StudentReviewManager key={tabRefreshKey} />;
+        return <StudentReviewManager key={tabRefreshKey} targetItem={searchTargetItem} />;
       case 'user-feedbacks':
-        return <UserReviewManager key={tabRefreshKey} />;
+        return <UserReviewManager key={tabRefreshKey} targetItem={searchTargetItem} />;
       case 'settings':
-        return <AdminSettings key={tabRefreshKey} />;
+        return <AdminSettings key={tabRefreshKey} targetItem={searchTargetItem} />;
       case 'students':
       default:
-        return <StudentApprovalManager key={tabRefreshKey} students={pendingStudents} setStudents={setPendingStudents} />;
+        return <StudentApprovalManager key={tabRefreshKey} students={pendingStudents} setStudents={setPendingStudents} targetItem={searchTargetItem} />;
     }
   };
 
@@ -402,7 +411,7 @@ const AdminDashboard = () => {
                   <div 
                     key={`${sec.key}-${idx}`} 
                     className="palette-item"
-                    onClick={() => handleTabChange(sec.key)}
+                    onClick={() => handleSearchResultClick(sec)}
                   >
                     <span className="palette-item-icon">{sec.icon}</span>
                     <div className="palette-item-text">

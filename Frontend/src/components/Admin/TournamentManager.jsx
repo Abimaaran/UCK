@@ -1,11 +1,17 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { createItem, updateItem, deleteItem } from '../../services/api';
 
-const TournamentManager = ({ tournaments, setTournaments }) => {
+const TournamentManager = ({ tournaments, setTournaments, targetItem }) => {
   const [editingTournament, setEditingTournament] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const [pdfData, setPdfData] = useState(null);
+
+  useEffect(() => {
+    if (targetItem) {
+      setEditingTournament(targetItem);
+    }
+  }, [targetItem]);
   const descriptionRef = useRef(null);
   const imageInputRef = useRef(null);
   const pdfInputRef = useRef(null);
