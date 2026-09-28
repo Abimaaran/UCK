@@ -443,20 +443,6 @@ const AdminDashboard = () => {
         </nav>
 
         <div className="sidebar-footer">
-          {/* Theme Switcher Toggle (Sun / Moon) */}
-          <button 
-            className="theme-toggle-btn"
-            onClick={toggleThemeMode}
-            title={`Switch to ${themeMode === 'dark' ? 'Light' : 'Dark'} Mode`}
-          >
-            <span className="nav-icon">
-              {themeMode === 'dark' ? <SunIcon /> : <MoonIcon />}
-            </span>
-            <span className="nav-label">
-              {themeMode === 'dark' ? 'Light Mode' : 'Dark Mode'}
-            </span>
-          </button>
-
           <button className="logout-btn" onClick={handleLogout} title="Exit Admin">
             <span className="nav-icon"><LogoutIcon /></span>
             <span className="nav-label">Exit Admin</span>
