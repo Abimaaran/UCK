@@ -10,6 +10,16 @@ const initialize = () => {
   connectionStatus = 'INITIALIZING';
   console.log('\n🤖 WhatsApp: Starting client initialization with WPPConnect...');
 
+  // Set a safety timeout to reset status if stuck initializing for > 35 seconds
+  setTimeout(() => {
+    if (connectionStatus === 'INITIALIZING') {
+      console.warn('⚠️ WhatsApp initialization timed out after 35s. Resetting status to DISCONNECTED.');
+      connectionStatus = 'DISCONNECTED';
+      client = null;
+      qrCodeData = null;
+    }
+  }, 35000);
+
   wppconnect
     .create({
       session: 'uck-session',
@@ -32,6 +42,7 @@ const initialize = () => {
       headless: true,
       autoClose: 0, // Disable 60-second auto close
       puppeteerOptions: {
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
         userDataDir: './.wppconnect_auth',
         args: [
           '--no-sandbox',
