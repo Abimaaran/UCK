@@ -217,6 +217,9 @@ const AdminDashboard = () => {
     setIsHovered(false);     // Instantly collapse desktop hover sidebar on click!
     setIsSearchFocused(false);
     setSearchQuery('');
+    if (document.activeElement) {
+      document.activeElement.blur();
+    }
   };
 
   const handleRefreshCurrentTab = () => {
