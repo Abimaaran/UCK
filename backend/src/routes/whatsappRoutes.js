@@ -6,7 +6,7 @@ const { verifyAdmin } = require('../middleware/authMiddleware');
 // Force Connect / Re-initialize WhatsApp (Protected to Admin)
 router.post('/connect', verifyAdmin, (req, res) => {
   whatsappService.initialize(true);
-  res.status(200).json({ status: whatsappService.getStatus() });
+  res.status(200).json({ status: whatsappService.getStatus(), error: whatsappService.getError() });
 });
 
 // Get connection status (Protected to Admin)
@@ -15,7 +15,7 @@ router.get('/status', verifyAdmin, (req, res) => {
   if (currentStatus === 'DISCONNECTED') {
     whatsappService.initialize();
   }
-  res.status(200).json({ status: whatsappService.getStatus() });
+  res.status(200).json({ status: whatsappService.getStatus(), error: whatsappService.getError() });
 });
 
 // Get QR code data URL (Protected to Admin)

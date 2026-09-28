@@ -12,6 +12,7 @@ const FeesManager = () => {
   // WhatsApp States
   const [waStatus, setWaStatus] = useState('LOADING');
   const [waQr, setWaQr] = useState(null);
+  const [waErrorMsg, setWaErrorMsg] = useState(null);
   const [sendingReminders, setSendingReminders] = useState(false);
   const [selectedStudentForView, setSelectedStudentForView] = useState(null);
   const [reminderLog, setReminderLog] = useState(null);
@@ -372,19 +373,33 @@ const FeesManager = () => {
                 onClick={async () => {
                   try {
                     setWaStatus('LOADING');
-                    await api.post('/whatsapp/connect').catch(() => {});
+                    setWaErrorMsg(null);
+                    const connRes = await api.post('/whatsapp/connect').catch(err => {
+                      if (err.response?.data?.error) {
+                        setWaErrorMsg(err.response.data.error);
+                      }
+                      return null;
+                    });
+                    
                     let attempts = 0;
                     const pollQr = async () => {
                       try {
                         const res = await api.get('/whatsapp/status');
                         setWaStatus(res.data.status);
+                        if (res.data.error) {
+                          setWaErrorMsg(res.data.error);
+                        }
                         if (res.data.status === 'QR_READY') {
                           const qrRes = await api.get('/whatsapp/qr');
-                          setWaQr(qrRes.data.qr);
-                          return true;
+                          if (qrRes.data.qr) {
+                            setWaQr(qrRes.data.qr);
+                            setWaErrorMsg(null);
+                            return true;
+                          }
                         }
                         return false;
                       } catch (e) {
+                        setWaErrorMsg(e.response?.data?.error || e.message);
                         return false;
                       }
                     };
@@ -396,12 +411,16 @@ const FeesManager = () => {
                         const ready = await pollQr();
                         if (ready || attempts > 15) {
                           clearInterval(interval);
-                          if (!ready) setWaStatus('DISCONNECTED');
+                          if (!ready) {
+                            setWaStatus('DISCONNECTED');
+                            setWaErrorMsg('QR Code generation timed out. Click Connect WhatsApp QR to try again.');
+                          }
                         }
                       }, 3000);
                     }
                   } catch (e) {
                     setWaStatus('DISCONNECTED');
+                    setWaErrorMsg(e.message || 'Failed to connect to WhatsApp service');
                   }
                 }}
                 style={{
@@ -436,6 +455,12 @@ const FeesManager = () => {
         {waStatus === 'LOADING' && (
           <div style={{ marginTop: '1rem', color: '#aaa', fontSize: '0.9rem' }}>
             🤖 Preparing browser context and connecting to WhatsApp Web. This might take up to a minute...
+          </div>
+        )}
+
+        {waErrorMsg && (
+          <div style={{ marginTop: '1rem', padding: '0.75rem 1rem', background: 'rgba(220, 53, 69, 0.15)', border: '1px solid #DC3545', color: '#FF6B6B', borderRadius: '8px', fontSize: '0.85rem' }}>
+            ⚠️ <strong>WhatsApp Alert:</strong> {waErrorMsg}
           </div>
         )}
       </div>

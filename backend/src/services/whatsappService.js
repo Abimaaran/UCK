@@ -1,10 +1,7 @@
 const wppconnect = require('@wppconnect-team/wppconnect');
 const QRCode = require('qrcode');
 
-let client = null;
-let qrCodeData = null;
-let connectionStatus = 'DISCONNECTED';
-let initTimeout = null;
+let lastError = null;
 
 const initialize = (force = false) => {
   if (client && !force) return;
@@ -12,9 +9,11 @@ const initialize = (force = false) => {
   if (force) {
     client = null;
     qrCodeData = null;
+    lastError = null;
   }
 
   connectionStatus = 'INITIALIZING';
+  lastError = null;
   console.log('\n🤖 WhatsApp: Starting client initialization with WPPConnect...');
 
   if (initTimeout) clearTimeout(initTimeout);
@@ -22,6 +21,7 @@ const initialize = (force = false) => {
     if (connectionStatus === 'INITIALIZING') {
       console.warn('⚠️ WhatsApp initialization timed out after 30s. Resetting status to DISCONNECTED.');
       connectionStatus = 'DISCONNECTED';
+      lastError = 'Initialization timed out (30s). Please click Connect again.';
       client = null;
       qrCodeData = null;
     }
@@ -34,6 +34,7 @@ const initialize = (force = false) => {
       catchQR: async (base64Qr, asciiQR, attempts, urlCode) => {
         console.log('🤖 WhatsApp: QR Code generated. Ready for scanning. Attempt:', attempts);
         connectionStatus = 'QR_READY';
+        lastError = null;
         if (base64Qr && base64Qr.length > 50) {
           qrCodeData = base64Qr.startsWith('data:') ? base64Qr : `data:image/png;base64,${base64Qr}`;
         } else if (urlCode || asciiQR) {
@@ -49,6 +50,7 @@ const initialize = (force = false) => {
         if (statusSession === 'isLogged' || statusSession === 'inChat' || statusSession === 'successChat') {
             connectionStatus = 'CONNECTED';
             qrCodeData = null;
+            lastError = null;
         }
         if (statusSession === 'notLogged' || statusSession === 'browserClose' || statusSession === 'desconnectedMobile' || statusSession === 'autocloseCalled') {
             connectionStatus = 'DISCONNECTED';
@@ -79,6 +81,7 @@ const initialize = (force = false) => {
       client = createdClient;
       connectionStatus = 'CONNECTED';
       qrCodeData = null;
+      lastError = null;
       console.log('🤖 WhatsApp: Connection established! WPPConnect is READY.');
       
       createdClient.onStateChange((state) => {
@@ -93,6 +96,7 @@ const initialize = (force = false) => {
     })
     .catch((error) => {
       console.error('❌ WhatsApp setup error:', error.message);
+      lastError = error.message;
       connectionStatus = 'DISCONNECTED';
       qrCodeData = null;
       client = null;
@@ -101,6 +105,7 @@ const initialize = (force = false) => {
 
 const getStatus = () => connectionStatus;
 const getQR = () => qrCodeData;
+const getError = () => lastError;
 
 const sendReminder = async (phone, message) => {
   if (connectionStatus !== 'CONNECTED' || !client) {
@@ -159,6 +164,7 @@ module.exports = {
   initialize,
   getStatus,
   getQR,
+  getError,
   sendReminder,
   logout
 };
