@@ -407,21 +407,71 @@
   font-family: monospace;
 }
 
-/* Floating Command Palette Dropdown (Overlays Everything 100%) */
-.search-command-palette {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  width: 340px;
-  background: var(--bg-card);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(245, 158, 11, 0.2);
-  z-index: 99999 !important;
-  overflow: hidden;
+/* ── GLOBAL COMMAND PALETTE SEARCH MODAL OVERLAY (100% TOP Z-INDEX) ── */
+.global-command-palette-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 9999999 !important;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 10vh;
   animation: fadeIn 0.2s ease-out;
+}
+
+.global-command-palette-card {
+  width: 620px;
+  max-width: 92vw;
+  background: var(--bg-card);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  box-shadow: 0 35px 80px rgba(0, 0, 0, 0.95), 0 0 40px rgba(245, 158, 11, 0.25);
+  overflow: hidden;
+  animation: slideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.command-palette-search-box {
+  display: flex;
+  align-items: center;
+  padding: 1.1rem 1.4rem;
+  gap: 14px;
+  border-bottom: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.command-palette-input {
+  flex-grow: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main);
+  font-family: inherit;
+}
+
+.esc-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  background: rgba(245, 158, 11, 0.18);
+  color: var(--accent-gold);
+  padding: 3px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+}
+
+.esc-badge:hover {
+  background: rgba(245, 158, 11, 0.3);
 }
 
 .palette-header {

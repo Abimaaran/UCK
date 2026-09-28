@@ -171,20 +171,23 @@ const AdminDashboard = () => {
     localStorage.setItem('adminThemeMode', nextMode);
   };
 
-  // Live Navigation Command Palette / Search
+  // Live Navigation Command Palette / Search Modal
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const searchContainerRef = useRef(null);
 
-  // Close search dropdown on click outside
+  // Keyboard shortcut (⌘K or Ctrl+K / Esc) handler for Command Palette
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsSearchFocused(prev => !prev);
+      }
+      if (e.key === 'Escape') {
         setIsSearchFocused(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const navSections = [
@@ -226,9 +229,9 @@ const AdminDashboard = () => {
     setTabRefreshKey(prev => prev + 1);
   };
 
-  // Lock body scroll when sidebar drawer is open on mobile
+  // Lock body scroll when sidebar drawer or search palette is open
   useEffect(() => {
-    if (isSidebarOpen) {
+    if (isSidebarOpen || isSearchFocused) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -236,7 +239,7 @@ const AdminDashboard = () => {
     return () => {
       document.body.style.overflow = '';
     };
-  }, [isSidebarOpen]);
+  }, [isSidebarOpen, isSearchFocused]);
 
   // State for all manageable entities
   const [coaches, setCoaches] = useState([]);
@@ -319,6 +322,48 @@ const AdminDashboard = () => {
           className="sidebar-backdrop" 
           onClick={() => setIsSidebarOpen(false)}
         />
+      )}
+
+      {/* Global Command Palette Overlay Dialog (Guaranteed 100% Top Stacking Above Modals, Cards & Tables) */}
+      {isSearchFocused && (
+        <div className="global-command-palette-backdrop" onClick={() => setIsSearchFocused(false)}>
+          <div className="global-command-palette-card" onClick={e => e.stopPropagation()}>
+            <div className="command-palette-search-box">
+              <span className="search-icon"><SearchIcon /></span>
+              <input 
+                type="text" 
+                placeholder="Search any admin section, student, fees, settings..." 
+                className="command-palette-input"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                autoFocus
+              />
+              <span className="esc-badge" onClick={() => setIsSearchFocused(false)}>ESC</span>
+            </div>
+
+            <div className="palette-header">ADMIN QUICK NAVIGATION</div>
+
+            <div className="palette-list">
+              {filteredNavSections.length > 0 ? (
+                filteredNavSections.map(sec => (
+                  <div 
+                    key={sec.key} 
+                    className="palette-item"
+                    onClick={() => handleTabChange(sec.key)}
+                  >
+                    <span className="palette-item-icon">{sec.icon}</span>
+                    <div className="palette-item-text">
+                      <span className="palette-item-title">{sec.label}</span>
+                      <span className="palette-item-desc">{sec.desc}</span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="palette-no-results">No matching admin section found</div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       <div 
@@ -480,44 +525,16 @@ const AdminDashboard = () => {
           </div>
           
           <div className="header-right">
-            {/* Quick Command Navigation Search Bar */}
-            <div className="header-search-wrapper" ref={searchContainerRef}>
+            {/* Quick Command Navigation Search Trigger Button */}
+            <div className="header-search-wrapper" onClick={() => setIsSearchFocused(true)}>
               <span className="search-icon"><SearchIcon /></span>
               <input 
                 type="text" 
                 placeholder="Search page or feature..." 
                 className="header-search-input"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => setIsSearchFocused(true)}
+                readOnly
               />
               <kbd className="search-shortcut">⌘K</kbd>
-
-              {/* Live Search Command Palette Dropdown */}
-              {isSearchFocused && (
-                <div className="search-command-palette">
-                  <div className="palette-header">Admin Quick Navigation</div>
-                  <div className="palette-list">
-                    {filteredNavSections.length > 0 ? (
-                      filteredNavSections.map(sec => (
-                        <div 
-                          key={sec.key} 
-                          className="palette-item"
-                          onClick={() => handleTabChange(sec.key)}
-                        >
-                          <span className="palette-item-icon">{sec.icon}</span>
-                          <div className="palette-item-text">
-                            <span className="palette-item-title">{sec.label}</span>
-                            <span className="palette-item-desc">{sec.desc}</span>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="palette-no-results">No matching admin section found</div>
-                    )}
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Quick Theme Toggle Button in Header */}
