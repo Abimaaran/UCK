@@ -13,7 +13,7 @@ import UserReviewManager from './UserReviewManager';
 import AdminSettings from './AdminSettings';
 import './AdminDashboard.css';
 
-/* ── PROFESSIONAL SVG ICONS ─────────────────────────────────── */
+/* ── PROFESSIONAL SVG ICONS FOR NAVIGATION ───────────────────── */
 const StudentIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
@@ -175,6 +175,49 @@ const AdminDashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
+  // System Entities for Universal Deep Search
+  const [coaches, setCoaches] = useState([]);
+  const [tournaments, setTournaments] = useState([]);
+  const [achievements, setAchievements] = useState([]);
+  const [timetable, setTimetable] = useState([]);
+  const [pendingStudents, setPendingStudents] = useState([]);
+  const [allStudents, setAllStudents] = useState([]);
+
+  // Dynamic API loading
+  useEffect(() => {
+    const loadAll = async () => {
+      const fetchSection = async (key, setter, endpoint) => {
+        try {
+          const data = await getCollection(endpoint || key);
+          setter(Array.isArray(data) ? data : []);
+        } catch (err) {
+          console.warn(`Failed to load ${key}:`, err.message);
+          setter([]);
+        }
+      };
+
+      await Promise.all([
+        fetchSection('coaches', setCoaches),
+        fetchSection('tournaments', setTournaments),
+        fetchSection('achievements', setAchievements),
+        fetchSection('timetable', setTimetable),
+        (async () => {
+          try {
+            const all = await getCollection('students');
+            const list = Array.isArray(all) ? all : [];
+            setAllStudents(list);
+            setPendingStudents(list.filter(s => s.status === 'Pending'));
+          } catch (err) {
+            console.warn('Failed to load students:', err.message);
+            setAllStudents([]);
+            setPendingStudents([]);
+          }
+        })()
+      ]);
+    };
+    loadAll();
+  }, [tabRefreshKey]);
+
   // Keyboard shortcut (⌘K or Ctrl+K / Esc) handler for Command Palette
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -191,23 +234,73 @@ const AdminDashboard = () => {
   }, []);
 
   const navSections = [
-    { key: 'students', label: 'Student Approval', desc: 'Manage pending registration applications & student profiles', icon: <StudentIcon /> },
-    { key: 'coaches', label: 'Coaches', desc: 'Add & manage certified chess instructors', icon: <CoachIcon /> },
-    { key: 'tournaments', label: 'Tournaments', desc: 'Schedule and manage academy tournaments', icon: <TournamentIcon /> },
-    { key: 'achievements', label: 'Achievements', desc: 'Publish student awards and trophies', icon: <AchievementIcon /> },
-    { key: 'timetable', label: 'Timetable', desc: 'Configure weekly training schedules', icon: <TimetableIcon /> },
-    { key: 'attendance', label: 'Attendance', desc: 'Track daily class attendance records', icon: <AttendanceIcon /> },
-    { key: 'fees', label: 'Fees System', desc: 'Manage tuition payments, receipts & WhatsApp reminders', icon: <FeesIcon /> },
-    { key: 'reviews', label: 'Student Reviews', desc: 'Review & moderate student testimonials', icon: <ReviewIcon /> },
-    { key: 'user-feedbacks', label: 'User Feedbacks', desc: 'Read contact form messages & inquiries', icon: <FeedbackIcon /> },
-    { key: 'web-demo', label: 'Web Demo', desc: 'Open main website public view', icon: <WebDemoIcon /> },
-    { key: 'settings', label: 'Settings', desc: 'Change admin security password & preferences', icon: <SettingsIcon /> },
+    { key: 'students', label: 'Student Approval', desc: 'Manage pending registration applications & student profiles', icon: <StudentIcon />, category: 'Pages & Tools' },
+    { key: 'coaches', label: 'Coaches', desc: 'Add & manage certified chess instructors', icon: <CoachIcon />, category: 'Pages & Tools' },
+    { key: 'tournaments', label: 'Tournaments', desc: 'Schedule and manage academy tournaments', icon: <TournamentIcon />, category: 'Pages & Tools' },
+    { key: 'achievements', label: 'Achievements', desc: 'Publish student awards and trophies', icon: <AchievementIcon />, category: 'Pages & Tools' },
+    { key: 'timetable', label: 'Timetable', desc: 'Configure weekly training schedules', icon: <TimetableIcon />, category: 'Pages & Tools' },
+    { key: 'attendance', label: 'Attendance', desc: 'Track daily class attendance records', icon: <AttendanceIcon />, category: 'Pages & Tools' },
+    { key: 'fees', label: 'Fees System', desc: 'Manage tuition payments, receipts & WhatsApp reminders', icon: <FeesIcon />, category: 'Pages & Tools' },
+    { key: 'reviews', label: 'Student Reviews', desc: 'Review & moderate student testimonials', icon: <ReviewIcon />, category: 'Pages & Tools' },
+    { key: 'user-feedbacks', label: 'User Feedbacks', desc: 'Read contact form messages & inquiries', icon: <FeedbackIcon />, category: 'Pages & Tools' },
+    { key: 'web-demo', label: 'Web Demo', desc: 'Open main website public view', icon: <WebDemoIcon />, category: 'Pages & Tools' },
+    { key: 'settings', label: 'Settings', desc: 'Change admin security password & preferences', icon: <SettingsIcon />, category: 'Pages & Tools' },
   ];
 
-  const filteredNavSections = navSections.filter(sec => 
-    sec.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    sec.desc.toLowerCase().includes(searchQuery.toLowerCase())
+  /* ── UNIVERSAL DEEP SYSTEM SEARCH (Like Android / iOS System Search) ── */
+  const searchLower = searchQuery.toLowerCase().trim();
+
+  // 1. Pages & Features
+  const matchedPages = navSections.filter(sec => 
+    sec.label.toLowerCase().includes(searchLower) ||
+    sec.desc.toLowerCase().includes(searchLower)
   );
+
+  // 2. Real Student Database Matches
+  const matchedStudents = searchLower ? allStudents.filter(s => 
+    (s.fullName || s.name || '').toLowerCase().includes(searchLower) ||
+    (s.studentId || '').toLowerCase().includes(searchLower) ||
+    (s.phone || '').includes(searchLower) ||
+    (s.parentName || '').toLowerCase().includes(searchLower)
+  ).slice(0, 5).map(s => ({
+    key: 'students',
+    label: `${s.fullName || s.name || 'Student'} (${s.studentId || 'ID'})`,
+    desc: `Status: ${s.status || 'Active'} • Phone: ${s.phone || 'N/A'} • Skill: ${s.chessSkillLevel || 'Standard'}`,
+    icon: <StudentIcon />,
+    category: 'Student Data'
+  })) : [];
+
+  // 3. Real Coaches Matches
+  const matchedCoaches = searchLower ? coaches.filter(c => 
+    (c.name || '').toLowerCase().includes(searchLower) ||
+    (c.specialization || c.role || '').toLowerCase().includes(searchLower)
+  ).slice(0, 4).map(c => ({
+    key: 'coaches',
+    label: `Coach ${c.name}`,
+    desc: `Role: ${c.specialization || c.role || 'Instructor'} • FIDE Rating: ${c.rating || 'N/A'}`,
+    icon: <CoachIcon />,
+    category: 'Coaches Data'
+  })) : [];
+
+  // 4. Real Tournaments Matches
+  const matchedTournaments = searchLower ? tournaments.filter(t => 
+    (t.title || t.name || '').toLowerCase().includes(searchLower) ||
+    (t.location || t.venue || '').toLowerCase().includes(searchLower)
+  ).slice(0, 4).map(t => ({
+    key: 'tournaments',
+    label: `Tournament: ${t.title || t.name}`,
+    desc: `Location: ${t.location || t.venue || 'Academy'} • Date: ${t.date || 'Upcoming'}`,
+    icon: <TournamentIcon />,
+    category: 'Tournaments Data'
+  })) : [];
+
+  // Combined Results List
+  const allSearchResults = [
+    ...matchedPages,
+    ...matchedStudents,
+    ...matchedCoaches,
+    ...matchedTournaments
+  ];
 
   const handleTabChange = (tabKey) => {
     if (tabKey === 'web-demo') {
@@ -240,46 +333,6 @@ const AdminDashboard = () => {
       document.body.style.overflow = '';
     };
   }, [isSidebarOpen, isSearchFocused]);
-
-  // State for all manageable entities
-  const [coaches, setCoaches] = useState([]);
-  const [tournaments, setTournaments] = useState([]);
-  const [achievements, setAchievements] = useState([]);
-  const [timetable, setTimetable] = useState([]);
-  const [pendingStudents, setPendingStudents] = useState([]);
-
-  // Dynamic API loading
-  useEffect(() => {
-    const loadAll = async () => {
-      const fetchSection = async (key, setter, endpoint) => {
-        try {
-          const data = await getCollection(endpoint || key);
-          setter(Array.isArray(data) ? data : []);
-        } catch (err) {
-          console.warn(`Failed to load ${key}:`, err.message);
-          setter([]);
-        }
-      };
-
-      await Promise.all([
-        fetchSection('coaches', setCoaches),
-        fetchSection('tournaments', setTournaments),
-        fetchSection('achievements', setAchievements),
-        fetchSection('timetable', setTimetable),
-        (async () => {
-          try {
-            const all = await getCollection('students');
-            const list = Array.isArray(all) ? all : [];
-            setPendingStudents(list.filter(s => s.status === 'Pending'));
-          } catch (err) {
-            console.warn('Failed to load students:', err.message);
-            setPendingStudents([]);
-          }
-        })()
-      ]);
-    };
-    loadAll();
-  }, [tabRefreshKey]);
 
   const handleLogout = () => {
     localStorage.removeItem('isAdminLoggedIn');
@@ -324,7 +377,7 @@ const AdminDashboard = () => {
         />
       )}
 
-      {/* Global Command Palette Overlay Dialog (Guaranteed 100% Top Stacking Above Modals, Cards & Tables) */}
+      {/* Global Universal System Command Search Modal Overlay (100% Top Stacking) */}
       {isSearchFocused && (
         <div className="global-command-palette-backdrop" onClick={() => setIsSearchFocused(false)}>
           <div className="global-command-palette-card" onClick={e => e.stopPropagation()}>
@@ -332,7 +385,7 @@ const AdminDashboard = () => {
               <span className="search-icon"><SearchIcon /></span>
               <input 
                 type="text" 
-                placeholder="Search any admin section, student, fees, settings..." 
+                placeholder="Search students, coaches, tournaments, fees, or features..." 
                 className="command-palette-input"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -341,25 +394,28 @@ const AdminDashboard = () => {
               <span className="esc-badge" onClick={() => setIsSearchFocused(false)}>ESC</span>
             </div>
 
-            <div className="palette-header">ADMIN QUICK NAVIGATION</div>
+            <div className="palette-header">SYSTEM UNIVERSAL SEARCH</div>
 
             <div className="palette-list">
-              {filteredNavSections.length > 0 ? (
-                filteredNavSections.map(sec => (
+              {allSearchResults.length > 0 ? (
+                allSearchResults.map((sec, idx) => (
                   <div 
-                    key={sec.key} 
+                    key={`${sec.key}-${idx}`} 
                     className="palette-item"
                     onClick={() => handleTabChange(sec.key)}
                   >
                     <span className="palette-item-icon">{sec.icon}</span>
                     <div className="palette-item-text">
-                      <span className="palette-item-title">{sec.label}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span className="palette-item-title">{sec.label}</span>
+                        {sec.category && <span className="palette-category-tag">{sec.category}</span>}
+                      </div>
                       <span className="palette-item-desc">{sec.desc}</span>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="palette-no-results">No matching admin section found</div>
+                <div className="palette-no-results">No matching data or section found</div>
               )}
             </div>
           </div>
@@ -525,12 +581,12 @@ const AdminDashboard = () => {
           </div>
           
           <div className="header-right">
-            {/* Quick Command Navigation Search Trigger Button */}
+            {/* Universal System Search Input */}
             <div className="header-search-wrapper" onClick={() => setIsSearchFocused(true)}>
               <span className="search-icon"><SearchIcon /></span>
               <input 
                 type="text" 
-                placeholder="Search page or feature..." 
+                placeholder="Universal System Search..." 
                 className="header-search-input"
                 readOnly
               />

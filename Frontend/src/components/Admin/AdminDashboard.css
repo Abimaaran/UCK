@@ -697,13 +697,10 @@ td:empty::before {
   font-weight: 700;
 }
 
-tr:hover {
-  background-color: rgba(245, 158, 11, 0.05);
-  transition: background-color 0.15s ease;
-}
-
+/* Table row hover removed as requested */
+tr:hover,
 .theme-light tr:hover {
-  background-color: #f1f5f9;
+  background-color: transparent !important;
 }
 
 /* ── ACTION BUTTONS VERTICAL STACKED COLUMN & UNIFORM SIZE ("OREY MAREE SIZE") ── */
@@ -746,6 +743,31 @@ tr:hover {
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   line-height: 1 !important;
+}
+
+/* Hide raw icons inside table action buttons */
+.action-btns button svg,
+.action-btns .view-btn svg,
+.action-btns .edit-btn svg,
+.action-btns .delete-btn svg,
+.action-btns .approve-btn svg,
+.view-btn svg,
+.edit-btn svg,
+.delete-btn svg,
+.approve-btn svg {
+  display: none !important;
+}
+
+.palette-category-tag {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--accent-gold);
+  border: 1px solid var(--border-color);
+  padding: 1px 6px;
+  border-radius: 6px;
+  letter-spacing: 0.05em;
 }
 
 .view-btn {
