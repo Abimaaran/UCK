@@ -28,7 +28,9 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState(() => {
     return localStorage.getItem('adminActiveTab') || 'students';
   });
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [tabRefreshKey, setTabRefreshKey] = useState(0);
 
   const handleTabChange = (tabKey) => {
     setActiveTab(tabKey);
