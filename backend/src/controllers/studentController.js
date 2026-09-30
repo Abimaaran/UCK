@@ -119,7 +119,11 @@ exports.update = async (req, res) => {
     if (body.email !== undefined) updatePayload.email = body.email;
     if (body.phone !== undefined || body.phoneNumber !== undefined) updatePayload.phone_number = body.phone || body.phoneNumber;
     if (body.dob !== undefined || body.dateOfBirth !== undefined) updatePayload.dob = body.dob || body.dateOfBirth;
-    if (body.level !== undefined || body.chessExperience !== undefined) updatePayload.level = body.level || body.chessExperience;
+    if (body.level !== undefined || body.chessExperience !== undefined) {
+      updatePayload.level = body.level || body.chessExperience;
+      updatePayload.chess_experience = body.chessExperience || body.level;
+    }
+    if (body.address !== undefined) updatePayload.address = body.address;
     if (body.status !== undefined) updatePayload.status = body.status;
     if (body.isPaused !== undefined) updatePayload.is_paused = body.isPaused;
     if (body.approvedDate !== undefined) updatePayload.approved_date = body.approvedDate;

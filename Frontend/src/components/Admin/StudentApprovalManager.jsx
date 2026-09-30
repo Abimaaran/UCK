@@ -91,7 +91,7 @@ const StudentApprovalManager = ({ students, setStudents, targetItem }) => {
 
       {view === 'pending' && <PendingTab students={students} setStudents={setStudents} onRefresh={refresh_} setViewingStudent={setViewingStudent} />}
       {view === 'add' && <ManualAddTab onRefresh={refresh_} />}
-      {view === 'approved' && <ApprovedTab key={refresh} onRefresh={refresh_} setViewingStudent={setViewingStudent} />}
+      {view === 'approved' && <ApprovedTab onRefresh={refresh_} setViewingStudent={setViewingStudent} />}
       {view === 'declined' && <DeclinedTab students={students} setStudents={setStudents} onRefresh={refresh_} setViewingStudent={setViewingStudent} />}
 
       {viewingStudent && (
@@ -574,17 +574,18 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('All');
 
+  const fetchApproved = async () => {
+    try {
+      const allStudents = await getCollection('students');
+      setApproved(allStudents.filter(s => s.status === 'Approved'));
+    } catch (err) {
+      console.error("Failed to fetch approved students:", err);
+    }
+  };
+
   useEffect(() => {
-    const fetchApproved = async () => {
-      try {
-        const allStudents = await getCollection('students');
-        setApproved(allStudents.filter(s => s.status === 'Approved'));
-      } catch (err) {
-        console.error(err);
-      }
-    };
     fetchApproved();
-  }, [onRefresh]);
+  }, []);
 
   const handleSort = (field) => {
     if (sortBy === field) {
@@ -662,36 +663,46 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
   });
 
   const handleTogglePause = async (student) => {
-    const confirmMsg = student.isPaused 
-      ? `Are you sure you want to resume ${student.studentName || student.name || 'this student'}?`
-      : `Are you sure you want to pause ${student.studentName || student.name || 'this student'}?`;
-      
-    if (window.confirm(confirmMsg)) {
-      try {
-        await updateItem('students', student.id || student._id, {
-          ...student,
-          isPaused: !student.isPaused
-        });
-        onRefresh();
-      } catch (err) {
-        console.error("Failed to toggle pause status:", err);
-        alert("Could not update student status.");
+    const isPaused = !student.isPaused;
+    const targetDbId = student.id || student._id || student.studentId;
+
+    // Instantly update UI state in-place (ZERO page reload)
+    setApproved(prev => prev.map(s => {
+      if ((s.id && s.id === targetDbId) || (s._id && s._id === targetDbId) || s.studentId === student.studentId) {
+        return { ...s, isPaused };
       }
+      return s;
+    }));
+
+    try {
+      await updateItem('students', targetDbId, {
+        isPaused
+      });
+    } catch (err) {
+      console.error("Failed to toggle pause status:", err);
+      alert("Could not update student status in database.");
+      fetchApproved();
     }
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm(`Are you sure you want to delete student #${id}? This action cannot be undone.`)) {
-      try {
-        // Here id might be db id or custom studentId depending on backend mapping.
-        // Assuming your backend uses the MongoDB ID for actual document deletion (`student.id` typically maps to `_id`).
-        // We will need the actual DB document _id, let's assume `id` here is the `_id`/`id` field of the user document.
-        const stud = approved.find(s => s.studentId === id || s.id === id);
-        if (stud) await deleteItem('students', stud.id || stud._id);
-        onRefresh();
-      } catch (err) {
-        console.error(err);
-      }
+    const stud = approved.find(s => s.studentId === id || s.id === id || s._id === id);
+    const displayName = stud?.studentName || stud?.name || id;
+    if (!window.confirm(`Are you sure you want to delete student "${displayName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    const targetDbId = stud?.id || stud?._id || id;
+
+    // Instantly remove student from UI table in-place (ZERO page reload)
+    setApproved(prev => prev.filter(s => (s.id !== targetDbId && s._id !== targetDbId && s.studentId !== id)));
+
+    try {
+      await deleteItem('students', targetDbId);
+    } catch (err) {
+      console.error("Failed to delete student:", err);
+      alert("Failed to delete student from database: " + (err.response?.data?.error || err.message));
+      fetchApproved();
     }
   };
 
@@ -700,10 +711,15 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
     setEditingId(targetId);
     setEditForm({ 
       ...student,
+      studentId: student.studentId || '',
       studentName: student.studentName || student.name || '',
+      name: student.studentName || student.name || '',
       phoneNumber: student.phoneNumber || student.phone || student.whatsappNo || '',
-      dateOfBirth: student.dateOfBirth || student.dob || '',
+      phone: student.phoneNumber || student.phone || student.whatsappNo || '',
+      dob: student.dob || student.dateOfBirth || '',
+      dateOfBirth: student.dob || student.dateOfBirth || '',
       chessExperience: student.chessExperience || student.level || 'Beginner level',
+      level: student.chessExperience || student.level || 'Beginner level',
       school: student.school || '',
       parentName: student.parentName || '',
       parentOccupation: student.parentOccupation || '',
@@ -716,49 +732,86 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
   const handleEditChange = (e) => {
     const { name, value } = e.target;
     if (name === 'studentId') {
-      setEditForm({ ...editForm, studentId: value.toUpperCase() });
+      setEditForm(prev => ({ ...prev, studentId: value.toUpperCase() }));
+    } else if (name === 'studentName' || name === 'name') {
+      setEditForm(prev => ({ ...prev, studentName: value, name: value }));
     } else if (name === 'phoneNumber' || name === 'phone') {
-      setEditForm({ ...editForm, phoneNumber: value, phone: value });
+      setEditForm(prev => ({ ...prev, phoneNumber: value, phone: value }));
+    } else if (name === 'dob' || name === 'dateOfBirth') {
+      setEditForm(prev => ({ ...prev, dob: value, dateOfBirth: value }));
+    } else if (name === 'chessExperience' || name === 'level') {
+      setEditForm(prev => ({ ...prev, chessExperience: value, level: value }));
     } else {
-      setEditForm({ ...editForm, [name]: value });
+      setEditForm(prev => ({ ...prev, [name]: value }));
     }
   };
 
   const saveEdit = async () => {
     try {
       const id = editingId;
-      if (!id) {
-        alert("Cannot update student: Student ID is missing.");
-        return;
-      }
+      if (!id) return;
+
+      const stud = approved.find(s => s.id === id || s._id === id || s.studentId === id);
+      const targetDbId = stud?.id || stud?._id || id;
+
       const payload = { ...editForm };
       if (payload.studentId) {
         payload.studentId = String(payload.studentId).trim().toUpperCase();
       }
-      await updateItem('students', id, payload);
-      
-      const newPhone = payload.phoneNumber || payload.phone;
 
-      // Instantly update local UI state
+      const newSid = payload.studentId || stud?.studentId;
+      const newName = payload.studentName || payload.name || stud?.studentName || stud?.name;
+      const newPhone = payload.phoneNumber || payload.phone || stud?.phone;
+      const newDob = payload.dob || payload.dateOfBirth || stud?.dob;
+      const newLevel = payload.chessExperience || payload.level || stud?.level;
+
+      const updatedRecord = {
+        ...stud,
+        ...payload,
+        studentId: newSid,
+        studentName: newName,
+        name: newName,
+        phone_number: newPhone,
+        phoneNumber: newPhone,
+        phone: newPhone,
+        dob: newDob,
+        dateOfBirth: newDob,
+        chessExperience: newLevel,
+        level: newLevel
+      };
+
+      // 1. Immediately update UI state in-place (ZERO page refresh, instant seamless feedback!)
       setApproved(prev => prev.map(s => {
-        if ((s.id || s._id || s.studentId) === id) {
-          return { 
-            ...s, 
-            ...editForm,
-            phone_number: newPhone,
-            phone: newPhone,
-            phoneNumber: newPhone 
-          };
+        if ((s.id && s.id === targetDbId) || (s._id && s._id === targetDbId) || s.studentId === id) {
+          return updatedRecord;
         }
         return s;
       }));
-
       setEditingId(null);
-      alert("✅ Student details updated successfully!");
-      onRefresh();
+
+      // 2. Persist directly to database
+      await updateItem('students', targetDbId, {
+        studentId: newSid,
+        studentName: newName,
+        name: newName,
+        email: payload.email,
+        phone: newPhone,
+        phoneNumber: newPhone,
+        dob: newDob,
+        dateOfBirth: newDob,
+        level: newLevel,
+        chessExperience: newLevel,
+        address: payload.address,
+        school: payload.school,
+        parentName: payload.parentName,
+        parentOccupation: payload.parentOccupation,
+        fideId: payload.fideId,
+        fideRating: payload.fideRating
+      });
     } catch (err) {
       console.error("Failed to save edit:", err);
-      alert(err.response?.data?.error || err.message || "Failed to update student details.");
+      alert(err.response?.data?.error || err.message || "Failed to update student details in database.");
+      fetchApproved();
     }
   };
 
