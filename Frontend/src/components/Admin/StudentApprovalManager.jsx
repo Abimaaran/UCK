@@ -990,14 +990,13 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
               <th>Phone Number</th>
               <th>DOB</th>
               <th>Level</th>
-              <th>Approved</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {sortedApproved.length === 0 ? (
               <tr>
-                <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
+                <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
                   No approved students matching criteria
                 </td>
               </tr>
@@ -1056,7 +1055,6 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
                         </select>
                       ) : (s.chessExperience || s.level || 'N/A')}
                     </td>
-                    <td>{s.approvedDate || (s.updatedAt ? new Date(s.updatedAt).toLocaleDateString() : 'N/A')}</td>
                     <td className="action-btns">
                       {isEditing ? (
                         <>
