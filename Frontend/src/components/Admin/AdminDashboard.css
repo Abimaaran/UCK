@@ -50,8 +50,8 @@
 
 /* ── HARMONIOUS SCROLLBAR ────────────────────────────────────── */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 9px;
+  height: 9px;
 }
 
 ::-webkit-scrollbar-track {
@@ -60,7 +60,7 @@
 
 ::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb);
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -634,20 +634,55 @@
   border-radius: 18px;
   box-shadow: var(--shadow-dark);
   overflow-x: auto;
+  overflow-y: auto;
+  max-height: clamp(400px, 68vh, 760px);
+  min-height: 250px;
   max-width: 100%;
+  position: relative;
+}
+
+/* Explicit Right-Side Scrollbar Styling for Data Table Containers */
+.data-table-container::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.data-table-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 8px;
+  margin: 6px 0;
+}
+
+.theme-light .data-table-container::-webkit-scrollbar-track {
+  background: #e2e8f0;
+}
+
+.data-table-container::-webkit-scrollbar-thumb {
+  background: var(--accent-primary, #6366f1);
+  border-radius: 8px;
+}
+
+.data-table-container::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary-hover, #4f46e5);
+}
+
+.data-table-container {
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-primary, #6366f1) rgba(0, 0, 0, 0.25);
 }
 
 /* Clear, Crisp Table Borders across cells & headers */
 .data-table-container table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   min-width: 900px;
   table-layout: auto;
   border: 1px solid var(--border-color);
 }
 
 th {
-  background: rgba(79, 70, 229, 0.08);
+  background: #111827 !important;
   color: var(--accent-primary-light);
   font-weight: 800;
   text-transform: uppercase;
@@ -656,11 +691,16 @@ th {
   padding: 1rem 1.1rem;
   border: 1px solid var(--border-color) !important;
   text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
 }
 
 .theme-light th {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: #f8fafc !important;
+  color: #0f172a !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
 td {
