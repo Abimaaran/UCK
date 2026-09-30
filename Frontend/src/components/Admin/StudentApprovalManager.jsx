@@ -336,7 +336,6 @@ const PendingTab = ({ students, setStudents, onRefresh, setViewingStudent }) => 
           <thead>
             <tr>
               <th>Name</th>
-              <th>Email</th>
               <th>Phone</th>
               <th>Address</th>
               <th>Level</th>
@@ -348,7 +347,7 @@ const PendingTab = ({ students, setStudents, onRefresh, setViewingStudent }) => 
           <tbody>
             {sortedStudents.length === 0 ? (
               <tr>
-                <td colSpan="8" style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
+                <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
                   No pending registrations matching criteria
                 </td>
               </tr>
@@ -356,7 +355,6 @@ const PendingTab = ({ students, setStudents, onRefresh, setViewingStudent }) => 
               sortedStudents.map(student => (
                 <tr key={student.id}>
                   <td style={{ fontWeight: '600', minWidth: '140px' }}>{highlightMatch(student.studentName || student.name || 'N/A', searchTerm)}</td>
-                  <td style={{ minWidth: '180px' }}>{student.email}</td>
                   <td style={{ minWidth: '110px' }}>{formatDisplayPhone(student.phoneNumber || student.whatsappNo || student.phone)}</td>
                   <td style={{ fontSize: '0.85rem', minWidth: '220px', whiteSpace: 'normal', lineHeight: '1.4' }}>{student.address || 'N/A'}</td>
                   <td style={{ minWidth: '110px' }}>{getStudentLevel(student)}</td>
@@ -980,7 +978,6 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
             <tr>
               <th>Student ID</th>
               <th>Name</th>
-              <th>Email</th>
               <th>Phone Number</th>
               <th>DOB</th>
               <th>Level</th>
@@ -991,7 +988,7 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
           <tbody>
             {sortedApproved.length === 0 ? (
               <tr>
-                <td colSpan="8" style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
+                <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
                   No approved students matching criteria
                 </td>
               </tr>
@@ -1030,11 +1027,6 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
                           )}
                         </span>
                       )}
-                    </td>
-                    <td>
-                      {isEditing ? (
-                        <input name="email" value={editForm.email} onChange={handleEditChange} style={miniInput} />
-                      ) : s.email}
                     </td>
                     <td>
                       {isEditing ? (
@@ -1317,7 +1309,6 @@ const DeclinedTab = ({ students, setStudents, onRefresh, setViewingStudent }) =>
           <thead>
             <tr>
               <th>Name</th>
-              <th>Email</th>
               <th>Date of Birth</th>
               <th>Level</th>
               <th>Declined Date</th>
@@ -1327,7 +1318,7 @@ const DeclinedTab = ({ students, setStudents, onRefresh, setViewingStudent }) =>
           <tbody>
             {sortedDeclined.length === 0 ? (
               <tr>
-                <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
+                <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
                   No declined registrations matching criteria
                 </td>
               </tr>
@@ -1335,7 +1326,6 @@ const DeclinedTab = ({ students, setStudents, onRefresh, setViewingStudent }) =>
               sortedDeclined.map(student => (
                 <tr key={student.id}>
                   <td>{highlightMatch(student.studentName || student.name || 'N/A', searchTerm)}</td>
-                  <td>{student.email}</td>
                   <td>{student.dateOfBirth || student.dob || 'N/A'}</td>
                   <td>{getStudentLevel(student)}</td>
                   <td>{student.declinedDate || (student.updatedAt ? new Date(student.updatedAt).toLocaleDateString() : 'N/A')}</td>
