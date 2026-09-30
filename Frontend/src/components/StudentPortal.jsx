@@ -6,6 +6,33 @@ import './StudentPortal.css';
 
 const APPROVED_KEY = 'chess_academy_approved_students';
 
+const formatDate = (dateVal) => {
+  if (!dateVal) return 'N/A';
+  const str = String(dateVal).trim();
+  if (!str || str === 'null' || str === 'undefined' || str === 'N/A') return 'N/A';
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(str)) {
+    const [d, m, y] = str.split('/');
+    return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
+  }
+  if (str.includes('-')) {
+    const datePart = str.split('T')[0];
+    const parts = datePart.split('-');
+    if (parts.length === 3 && parts[0].length === 4) {
+      return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+    }
+  }
+  try {
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) {
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
+    }
+  } catch (e) {}
+  return str;
+};
+
 const StudentPortal = () => {
   const navigate = useNavigate();
   const [student, setStudent] = useState(null);
@@ -389,7 +416,7 @@ const StudentPortal = () => {
           <div className="portal-info-card">
             <div className="info-card-icon">🏛️</div>
             <div className="info-card-label">Approved On</div>
-            <div className="info-card-value">{student.approvedDate || (student.createdAt ? new Date(student.createdAt).toLocaleDateString() : 'N/A')}</div>
+            <div className="info-card-value">{formatDate(student.approvedDate || student.approved_date || student.createdAt || student.created_at)}</div>
           </div>
         </div>
 

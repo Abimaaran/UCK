@@ -6,11 +6,11 @@ import { getCollection, createItem, updateItem, deleteItem } from '../../service
    ═══════════════════════════════════════════════════════════ */
 const approveStudentApi = async (studentId, studentData) => {
   // we could move a student from pending to approved by updating their status via API
-  return await updateItem('students', studentData.id, { ...studentData, studentId, status: 'Approved', approvedDate: new Date().toISOString().split('T')[0] });
+  return await updateItem('students', studentData.id, { ...studentData, studentId, status: 'Approved', approvedDate: new Date().toISOString() });
 };
 
 const declineStudentApi = async (studentId) => {
-  return await updateItem('students', studentId, { status: 'Declined', declinedDate: new Date().toISOString().split('T')[0] });
+  return await updateItem('students', studentId, { status: 'Declined', declinedDate: new Date().toISOString() });
 };
 
 const formatDisplayPhone = (phone) => {
@@ -24,16 +24,39 @@ const formatDisplayPhone = (phone) => {
   return str;
 };
 
-const formatDOB = (dobStr) => {
-  if (!dobStr) return 'N/A';
-  const str = String(dobStr).trim();
+const formatDate = (dateVal) => {
+  if (!dateVal) return 'N/A';
+  const str = String(dateVal).trim();
+  if (!str || str === 'null' || str === 'undefined' || str === 'N/A') return 'N/A';
+
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(str)) {
+    const [d, m, y] = str.split('/');
+    return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
+  }
+
   if (str.includes('-')) {
-    const parts = str.split('T')[0].split('-');
+    const datePart = str.split('T')[0];
+    const parts = datePart.split('-');
     if (parts.length === 3 && parts[0].length === 4) {
       return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
     }
   }
+
+  try {
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) {
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
+    }
+  } catch (e) {}
+
   return str;
+};
+
+const formatDOB = (dobStr) => {
+  return formatDate(dobStr);
 };
 
 /* ═══════════════════════════════════════════════════════════
@@ -358,7 +381,7 @@ const PendingTab = ({ students, setStudents, onRefresh, setViewingStudent }) => 
                   <td style={{ minWidth: '110px' }}>{formatDisplayPhone(student.phoneNumber || student.whatsappNo || student.phone)}</td>
                   <td style={{ fontSize: '0.85rem', minWidth: '220px', whiteSpace: 'normal', lineHeight: '1.4' }}>{student.address || 'N/A'}</td>
                   <td style={{ minWidth: '110px' }}>{getStudentLevel(student)}</td>
-                  <td style={{ fontSize: '0.85rem', minWidth: '100px' }}>{student.createdAt ? new Date(student.createdAt).toLocaleDateString() : (student.appliedDate || 'N/A')}</td>
+                  <td style={{ fontSize: '0.85rem', minWidth: '100px' }}>{formatDate(student.appliedDate || student.createdAt)}</td>
                   <td>
                     <input
                       type="text"
@@ -439,7 +462,7 @@ const ManualAddTab = ({ onRefresh }) => {
         level: form.level,
         dob: form.dob.trim(),
         status: 'Approved',
-        approvedDate: new Date().toISOString().split('T')[0],
+        approvedDate: new Date().toISOString(),
       });
       onRefresh();
       setSuccess(`Student added successfully! Credentials — Student ID: ${formattedId} | Password: ${form.dob}`);
@@ -1348,9 +1371,9 @@ const DeclinedTab = ({ students, setStudents, onRefresh, setViewingStudent }) =>
               sortedDeclined.map(student => (
                 <tr key={student.id}>
                   <td>{highlightMatch(student.studentName || student.name || 'N/A', searchTerm)}</td>
-                  <td>{student.dateOfBirth || student.dob || 'N/A'}</td>
+                  <td>{formatDate(student.dateOfBirth || student.dob)}</td>
                   <td>{getStudentLevel(student)}</td>
-                  <td>{student.declinedDate || (student.updatedAt ? new Date(student.updatedAt).toLocaleDateString() : 'N/A')}</td>
+                  <td>{formatDate(student.declinedDate || student.updatedAt || student.createdAt)}</td>
                   <td className="action-btns">
                     <button className="view-btn" onClick={() => setViewingStudent(student)}>View</button>
                     <button className="edit-btn" onClick={() => handleRestore(student)}>Restore</button>
@@ -1433,7 +1456,7 @@ const StudentDetailsModal = ({ student, onClose }) => {
           {detailRow('Phone Number', formatDisplayPhone(student.phoneNumber || student.phone || student.whatsappNo))}
           {detailRow('Date of Birth', formatDOB(student.dateOfBirth || student.dob))}
           {detailRow('Chess Level', student.chessExperience || student.level)}
-          {detailRow('Registration Date', student.approvedDate || (student.createdAt ? new Date(student.createdAt).toLocaleDateString() : 'N/A'))}
+          {detailRow('Registration Date', formatDate(student.approvedDate || student.approved_date || student.createdAt || student.created_at))}
           {detailRow('School / College', student.school)}
           {detailRow('Gender', student.gender)}
           {detailRow('FIDE ID', student.fideId && String(student.fideId).trim() ? student.fideId : 'N/A')}

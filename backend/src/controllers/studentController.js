@@ -53,6 +53,7 @@ exports.register = async (req, res) => {
       finalStudentId = `UCK${maxNum + 1}`;
     }
 
+    const nowIso = new Date().toISOString();
     const newStudent = {
       student_id: finalStudentId,
       student_name: data.studentName || data.name || 'Anonymous Student',
@@ -64,8 +65,8 @@ exports.register = async (req, res) => {
       preferred_schedule: JSON.stringify(extraMeta),
       status: data.status || 'Pending',
       is_paused: false,
-      applied_date: new Date().toISOString(),
-      approved_date: data.approvedDate || (data.status === 'Approved' ? new Date().toISOString().split('T')[0] : null)
+      applied_date: nowIso,
+      approved_date: data.approvedDate || (data.status === 'Approved' ? nowIso : null)
     };
 
     const { data: inserted, error } = await supabase
@@ -122,7 +123,7 @@ exports.getAll = async (req, res) => {
         status: s.status,
         isPaused: s.is_paused,
         appliedDate: s.applied_date,
-        approvedDate: s.approved_date,
+        approvedDate: s.approved_date || (s.status === 'Approved' ? s.created_at : null),
         createdAt: s.created_at,
         school: meta.school || s.school || '',
         address: meta.address || s.address || '',

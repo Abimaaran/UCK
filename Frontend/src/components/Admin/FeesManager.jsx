@@ -24,6 +24,33 @@ const formatDOB = (dobStr) => {
   return str;
 };
 
+const formatDate = (dateVal) => {
+  if (!dateVal) return 'N/A';
+  const str = String(dateVal).trim();
+  if (!str || str === 'null' || str === 'undefined' || str === 'N/A') return 'N/A';
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(str)) {
+    const [d, m, y] = str.split('/');
+    return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
+  }
+  if (str.includes('-')) {
+    const datePart = str.split('T')[0];
+    const parts = datePart.split('-');
+    if (parts.length === 3 && parts[0].length === 4) {
+      return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+    }
+  }
+  try {
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) {
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
+    }
+  } catch (e) {}
+  return str;
+};
+
 const formatSentTime = (item, reminderLog) => {
   if (!item) return 'N/A';
 
@@ -1497,7 +1524,7 @@ const FeesManager = () => {
                 {detailRow('Phone Number', formatDisplayPhone(selectedStudentForView.phoneNumber || selectedStudentForView.phone || selectedStudentForView.whatsappNo))}
                 {detailRow('Date of Birth', formatDOB(selectedStudentForView.dateOfBirth || selectedStudentForView.dob))}
                 {detailRow('Chess Level', selectedStudentForView.chessExperience || selectedStudentForView.level)}
-                {detailRow('Registration Date', selectedStudentForView.approvedDate || (selectedStudentForView.createdAt ? new Date(selectedStudentForView.createdAt).toLocaleDateString() : 'N/A'))}
+                {detailRow('Registration Date', formatDate(selectedStudentForView.approvedDate || selectedStudentForView.approved_date || selectedStudentForView.createdAt || selectedStudentForView.created_at))}
                 {detailRow('School / College', selectedStudentForView.school)}
                 {detailRow('Gender', selectedStudentForView.gender)}
                 {detailRow('FIDE ID', selectedStudentForView.fideId && String(selectedStudentForView.fideId).trim() ? selectedStudentForView.fideId : 'N/A')}
