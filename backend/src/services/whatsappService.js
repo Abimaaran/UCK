@@ -36,7 +36,6 @@ const initialize = async (force = false) => {
       auth: state,
       printQRInTerminal: false,
       logger: pino({ level: 'silent' }),
-      browser: ['UCK Academy', 'Chrome', '1.0.0'],
       connectTimeoutMs: 60000,
       defaultQueryTimeoutMs: 60000,
       keepAliveIntervalMs: 25000,
@@ -66,6 +65,12 @@ const initialize = async (force = false) => {
         if (statusCode === DisconnectReason.loggedOut) {
           console.log('🤖 WhatsApp: User logged out. Clearing session files.');
           await logout();
+        } else if (shouldReconnect && connectionStatus !== 'CONNECTED') {
+          console.log('🤖 WhatsApp: Socket closed unexpectedly, retrying connection...');
+          sock = null;
+          setTimeout(() => {
+            initialize();
+          }, 1500);
         } else {
           connectionStatus = 'DISCONNECTED';
           qrCodeData = null;
@@ -116,6 +121,7 @@ const sendReminder = async (phone, message) => {
 };
 
 const logout = async () => {
+  isInitializing = false;
   if (sock) {
     try {
       await sock.logout();
@@ -129,6 +135,7 @@ const logout = async () => {
   sock = null;
   connectionStatus = 'DISCONNECTED';
   qrCodeData = null;
+  lastError = null;
 
   const authDir = path.join(__dirname, '../../.baileys_auth');
   if (fs.existsSync(authDir)) {

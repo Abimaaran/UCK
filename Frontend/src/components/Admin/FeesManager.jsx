@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api, { getCollection, updateItem } from '../../services/api';
 
 const formatDisplayPhone = (phone) => {
@@ -99,10 +99,12 @@ const FeesManager = () => {
   const [selectedLevel, setSelectedLevel] = useState('All');
 
   // WhatsApp States
-  const [waStatus, setWaStatus] = useState('LOADING');
+  const [waStatus, setWaStatus] = useState('STANDBY');
   const [waQr, setWaQr] = useState(null);
   const [waErrorMsg, setWaErrorMsg] = useState(null);
   const [waSeconds, setWaSeconds] = useState(0);
+  const waPollIntervalRef = useRef(null);
+  const waSecTimerRef = useRef(null);
   const [sendingReminders, setSendingReminders] = useState(false);
   const [selectedStudentForView, setSelectedStudentForView] = useState(null);
   const [reminderLog, setReminderLog] = useState(null);
@@ -212,12 +214,25 @@ const FeesManager = () => {
     const checkStatus = async () => {
       try {
         const response = await api.get('/whatsapp/status');
-        setWaStatus(response.data.status);
+        if (response.data.status) {
+          // If we are actively initializing/connecting with timer, only update if status changed to QR_READY, CONNECTED or DISCONNECTED
+          setWaStatus(prev => {
+            if ((prev === 'LOADING' || prev === 'INITIALIZING') && response.data.status === 'INITIALIZING') {
+              return prev;
+            }
+            return response.data.status;
+          });
+        }
         if (response.data.status === 'QR_READY') {
-          const qrResponse = await api.get('/whatsapp/qr');
-          setWaQr(qrResponse.data.qr);
-        } else {
+          const qrResponse = await api.get('/whatsapp/qr').catch(() => ({ data: {} }));
+          const qrCode = qrResponse.data?.qr || response.data.qr;
+          if (qrCode) {
+            setWaQr(qrCode);
+            setWaErrorMsg(null);
+          }
+        } else if (response.data.status === 'CONNECTED') {
           setWaQr(null);
+          setWaErrorMsg(null);
         }
       } catch (err) {
         console.warn("Failed to fetch WhatsApp status:", err.message);
@@ -227,17 +242,109 @@ const FeesManager = () => {
     checkStatus();
     interval = setInterval(checkStatus, 5000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      if (waPollIntervalRef.current) clearInterval(waPollIntervalRef.current);
+      if (waSecTimerRef.current) clearInterval(waSecTimerRef.current);
+    };
   }, []);
 
   const handleWaLogout = async () => {
-    if (!window.confirm("Are you sure you want to disconnect WhatsApp?")) return;
+    if (!window.confirm("Are you sure you want to disconnect WhatsApp and reset session?")) return;
     try {
-      setWaStatus('LOADING');
-      await api.post('/whatsapp/logout');
+      if (waPollIntervalRef.current) clearInterval(waPollIntervalRef.current);
+      if (waSecTimerRef.current) clearInterval(waSecTimerRef.current);
+      setWaStatus('DISCONNECTED');
       setWaQr(null);
+      setWaSeconds(0);
+      setWaErrorMsg(null);
+      await api.post('/whatsapp/logout');
     } catch (err) {
-      alert("Failed to logout WhatsApp session.");
+      console.warn("Failed to logout WhatsApp session:", err);
+      setWaStatus('DISCONNECTED');
+      setWaQr(null);
+    }
+  };
+
+  const handleWaConnect = async () => {
+    try {
+      if (waPollIntervalRef.current) clearInterval(waPollIntervalRef.current);
+      if (waSecTimerRef.current) clearInterval(waSecTimerRef.current);
+
+      setWaStatus('INITIALIZING');
+      setWaErrorMsg(null);
+      setWaQr(null);
+      setWaSeconds(0);
+
+      // Start live 1-second timer
+      waSecTimerRef.current = setInterval(() => {
+        setWaSeconds(prev => prev + 1);
+      }, 1000);
+
+      await api.post('/whatsapp/connect').catch(err => {
+        if (err.response?.data?.error) {
+          setWaErrorMsg(err.response.data.error);
+        }
+        return null;
+      });
+
+      let attempts = 0;
+      const pollQr = async () => {
+        try {
+          const res = await api.get('/whatsapp/status');
+          setWaStatus(res.data.status);
+          if (res.data.error) {
+            setWaErrorMsg(res.data.error);
+          }
+          if (res.data.status === 'QR_READY') {
+            const qrData = res.data.qr || (await api.get('/whatsapp/qr').catch(() => ({})))?.data?.qr;
+            if (qrData) {
+              setWaQr(qrData);
+              setWaErrorMsg(null);
+              if (waSecTimerRef.current) clearInterval(waSecTimerRef.current);
+              return true;
+            }
+          }
+          if (res.data.status === 'CONNECTED') {
+            setWaQr(null);
+            setWaErrorMsg(null);
+            if (waSecTimerRef.current) clearInterval(waSecTimerRef.current);
+            return true;
+          }
+          return false;
+        } catch (e) {
+          const errorMsg = e.response?.data?.error || e.message;
+          setWaErrorMsg(errorMsg);
+          if (e.response?.status === 401) {
+            // Stop polling immediately if unauthorized
+            if (waSecTimerRef.current) clearInterval(waSecTimerRef.current);
+            setWaStatus('DISCONNECTED');
+            return true;
+          }
+          return false;
+        }
+      };
+
+      const isReady = await pollQr();
+      if (!isReady) {
+        waPollIntervalRef.current = setInterval(async () => {
+          attempts++;
+          const ready = await pollQr();
+          if (ready || attempts > 30) {
+            if (waPollIntervalRef.current) clearInterval(waPollIntervalRef.current);
+            if (waSecTimerRef.current) clearInterval(waSecTimerRef.current);
+            if (!ready) {
+              setWaStatus('DISCONNECTED');
+              setWaErrorMsg('QR Code generation timed out (90s). Click Connect WhatsApp QR to try again.');
+            }
+          }
+        }, 3000);
+      }
+    } catch (e) {
+      if (waPollIntervalRef.current) clearInterval(waPollIntervalRef.current);
+      if (waSecTimerRef.current) clearInterval(waSecTimerRef.current);
+      setWaStatus('DISCONNECTED');
+      setWaErrorMsg(e.message || 'Failed to connect to WhatsApp service');
     }
   };
 
@@ -481,7 +588,8 @@ const FeesManager = () => {
                     'Standby (Offline)'}
             </span>
 
-            {waStatus === 'CONNECTED' && (
+            {/* Disconnect / Reset Button - Visible when connected, scanning QR, initializing or error */}
+            {waStatus === 'CONNECTED' ? (
               <button
                 onClick={handleWaLogout}
                 style={{
@@ -493,95 +601,89 @@ const FeesManager = () => {
                   fontSize: '0.85rem',
                   cursor: 'pointer',
                   fontWeight: '600',
-                  transition: 'all 0.2s'
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
                 }}
                 onMouseEnter={e => e.target.style.background = 'rgba(220, 53, 69, 0.25)'}
                 onMouseLeave={e => e.target.style.background = 'rgba(220, 53, 69, 0.15)'}
               >
-                Disconnect Session
+                🔌 Disconnect Session
               </button>
-            )}
-
-            {waStatus !== 'CONNECTED' && waStatus !== 'QR_READY' && (
+            ) : (waStatus === 'INITIALIZING' || waStatus === 'LOADING') ? (
               <button
-                onClick={async () => {
-                  try {
-                    setWaStatus('LOADING');
-                    setWaErrorMsg(null);
-                    setWaSeconds(0);
-
-                    // Start live 1-second timer
-                    const secTimer = setInterval(() => {
-                      setWaSeconds(prev => prev + 1);
-                    }, 1000);
-
-                    await api.post('/whatsapp/connect').catch(err => {
-                      if (err.response?.data?.error) {
-                        setWaErrorMsg(err.response.data.error);
-                      }
-                      return null;
-                    });
-
-                    let attempts = 0;
-                    const pollQr = async () => {
-                      try {
-                        const res = await api.get('/whatsapp/status');
-                        setWaStatus(res.data.status);
-                        if (res.data.error) {
-                          setWaErrorMsg(res.data.error);
-                        }
-                        if (res.data.status === 'QR_READY') {
-                          const qrData = res.data.qr || (await api.get('/whatsapp/qr').catch(() => ({})))?.data?.qr;
-                          if (qrData) {
-                            setWaQr(qrData);
-                            setWaErrorMsg(null);
-                            clearInterval(secTimer);
-                            return true;
-                          }
-                        }
-                        return false;
-                      } catch (e) {
-                        setWaErrorMsg(e.response?.data?.error || e.message);
-                        return false;
-                      }
-                    };
-
-                    const isReady = await pollQr();
-                    if (!isReady) {
-                      const interval = setInterval(async () => {
-                        attempts++;
-                        const ready = await pollQr();
-                        if (ready || attempts > 30) {
-                          clearInterval(interval);
-                          clearInterval(secTimer);
-                          if (!ready) {
-                            setWaStatus('DISCONNECTED');
-                            setWaErrorMsg('QR Code generation timed out (90s). Click Connect WhatsApp QR to try again.');
-                          }
-                        }
-                      }, 3000);
-                    }
-                  } catch (e) {
-                    setWaStatus('DISCONNECTED');
-                    setWaErrorMsg(e.message || 'Failed to connect to WhatsApp service');
-                  }
-                }}
+                onClick={handleWaLogout}
                 style={{
-                  background: 'rgba(255, 193, 7, 0.15)',
-                  border: '1px solid #FFC107',
-                  color: '#FFC107',
+                  background: 'rgba(220, 53, 69, 0.15)',
+                  border: '1px solid #DC3545',
+                  color: '#DC3545',
                   padding: '6px 14px',
                   borderRadius: '8px',
                   fontSize: '0.85rem',
                   cursor: 'pointer',
                   fontWeight: '600',
+                  transition: 'all 0.2s',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px'
                 }}
+                onMouseEnter={e => e.target.style.background = 'rgba(220, 53, 69, 0.25)'}
+                onMouseLeave={e => e.target.style.background = 'rgba(220, 53, 69, 0.15)'}
               >
-                📲 Connect WhatsApp QR
+                🛑 Cancel / Disconnect
               </button>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button
+                  onClick={handleWaConnect}
+                  style={{
+                    background: 'rgba(255, 193, 7, 0.15)',
+                    border: '1px solid #FFC107',
+                    color: '#FFC107',
+                    padding: '6px 14px',
+                    borderRadius: '8px',
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  📲 Connect WhatsApp QR
+                </button>
+                <button
+                  onClick={handleWaLogout}
+                  title="Disconnect and reset WhatsApp session"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    color: '#aaa',
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={e => {
+                    e.target.style.background = 'rgba(220, 53, 69, 0.15)';
+                    e.target.style.borderColor = '#DC3545';
+                    e.target.style.color = '#DC3545';
+                  }}
+                  onMouseLeave={e => {
+                    e.target.style.background = 'rgba(255, 255, 255, 0.05)';
+                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                    e.target.style.color = '#aaa';
+                  }}
+                >
+                  🔌 Disconnect
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -592,6 +694,22 @@ const FeesManager = () => {
             <span style={{ color: '#000', fontSize: '0.85rem', marginTop: '0.75rem', fontWeight: 'bold', textAlign: 'center' }}>
               Scan this QR Code with WhatsApp Link Device to connect.
             </span>
+            <button
+              onClick={handleWaLogout}
+              style={{
+                marginTop: '1rem',
+                background: '#dc3545',
+                color: '#fff',
+                border: 'none',
+                padding: '6px 16px',
+                borderRadius: '6px',
+                fontSize: '0.82rem',
+                fontWeight: '600',
+                cursor: 'pointer'
+              }}
+            >
+              Cancel / Disconnect
+            </button>
           </div>
         )}
 
@@ -600,11 +718,28 @@ const FeesManager = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
               <span style={{ color: '#64B5F6', fontSize: '0.9rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ display: 'inline-block', animation: 'spin 1.5s linear infinite' }}>🤖</span>
-                Starting WhatsApp Web Chromium...
+                Connecting to WhatsApp Network...
               </span>
-              <span style={{ background: '#007BFF', color: '#fff', padding: '3px 10px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold' }}>
-                {waSeconds}s / 90s
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ background: '#007BFF', color: '#fff', padding: '3px 10px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                  {waSeconds}s / 90s
+                </span>
+                <button
+                  onClick={handleWaLogout}
+                  style={{
+                    background: 'rgba(220, 53, 69, 0.2)',
+                    border: '1px solid #DC3545',
+                    color: '#DC3545',
+                    padding: '2px 8px',
+                    borderRadius: '6px',
+                    fontSize: '0.75rem',
+                    fontWeight: 'bold',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
 
             {/* Live Progress Bar */}
@@ -622,8 +757,26 @@ const FeesManager = () => {
         )}
 
         {waErrorMsg && (
-          <div style={{ marginTop: '1rem', padding: '0.75rem 1rem', background: 'rgba(220, 53, 69, 0.15)', border: '1px solid #DC3545', color: '#FF6B6B', borderRadius: '8px', fontSize: '0.85rem' }}>
-            ⚠️ <strong>WhatsApp Alert:</strong> {waErrorMsg}
+          <div style={{ marginTop: '1rem', padding: '0.75rem 1rem', background: 'rgba(220, 53, 69, 0.15)', border: '1px solid #DC3545', color: '#FF6B6B', borderRadius: '8px', fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>⚠️ <strong>WhatsApp Alert:</strong> {waErrorMsg}</span>
+            <button
+              onClick={() => {
+                setWaErrorMsg(null);
+                setWaStatus('DISCONNECTED');
+              }}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#FF6B6B',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                padding: '0 6px',
+                fontSize: '1rem'
+              }}
+              title="Dismiss alert"
+            >
+              ✕
+            </button>
           </div>
         )}
       </div>

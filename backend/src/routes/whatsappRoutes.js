@@ -4,9 +4,13 @@ const whatsappService = require('../services/whatsappService');
 const { verifyAdmin } = require('../middleware/authMiddleware');
 
 // Force Connect / Re-initialize WhatsApp (Protected to Admin)
-router.post('/connect', verifyAdmin, (req, res) => {
-  whatsappService.initialize(true);
-  res.status(200).json({ status: whatsappService.getStatus(), error: whatsappService.getError() });
+router.post('/connect', verifyAdmin, async (req, res) => {
+  try {
+    await whatsappService.initialize(true);
+    res.status(200).json({ status: whatsappService.getStatus(), error: whatsappService.getError() });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Get connection status (Protected to Admin)
@@ -32,14 +36,17 @@ router.get('/qr', verifyAdmin, (req, res) => {
   }
 });
 
-// Logout WhatsApp session (Protected to Admin)
-router.post('/logout', verifyAdmin, async (req, res) => {
+// Logout / Disconnect WhatsApp session (Protected to Admin)
+const handleLogout = async (req, res) => {
   try {
     await whatsappService.logout();
-    res.status(200).json({ message: 'Logged out successfully' });
+    res.status(200).json({ message: 'Disconnected successfully', status: 'DISCONNECTED' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-});
+};
+
+router.post('/logout', verifyAdmin, handleLogout);
+router.post('/disconnect', verifyAdmin, handleLogout);
 
 module.exports = router;
