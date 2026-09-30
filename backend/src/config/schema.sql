@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS students (
     email TEXT,
     phone_number TEXT,
     dob DATE,
+    school TEXT,
     level TEXT DEFAULT 'Beginner',
     chess_experience TEXT,
     preferred_schedule TEXT,

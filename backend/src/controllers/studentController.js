@@ -1,6 +1,16 @@
 const supabase = require('../config/supabaseClient');
 const bcrypt = require('bcryptjs');
 
+const parseMeta = (scheduleStr) => {
+  if (!scheduleStr) return {};
+  if (typeof scheduleStr === 'object') return scheduleStr;
+  try {
+    return JSON.parse(scheduleStr);
+  } catch {
+    return { preferredSchedule: scheduleStr };
+  }
+};
+
 exports.register = async (req, res) => {
   try {
     const data = req.body;
@@ -11,18 +21,37 @@ exports.register = async (req, res) => {
       hashedPassword = await bcrypt.hash(data.password, salt);
     }
 
+    const schoolVal = data.school ? String(data.school).trim() : null;
+    const addressVal = data.address ? String(data.address).trim() : null;
+    const parentNameVal = data.parentName ? String(data.parentName).trim() : null;
+    const parentOccupationVal = data.parentOccupation ? String(data.parentOccupation).trim() : null;
+    const genderVal = data.gender || null;
+    const fideIdVal = data.fideId || null;
+    const fideRatingVal = data.fideRating || null;
+
+    const extraMeta = {
+      school: schoolVal,
+      address: addressVal,
+      parentName: parentNameVal,
+      parentOccupation: parentOccupationVal,
+      gender: genderVal,
+      fideId: fideIdVal,
+      fideRating: fideRatingVal
+    };
+
     const newStudent = {
-      student_id: data.studentId || null,
+      student_id: data.studentId ? String(data.studentId).trim().toUpperCase() : null,
       student_name: data.studentName || data.name || 'Anonymous Student',
       email: data.email || null,
-      phone_number: data.phone || data.phoneNumber || null,
-      dob: data.dob || null,
-      level: data.level || 'Beginner',
-      chess_experience: data.chessExperience || null,
-      preferred_schedule: data.preferredSchedule || null,
-      status: 'Pending',
+      phone_number: data.phone || data.phoneNumber || data.whatsappNo || null,
+      dob: data.dob || data.dateOfBirth || null,
+      level: data.level || data.chessExperience || 'Beginner',
+      chess_experience: data.chessExperience || data.level || null,
+      preferred_schedule: JSON.stringify(extraMeta),
+      status: data.status || 'Pending',
       is_paused: false,
-      applied_date: new Date().toISOString()
+      applied_date: new Date().toISOString(),
+      approved_date: data.approvedDate || (data.status === 'Approved' ? new Date().toISOString().split('T')[0] : null)
     };
 
     const { data: inserted, error } = await supabase
@@ -33,7 +62,18 @@ exports.register = async (req, res) => {
 
     if (error) throw error;
 
-    res.status(201).json({ message: 'Registration successful', id: inserted.id, ...inserted });
+    res.status(201).json({
+      message: 'Registration successful',
+      id: inserted.id,
+      ...inserted,
+      school: schoolVal,
+      address: addressVal,
+      parentName: parentNameVal,
+      parentOccupation: parentOccupationVal,
+      gender: genderVal,
+      fideId: fideIdVal,
+      fideRating: fideRatingVal
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -48,24 +88,36 @@ exports.getAll = async (req, res) => {
 
     if (error) throw error;
 
-    const formatted = (students || []).map(s => ({
-      id: s.id,
-      studentId: s.student_id,
-      studentName: s.student_name,
-      name: s.student_name,
-      email: s.email,
-      phone: s.phone_number,
-      phoneNumber: s.phone_number,
-      dob: s.dob,
-      level: s.level,
-      chessExperience: s.chess_experience,
-      preferredSchedule: s.preferred_schedule,
-      status: s.status,
-      isPaused: s.is_paused,
-      appliedDate: s.applied_date,
-      approvedDate: s.approved_date,
-      createdAt: s.created_at
-    }));
+    const formatted = (students || []).map(s => {
+      const meta = parseMeta(s.preferred_schedule);
+      return {
+        id: s.id,
+        studentId: s.student_id,
+        studentName: s.student_name,
+        name: s.student_name,
+        email: s.email,
+        phone: s.phone_number,
+        phoneNumber: s.phone_number,
+        whatsappNo: s.phone_number,
+        dob: s.dob,
+        dateOfBirth: s.dob,
+        level: s.level,
+        chessExperience: s.chess_experience || s.level,
+        preferredSchedule: meta.preferredSchedule || s.preferred_schedule,
+        status: s.status,
+        isPaused: s.is_paused,
+        appliedDate: s.applied_date,
+        approvedDate: s.approved_date,
+        createdAt: s.created_at,
+        school: meta.school || s.school || '',
+        address: meta.address || s.address || '',
+        parentName: meta.parentName || s.parent_name || '',
+        parentOccupation: meta.parentOccupation || s.parent_occupation || '',
+        gender: meta.gender || s.gender || '',
+        fideId: meta.fideId || s.fide_id || '',
+        fideRating: meta.fideRating || s.fide_rating || ''
+      };
+    });
 
     res.status(200).json(formatted);
   } catch (error) {
@@ -82,23 +134,35 @@ exports.getPending = async (req, res) => {
 
     if (error) throw error;
 
-    const formatted = (pending || []).map(s => ({
-      id: s.id,
-      studentId: s.student_id,
-      studentName: s.student_name,
-      name: s.student_name,
-      email: s.email,
-      phone: s.phone_number,
-      phoneNumber: s.phone_number,
-      dob: s.dob,
-      level: s.level,
-      chessExperience: s.chess_experience,
-      preferredSchedule: s.preferred_schedule,
-      status: s.status,
-      isPaused: s.is_paused,
-      appliedDate: s.applied_date,
-      createdAt: s.created_at
-    }));
+    const formatted = (pending || []).map(s => {
+      const meta = parseMeta(s.preferred_schedule);
+      return {
+        id: s.id,
+        studentId: s.student_id,
+        studentName: s.student_name,
+        name: s.student_name,
+        email: s.email,
+        phone: s.phone_number,
+        phoneNumber: s.phone_number,
+        whatsappNo: s.phone_number,
+        dob: s.dob,
+        dateOfBirth: s.dob,
+        level: s.level,
+        chessExperience: s.chess_experience || s.level,
+        preferredSchedule: meta.preferredSchedule || s.preferred_schedule,
+        status: s.status,
+        isPaused: s.is_paused,
+        appliedDate: s.applied_date,
+        createdAt: s.created_at,
+        school: meta.school || s.school || '',
+        address: meta.address || s.address || '',
+        parentName: meta.parentName || s.parent_name || '',
+        parentOccupation: meta.parentOccupation || s.parent_occupation || '',
+        gender: meta.gender || s.gender || '',
+        fideId: meta.fideId || s.fide_id || '',
+        fideRating: meta.fideRating || s.fide_rating || ''
+      };
+    });
 
     res.status(200).json(formatted);
   } catch (error) {
@@ -123,10 +187,39 @@ exports.update = async (req, res) => {
       updatePayload.level = body.level || body.chessExperience;
       updatePayload.chess_experience = body.chessExperience || body.level;
     }
-    if (body.address !== undefined) updatePayload.address = body.address;
     if (body.status !== undefined) updatePayload.status = body.status;
     if (body.isPaused !== undefined) updatePayload.is_paused = body.isPaused;
     if (body.approvedDate !== undefined) updatePayload.approved_date = body.approvedDate;
+
+    // Persist school and extra meta
+    if (
+      body.school !== undefined ||
+      body.address !== undefined ||
+      body.parentName !== undefined ||
+      body.parentOccupation !== undefined ||
+      body.gender !== undefined ||
+      body.fideId !== undefined ||
+      body.fideRating !== undefined
+    ) {
+      const { data: existing } = await supabase
+        .from('students')
+        .select('preferred_schedule')
+        .or(`id.eq.${id},student_id.eq.${id}`)
+        .maybeSingle();
+
+      const existingMeta = parseMeta(existing?.preferred_schedule);
+      const newMeta = {
+        ...existingMeta,
+        ...(body.school !== undefined ? { school: body.school } : {}),
+        ...(body.address !== undefined ? { address: body.address } : {}),
+        ...(body.parentName !== undefined ? { parentName: body.parentName } : {}),
+        ...(body.parentOccupation !== undefined ? { parentOccupation: body.parentOccupation } : {}),
+        ...(body.gender !== undefined ? { gender: body.gender } : {}),
+        ...(body.fideId !== undefined ? { fideId: body.fideId } : {}),
+        ...(body.fideRating !== undefined ? { fideRating: body.fideRating } : {})
+      };
+      updatePayload.preferred_schedule = JSON.stringify(newMeta);
+    }
 
     let { data: updated, error } = await supabase
       .from('students')
@@ -213,6 +306,7 @@ exports.login = async (req, res) => {
       return res.status(401).json({ error: 'Invalid Password or Date of Birth.' });
     }
 
+    const meta = parseMeta(student.preferred_schedule);
     const formattedStudent = {
       id: student.id,
       studentId: student.student_id,
@@ -223,8 +317,12 @@ exports.login = async (req, res) => {
       phoneNumber: student.phone_number,
       dob: student.dob,
       level: student.level,
-      chessExperience: student.chess_experience,
-      preferredSchedule: student.preferred_schedule,
+      chessExperience: student.chess_experience || student.level,
+      preferredSchedule: meta.preferredSchedule || student.preferred_schedule,
+      school: meta.school || student.school || '',
+      address: meta.address || student.address || '',
+      parentName: meta.parentName || student.parent_name || '',
+      parentOccupation: meta.parentOccupation || student.parent_occupation || '',
       status: student.status,
       isPaused: student.is_paused,
       appliedDate: student.applied_date
@@ -262,6 +360,7 @@ exports.getProfile = async (req, res) => {
       return res.status(404).json({ error: 'Student profile not found' });
     }
 
+    const meta = parseMeta(student.preferred_schedule);
     const formattedStudent = {
       id: student.id,
       studentId: student.student_id,
@@ -272,8 +371,12 @@ exports.getProfile = async (req, res) => {
       phoneNumber: student.phone_number,
       dob: student.dob,
       level: student.level,
-      chessExperience: student.chess_experience,
-      preferredSchedule: student.preferred_schedule,
+      chessExperience: student.chess_experience || student.level,
+      preferredSchedule: meta.preferredSchedule || student.preferred_schedule,
+      school: meta.school || student.school || '',
+      address: meta.address || student.address || '',
+      parentName: meta.parentName || student.parent_name || '',
+      parentOccupation: meta.parentOccupation || student.parent_occupation || '',
       status: student.status,
       isPaused: student.is_paused,
       appliedDate: student.applied_date

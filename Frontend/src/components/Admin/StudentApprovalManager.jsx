@@ -405,6 +405,7 @@ const ManualAddTab = ({ onRefresh }) => {
     dob: '',
     level: 'Beginner',
     phone: '',
+    school: '',
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -435,12 +436,13 @@ const ManualAddTab = ({ onRefresh }) => {
         dob: form.dob,
         level: form.level,
         phone: form.phone.trim(),
+        school: form.school.trim(),
         status: 'Approved',
         approvedDate: new Date().toISOString().split('T')[0],
       });
       onRefresh();
       setSuccess(`Student added! Credentials — Username: ${formattedId} | Password: ${form.dob}`);
-      setForm({ studentId: '', name: '', email: '', dob: '', level: 'Beginner', phone: '' });
+      setForm({ studentId: '', name: '', email: '', dob: '', level: 'Beginner', phone: '', school: '' });
     } catch (err) {
       setError(`Failed to add student. The ID may already be in use.`);
     }
@@ -519,12 +521,11 @@ const ManualAddTab = ({ onRefresh }) => {
             placeholder="e.g. 0771234567" style={inputStyle} />
         </div>
 
-        {/* DOB — password */}
+        {/* School / College */}
         <div>
-          <label style={labelStyle}>
-            🔑 Date of Birth (DD/MM/YYYY) <span style={{ color: '#d4af37' }}>(becomes portal password)</span>
-          </label>
-          <input name="dob" type="text" value={form.dob} onChange={handle} placeholder="DD/MM/YYYY" style={inputStyle} required />
+          <label style={labelStyle}>School / College</label>
+          <input name="school" value={form.school} onChange={handle}
+            placeholder="School or College name" style={inputStyle} />
         </div>
 
         {/* Level */}
@@ -536,6 +537,14 @@ const ManualAddTab = ({ onRefresh }) => {
             <option value="Intermediate" style={{ background: '#15151a', color: '#fff' }}>Intermediate</option>
             <option value="Advanced" style={{ background: '#15151a', color: '#fff' }}>Advanced</option>
           </select>
+        </div>
+
+        {/* DOB — password */}
+        <div style={{ gridColumn: '1 / -1' }}>
+          <label style={labelStyle}>
+            🔑 Date of Birth (DD/MM/YYYY) <span style={{ color: '#d4af37' }}>(becomes portal password)</span>
+          </label>
+          <input name="dob" type="text" value={form.dob} onChange={handle} placeholder="DD/MM/YYYY" style={inputStyle} required />
         </div>
 
         {/* Submit */}
