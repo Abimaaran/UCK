@@ -472,8 +472,6 @@ const ManualAddTab = ({ onRefresh }) => {
 
   return (
     <div style={{ maxWidth: '620px' }}>
-      <InfoBanner text="Manually add a student with a custom Student ID. They should use their provided password to log in once approved." />
-
       {error && (
         <div style={{
           background: 'rgba(220,53,69,0.15)', border: '1px solid rgba(220,53,69,0.4)',
