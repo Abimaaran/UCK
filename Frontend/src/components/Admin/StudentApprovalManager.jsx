@@ -685,17 +685,39 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
     }
   };
 
-  const handleDelete = async (id) => {
-    const stud = approved.find(s => s.studentId === id || s.id === id || s._id === id);
-    const displayName = stud?.studentName || stud?.name || id;
-    if (!window.confirm(`Are you sure you want to delete student "${displayName}"? This action cannot be undone.`)) {
+  const handleDelete = async (studentOrId) => {
+    let stud = null;
+    let targetDbId = null;
+    let studentId = '';
+    let studentName = '';
+
+    if (typeof studentOrId === 'object' && studentOrId !== null) {
+      stud = studentOrId;
+      targetDbId = stud.id || stud._id;
+      studentId = stud.studentId || '';
+      studentName = stud.studentName || stud.name || '';
+    } else {
+      const id = studentOrId;
+      stud = approved.find(s => s.studentId === id || s.id === id || s._id === id);
+      targetDbId = stud?.id || stud?._id || id;
+      studentId = stud?.studentId || '';
+      studentName = stud?.studentName || stud?.name || '';
+    }
+
+    const nameText = studentName ? studentName : '';
+    const idText = studentId ? `(ID: ${studentId})` : '';
+    const displayInfo = [nameText, idText].filter(Boolean).join(' ') || 'this student';
+
+    if (!window.confirm(`Are you sure you want to delete student ${displayInfo}? This action cannot be undone.`)) {
       return;
     }
 
-    const targetDbId = stud?.id || stud?._id || id;
-
     // Instantly remove student from UI table in-place (ZERO page reload)
-    setApproved(prev => prev.filter(s => (s.id !== targetDbId && s._id !== targetDbId && s.studentId !== id)));
+    setApproved(prev => prev.filter(s => (
+      s.id !== targetDbId && 
+      s._id !== targetDbId && 
+      (!studentId || s.studentId !== studentId)
+    )));
 
     try {
       await deleteItem('students', targetDbId);
@@ -1038,7 +1060,7 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
                           >
                             {s.isPaused ? "▶️ Resume" : "⏸️ Pause"}
                           </button>
-                          <button className="delete-btn" onClick={() => handleDelete(s.id || s._id || s.studentId)}>Delete</button>
+                          <button className="delete-btn" onClick={() => handleDelete(s)}>Delete</button>
                         </>
                       )}
                     </td>
@@ -1149,11 +1171,12 @@ const DeclinedTab = ({ students, setStudents, onRefresh, setViewingStudent }) =>
     }
   };
 
-  const handleDeletePermanent = async (id) => {
-    if (window.confirm('Permanently delete this declined registration history?')) {
+  const handleDeletePermanent = async (student) => {
+    const studentName = student?.studentName || student?.name || 'this registration';
+    if (window.confirm(`Permanently delete declined registration for "${studentName}"?`)) {
       try {
-        await deleteItem('students', id);
-        onRefresh();
+        setDeclined(prev => prev.filter(s => s.id !== student.id));
+        await deleteItem('students', student.id);
       } catch (err) { console.error(err); }
     }
   };
@@ -1301,7 +1324,7 @@ const DeclinedTab = ({ students, setStudents, onRefresh, setViewingStudent }) =>
                   <td className="action-btns">
                     <button className="view-btn" onClick={() => setViewingStudent(student)}>View</button>
                     <button className="edit-btn" onClick={() => handleRestore(student)}>Restore</button>
-                    <button className="delete-btn" onClick={() => handleDeletePermanent(student.id)}>Purge</button>
+                    <button className="delete-btn" onClick={() => handleDeletePermanent(student)}>Purge</button>
                   </td>
                 </tr>
               ))
