@@ -10,6 +10,7 @@ router.put('/:studentId', controller.update);
 
 // Bulk Fee Updates & Automated WhatsApp reminders
 router.post('/mark-all-paid', verifyAdmin, controller.markAllAsPaid);
+router.post('/clear-all', verifyAdmin, controller.clearAllForMonth);
 router.post('/send-reminders', verifyAdmin, controller.sendWhatsAppReminders);
 router.get('/reminder-status/latest', verifyAdmin, controller.getReminderStatus);
 router.post('/cron-send-reminders', controller.cronSendWhatsAppReminders);

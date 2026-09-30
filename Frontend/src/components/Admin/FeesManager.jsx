@@ -24,6 +24,72 @@ const formatDOB = (dobStr) => {
   return str;
 };
 
+const formatSentTime = (item, reminderLog) => {
+  if (!item) return 'N/A';
+
+  // 1. If explicit ISO timestamp exists
+  if (item.sentAt) {
+    const d = new Date(item.sentAt);
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+    }
+  }
+
+  // 2. If item.time is already a full ISO date string
+  if (item.time && (item.time.includes('T') || item.time.includes('-'))) {
+    const d = new Date(item.time);
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+    }
+  }
+
+  // 3. If item.time is a time string like "06:02:54 AM" or "06:02 AM"
+  if (item.time && reminderLog?.startedAt) {
+    try {
+      const startedDate = new Date(reminderLog.startedAt);
+      if (!isNaN(startedDate.getTime())) {
+        const timeMatch = item.time.match(/(\d+):(\d+)(?::(\d+))?\s*(AM|PM)?/i);
+        if (timeMatch) {
+          let hours = parseInt(timeMatch[1], 10);
+          const minutes = parseInt(timeMatch[2], 10);
+          const seconds = timeMatch[3] ? parseInt(timeMatch[3], 10) : 0;
+          const ampm = timeMatch[4] ? timeMatch[4].toUpperCase() : null;
+
+          if (ampm === 'PM' && hours < 12) hours += 12;
+          if (ampm === 'AM' && hours === 12) hours = 0;
+
+          // If the hour closely matches startedDate.getUTCHours() (within 2 hours),
+          // it was recorded in UTC server-side without timezone offset.
+          const utcHours = startedDate.getUTCHours();
+          if (Math.abs(hours - utcHours) <= 2) {
+            const utcDate = new Date(Date.UTC(
+              startedDate.getUTCFullYear(),
+              startedDate.getUTCMonth(),
+              startedDate.getUTCDate(),
+              hours,
+              minutes,
+              seconds
+            ));
+            return utcDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('formatSentTime fallback error:', e);
+    }
+    return item.time;
+  }
+
+  if (reminderLog?.startedAt) {
+    const d = new Date(reminderLog.startedAt);
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+    }
+  }
+
+  return item.time || 'N/A';
+};
+
 const FeesManager = () => {
   const [approvedStudents, setApprovedStudents] = useState([]);
   const [fees, setFees] = useState({});
@@ -31,7 +97,7 @@ const FeesManager = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [selectedLevel, setSelectedLevel] = useState('All');
-  
+
   // WhatsApp States
   const [waStatus, setWaStatus] = useState('LOADING');
   const [waQr, setWaQr] = useState(null);
@@ -44,7 +110,7 @@ const FeesManager = () => {
   const [logModalSearch, setLogModalSearch] = useState('');
   const [embeddedFilter, setEmbeddedFilter] = useState('ALL'); // 'ALL' | 'SUCCESS' | 'FAILED'
   const [embeddedSearch, setEmbeddedSearch] = useState('');
-  const [showReportTable, setShowReportTable] = useState(true);
+  const [showReportTable, setShowReportTable] = useState(false);
 
   // Lock background page scroll when modal is open
   useEffect(() => {
@@ -86,7 +152,7 @@ const FeesManager = () => {
     const escapedQuery = query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
     const regex = new RegExp(`(${escapedQuery})`, 'gi');
     const parts = String(text).split(regex);
-    return parts.map((part, index) => 
+    return parts.map((part, index) =>
       regex.test(part) ? (
         <span key={index} className="search-highlight-blink">
           {part}
@@ -211,7 +277,7 @@ const FeesManager = () => {
     try {
       const response = await api.post('/fees/mark-all-paid', { month: selectedMonth });
       alert(response.data.message || "All active students marked as Paid successfully!");
-      
+
       // Local state bulk update
       const newFees = { ...fees };
       approvedStudents.forEach(s => {
@@ -227,14 +293,43 @@ const FeesManager = () => {
     }
   };
 
+  const handleClearAllForMonth = async () => {
+    const monthName = getMonthName(selectedMonth);
+    if (!window.confirm(`Are you sure you want to CLEAR ALL recorded fees for ${monthName}? This will reset all students to Not Paid for ${monthName} only.`)) {
+      return;
+    }
+
+    try {
+      const response = await api.post('/fees/clear-all', { month: selectedMonth });
+      alert(response.data.message || `All recorded fees for ${monthName} have been cleared successfully!`);
+
+      // Local state update: remove this month's fee record for all students
+      const newFees = { ...fees };
+      Object.keys(newFees).forEach(sid => {
+        if (newFees[sid] && newFees[sid][selectedMonth]) {
+          delete newFees[sid][selectedMonth];
+        }
+      });
+      setFees(newFees);
+
+      // If active reminderLog is for this month, reset it too
+      if (reminderLog && reminderLog.month === selectedMonth) {
+        setReminderLog(null);
+      }
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.error || "Failed to clear fees for the selected month.");
+    }
+  };
+
   const handleFeeChange = async (studentId, status) => {
     try {
       const payload = {
-          month: selectedMonth,
-          status: status
+        month: selectedMonth,
+        status: status
       };
       await updateItem('fees', studentId, payload);
-      
+
       const newFees = { ...fees };
       if (!newFees[studentId]) newFees[studentId] = {};
       newFees[studentId][selectedMonth] = status;
@@ -265,17 +360,17 @@ const FeesManager = () => {
   const filteredStudents = approvedStudents.filter(student => {
     const studentName = (student.studentName || student.name || '').toLowerCase();
     const studentIdStr = (student.studentId || '').toString().toLowerCase();
-    
-    const matchesSearch = studentName.includes(searchTerm.toLowerCase()) || 
-                          studentIdStr.includes(searchTerm.toLowerCase());
-    
+
+    const matchesSearch = studentName.includes(searchTerm.toLowerCase()) ||
+      studentIdStr.includes(searchTerm.toLowerCase());
+
     const status = fees[student.studentId]?.[selectedMonth] || 'Not Paid';
-    const matchesFilter = statusFilter === 'All' || 
-                         (statusFilter === 'Paid' && status === 'Paid') ||
-                         (statusFilter === 'Unpaid' && status === 'Not Paid');
-    
+    const matchesFilter = statusFilter === 'All' ||
+      (statusFilter === 'Paid' && status === 'Paid') ||
+      (statusFilter === 'Unpaid' && status === 'Not Paid');
+
     const matchesLevel = selectedLevel === 'All' || getStudentLevel(student) === selectedLevel;
-    
+
     return matchesSearch && matchesFilter && matchesLevel;
   });
 
@@ -316,7 +411,7 @@ const FeesManager = () => {
         }
       `}</style>
       {/* WhatsApp Connection Status Panel */}
-      <div 
+      <div
         style={{
           background: 'rgba(255, 255, 255, 0.03)',
           border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -335,7 +430,7 @@ const FeesManager = () => {
               Send instant WhatsApp fee reminders to unpaid students for the selected month by clicking the Send button.
             </p>
           </div>
-          
+
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             {/* Status Badge */}
             <span style={{
@@ -348,44 +443,42 @@ const FeesManager = () => {
               fontWeight: '600',
               textTransform: 'uppercase',
               letterSpacing: '0.5px',
-              background: 
+              background:
                 waStatus === 'CONNECTED' ? 'rgba(37, 211, 102, 0.12)' :
-                waStatus === 'QR_READY' ? 'rgba(255, 193, 7, 0.12)' :
-                waStatus === 'INITIALIZING' ? 'rgba(0, 123, 255, 0.12)' :
-                'rgba(255, 255, 255, 0.08)',
-              color: 
+                  waStatus === 'QR_READY' ? 'rgba(255, 193, 7, 0.12)' :
+                    waStatus === 'INITIALIZING' ? 'rgba(0, 123, 255, 0.12)' :
+                      'rgba(255, 255, 255, 0.08)',
+              color:
                 waStatus === 'CONNECTED' ? '#25D366' :
-                waStatus === 'QR_READY' ? '#FFC107' :
-                waStatus === 'INITIALIZING' ? '#007BFF' :
-                '#aaa',
-              border: `1px solid ${
-                waStatus === 'CONNECTED' ? '#25D366' :
-                waStatus === 'QR_READY' ? '#FFC107' :
-                waStatus === 'INITIALIZING' ? '#007BFF' :
-                'rgba(255, 255, 255, 0.15)'
-              }`
+                  waStatus === 'QR_READY' ? '#FFC107' :
+                    waStatus === 'INITIALIZING' ? '#007BFF' :
+                      '#aaa',
+              border: `1px solid ${waStatus === 'CONNECTED' ? '#25D366' :
+                  waStatus === 'QR_READY' ? '#FFC107' :
+                    waStatus === 'INITIALIZING' ? '#007BFF' :
+                      'rgba(255, 255, 255, 0.15)'
+                }`
             }}>
               <span style={{
                 width: '8px',
                 height: '8px',
                 borderRadius: '50%',
-                background: 
+                background:
                   waStatus === 'CONNECTED' ? '#25D366' :
-                  waStatus === 'QR_READY' ? '#FFC107' :
-                  waStatus === 'INITIALIZING' ? '#007BFF' :
-                  '#888',
+                    waStatus === 'QR_READY' ? '#FFC107' :
+                      waStatus === 'INITIALIZING' ? '#007BFF' :
+                        '#888',
                 display: 'inline-block',
-                boxShadow: `0 0 8px ${
-                  waStatus === 'CONNECTED' ? '#25D366' :
-                  waStatus === 'QR_READY' ? '#FFC107' :
-                  waStatus === 'INITIALIZING' ? '#007BFF' :
-                  'rgba(255,255,255,0.2)'
-                }`
+                boxShadow: `0 0 8px ${waStatus === 'CONNECTED' ? '#25D366' :
+                    waStatus === 'QR_READY' ? '#FFC107' :
+                      waStatus === 'INITIALIZING' ? '#007BFF' :
+                        'rgba(255,255,255,0.2)'
+                  }`
               }}></span>
               {waStatus === 'CONNECTED' ? 'Connected' :
-               waStatus === 'QR_READY' ? 'Scan QR Code' :
-               waStatus === 'INITIALIZING' ? 'Initializing' :
-               'Standby (Offline)'}
+                waStatus === 'QR_READY' ? 'Scan QR Code' :
+                  waStatus === 'INITIALIZING' ? 'Initializing' :
+                    'Standby (Offline)'}
             </span>
 
             {waStatus === 'CONNECTED' && (
@@ -416,7 +509,7 @@ const FeesManager = () => {
                     setWaStatus('LOADING');
                     setWaErrorMsg(null);
                     setWaSeconds(0);
-                    
+
                     // Start live 1-second timer
                     const secTimer = setInterval(() => {
                       setWaSeconds(prev => prev + 1);
@@ -428,7 +521,7 @@ const FeesManager = () => {
                       }
                       return null;
                     });
-                    
+
                     let attempts = 0;
                     const pollQr = async () => {
                       try {
@@ -513,16 +606,16 @@ const FeesManager = () => {
                 {waSeconds}s / 90s
               </span>
             </div>
-            
+
             {/* Live Progress Bar */}
             <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
-              <div 
-                style={{ 
-                  height: '100%', 
-                  width: `${Math.min(100, Math.round((waSeconds / 90) * 100))}%`, 
-                  background: 'linear-gradient(90deg, #007BFF, #00E5FF)', 
-                  transition: 'width 0.3s ease-in-out' 
-                }} 
+              <div
+                style={{
+                  height: '100%',
+                  width: `${Math.min(100, Math.round((waSeconds / 90) * 100))}%`,
+                  background: 'linear-gradient(90deg, #007BFF, #00E5FF)',
+                  transition: 'width 0.3s ease-in-out'
+                }}
               />
             </div>
           </div>
@@ -537,14 +630,13 @@ const FeesManager = () => {
 
       {/* WhatsApp Reminder Logs / Full Live Status Report Feed */}
       {reminderLog && (
-        <div 
+        <div
           style={{
             background: 'rgba(18, 19, 24, 0.95)',
-            border: `1px solid ${
-              reminderLog.status === 'PROCESSING' ? 'rgba(0, 123, 255, 0.4)' :
-              reminderLog.failCount > 0 ? 'rgba(220, 53, 69, 0.4)' :
-              'rgba(40, 167, 69, 0.4)'
-            }`,
+            border: `1px solid ${reminderLog.status === 'PROCESSING' ? 'rgba(0, 123, 255, 0.4)' :
+                reminderLog.failCount > 0 ? 'rgba(220, 53, 69, 0.4)' :
+                  'rgba(40, 167, 69, 0.4)'
+              }`,
             borderRadius: '16px',
             padding: '1.75rem',
             marginBottom: '2.5rem',
@@ -564,8 +656,30 @@ const FeesManager = () => {
                 <span>Mode: <strong style={{ color: '#d4af37' }}>{reminderLog.runType || 'Manual'}</strong></span>
               </p>
             </div>
-            
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <button 
+                onClick={() => setShowReportTable(prev => !prev)}
+                style={{
+                  background: showReportTable ? 'rgba(212, 175, 55, 0.15)' : 'linear-gradient(135deg, #1877F2, #0d65d9)',
+                  border: showReportTable ? '1px solid rgba(212, 175, 55, 0.5)' : '1px solid rgba(24, 119, 242, 0.4)',
+                  color: showReportTable ? '#d4af37' : '#fff',
+                  padding: '7px 16px',
+                  borderRadius: '8px',
+                  fontSize: '0.82rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: showReportTable ? 'none' : '0 2px 10px rgba(24, 119, 242, 0.35)',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <span>{showReportTable ? '▲' : '📋'}</span>
+                <span>{showReportTable ? 'Hide Details' : 'Show Details'}</span>
+              </button>
+
               <span style={{
                 padding: '6px 14px',
                 borderRadius: '20px',
@@ -573,22 +687,21 @@ const FeesManager = () => {
                 fontWeight: '700',
                 textTransform: 'uppercase',
                 letterSpacing: '0.5px',
-                background: 
+                background:
                   reminderLog.status === 'PROCESSING' ? 'rgba(0, 123, 255, 0.15)' :
-                  'rgba(40, 167, 69, 0.15)',
-                color: 
+                    'rgba(40, 167, 69, 0.15)',
+                color:
                   reminderLog.status === 'PROCESSING' ? '#007BFF' :
-                  '#25D366',
-                border: `1px solid ${
-                  reminderLog.status === 'PROCESSING' ? '#007BFF' :
-                  '#25D366'
-                }`
+                    '#25D366',
+                border: `1px solid ${reminderLog.status === 'PROCESSING' ? '#007BFF' :
+                    '#25D366'
+                  }`
               }}>
                 ● {reminderLog.status}
               </span>
 
               {/* Close ✕ Button */}
-              <button 
+              <button
                 onClick={() => setReminderLog(null)}
                 style={{
                   background: 'rgba(255,255,255,0.08)',
@@ -614,56 +727,71 @@ const FeesManager = () => {
           </div>
 
           {/* Summary Filter Cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-            <div 
-              onClick={() => setEmbeddedFilter('ALL')}
-              style={{ 
-                background: embeddedFilter === 'ALL' ? 'rgba(212,175,55,0.15)' : 'rgba(255,255,255,0.02)', 
-                padding: '1rem', 
-                borderRadius: '12px', 
-                textAlign: 'center', 
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1rem', marginBottom: showReportTable ? '1.5rem' : '0.5rem' }}>
+            <div
+              onClick={() => {
+                setEmbeddedFilter('ALL');
+                setShowReportTable(true);
+              }}
+              style={{
+                background: embeddedFilter === 'ALL' && showReportTable ? 'rgba(212,175,55,0.15)' : 'rgba(255,255,255,0.02)',
+                padding: '1rem',
+                borderRadius: '12px',
+                textAlign: 'center',
                 cursor: 'pointer',
-                border: `1px solid ${embeddedFilter === 'ALL' ? '#d4af37' : 'rgba(255,255,255,0.08)'}`,
+                border: `1px solid ${embeddedFilter === 'ALL' && showReportTable ? '#d4af37' : 'rgba(255,255,255,0.08)'}`,
                 transition: 'all 0.2s ease'
               }}
             >
               <div style={{ fontSize: '0.75rem', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Targeted</div>
               <div style={{ fontSize: '1.6rem', fontWeight: '800', color: '#fff', margin: '2px 0' }}>{reminderLog.totalRecipients}</div>
-              <span style={{ fontSize: '0.72rem', color: embeddedFilter === 'ALL' ? '#d4af37' : '#888', fontWeight: '600' }}>Show All List</span>
+              <span style={{ fontSize: '0.72rem', color: embeddedFilter === 'ALL' && showReportTable ? '#d4af37' : '#888', fontWeight: '600' }}>
+                {showReportTable && embeddedFilter === 'ALL' ? 'Showing All List' : 'Show All List'}
+              </span>
             </div>
 
-            <div 
-              onClick={() => setEmbeddedFilter('SUCCESS')}
-              style={{ 
-                background: embeddedFilter === 'SUCCESS' ? 'rgba(37,211,102,0.18)' : 'rgba(40, 167, 69, 0.08)', 
-                padding: '1rem', 
-                borderRadius: '12px', 
-                textAlign: 'center', 
+            <div
+              onClick={() => {
+                setEmbeddedFilter('SUCCESS');
+                setShowReportTable(true);
+              }}
+              style={{
+                background: embeddedFilter === 'SUCCESS' && showReportTable ? 'rgba(37,211,102,0.18)' : 'rgba(40, 167, 69, 0.08)',
+                padding: '1rem',
+                borderRadius: '12px',
+                textAlign: 'center',
                 cursor: 'pointer',
-                border: `1px solid ${embeddedFilter === 'SUCCESS' ? '#25D366' : 'rgba(40,167,69,0.3)'}`,
+                border: `1px solid ${embeddedFilter === 'SUCCESS' && showReportTable ? '#25D366' : 'rgba(40,167,69,0.3)'}`,
                 transition: 'all 0.2s ease'
               }}
             >
               <div style={{ fontSize: '0.75rem', color: '#25D366', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 'bold' }}>✅ Delivered</div>
               <div style={{ fontSize: '1.6rem', fontWeight: '800', color: '#25D366', margin: '2px 0' }}>{reminderLog.successCount}</div>
-              <span style={{ fontSize: '0.72rem', color: '#25D366', fontWeight: '600' }}>Show Delivered ({reminderLog.successCount})</span>
+              <span style={{ fontSize: '0.72rem', color: '#25D366', fontWeight: '600' }}>
+                {showReportTable && embeddedFilter === 'SUCCESS' ? `Showing (${reminderLog.successCount})` : `Show Delivered (${reminderLog.successCount})`}
+              </span>
             </div>
 
-            <div 
-              onClick={() => setEmbeddedFilter('FAILED')}
-              style={{ 
-                background: embeddedFilter === 'FAILED' ? 'rgba(220,53,69,0.18)' : 'rgba(220, 53, 69, 0.08)', 
-                padding: '1rem', 
-                borderRadius: '12px', 
-                textAlign: 'center', 
+            <div
+              onClick={() => {
+                setEmbeddedFilter('FAILED');
+                setShowReportTable(true);
+              }}
+              style={{
+                background: embeddedFilter === 'FAILED' && showReportTable ? 'rgba(220,53,69,0.18)' : 'rgba(220, 53, 69, 0.08)',
+                padding: '1rem',
+                borderRadius: '12px',
+                textAlign: 'center',
                 cursor: 'pointer',
-                border: `1px solid ${embeddedFilter === 'FAILED' ? '#dc3545' : 'rgba(220,53,69,0.3)'}`,
+                border: `1px solid ${embeddedFilter === 'FAILED' && showReportTable ? '#dc3545' : 'rgba(220,53,69,0.3)'}`,
                 transition: 'all 0.2s ease'
               }}
             >
               <div style={{ fontSize: '0.75rem', color: '#dc3545', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 'bold' }}>❌ Failed</div>
               <div style={{ fontSize: '1.6rem', fontWeight: '800', color: '#dc3545', margin: '2px 0' }}>{reminderLog.failCount}</div>
-              <span style={{ fontSize: '0.72rem', color: '#dc3545', fontWeight: '600' }}>Show Failed ({reminderLog.failCount})</span>
+              <span style={{ fontSize: '0.72rem', color: '#dc3545', fontWeight: '600' }}>
+                {showReportTable && embeddedFilter === 'FAILED' ? `Showing (${reminderLog.failCount})` : `Show Failed (${reminderLog.failCount})`}
+              </span>
             </div>
           </div>
 
@@ -675,135 +803,173 @@ const FeesManager = () => {
                 <span>{Math.round(((reminderLog.successCount + reminderLog.failCount) / reminderLog.totalRecipients) * 100)}%</span>
               </div>
               <div style={{ height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', overflow: 'hidden' }}>
-                <div style={{ 
-                  width: `${((reminderLog.successCount + reminderLog.failCount) / reminderLog.totalRecipients) * 100}%`, 
-                  height: '100%', 
-                  background: 'linear-gradient(90deg, #007BFF, #25D366)', 
-                  transition: 'width 0.3s ease-in-out' 
-                }}/>
+                <div style={{
+                  width: `${((reminderLog.successCount + reminderLog.failCount) / reminderLog.totalRecipients) * 100}%`,
+                  height: '100%',
+                  background: 'linear-gradient(90deg, #007BFF, #25D366)',
+                  transition: 'width 0.3s ease-in-out'
+                }} />
               </div>
             </div>
           )}
 
-          {/* Table Header Controls */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-            <h5 style={{ margin: 0, color: '#fff', fontSize: '1rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span>📋</span> Delivery Details ({embeddedFilter === 'ALL' ? 'All Students' : embeddedFilter})
-            </h5>
-
-            <div style={{ position: 'relative', minWidth: '260px' }}>
-              <input 
-                type="text"
-                placeholder="🔍 Search student name or phone..."
-                value={embeddedSearch}
-                onChange={e => setEmbeddedSearch(e.target.value)}
+          {/* Collapsed State Bar when details table is hidden */}
+          {!showReportTable && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              <button
+                onClick={() => setShowReportTable(true)}
                 style={{
-                  width: '100%',
-                  padding: '0.5rem 2rem 0.5rem 0.85rem',
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  color: '#d4af37',
+                  padding: '9px 24px',
                   borderRadius: '8px',
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  color: '#fff',
-                  fontSize: '0.85rem'
+                  fontSize: '0.85rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  transition: 'all 0.2s ease'
                 }}
-              />
-              {embeddedSearch && (
-                <button 
-                  onClick={() => setEmbeddedSearch('')}
-                  style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#888', cursor: 'pointer' }}
-                >✕</button>
-              )}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = 'rgba(212, 175, 55, 0.12)';
+                  e.currentTarget.style.borderColor = '#d4af37';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+                }}
+              >
+                <span>📋</span> Show Details
+              </button>
             </div>
-          </div>
+          )}
 
-          {/* Embedded Full Table (No Height Restrictions, Clean Display) */}
-          <div style={{ overflowX: 'auto' }}>
-            {(() => {
-              let list = [];
-              if (embeddedFilter === 'SUCCESS') list = reminderLog.successList || [];
-              else if (embeddedFilter === 'FAILED') list = reminderLog.failList || [];
-              else {
-                list = [
-                  ...(reminderLog.successList || []).map(item => ({ ...item, isSuccess: true })),
-                  ...(reminderLog.failList || []).map(item => ({ ...item, isSuccess: false }))
-                ];
-              }
+          {/* Detailed Table Section (Only shown when expanded) */}
+          {showReportTable && (
+            <>
+              {/* Table Header Controls */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                <h5 style={{ margin: 0, color: '#fff', fontSize: '1rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>📋</span> Delivery Details ({embeddedFilter === 'ALL' ? 'All Students' : embeddedFilter})
+                </h5>
 
-              if (embeddedSearch.trim()) {
-                const query = embeddedSearch.toLowerCase();
-                list = list.filter(item => 
-                  (item.name || '').toLowerCase().includes(query) ||
-                  (item.studentId || '').toString().toLowerCase().includes(query) ||
-                  (item.phone || '').includes(query)
-                );
-              }
+                <div style={{ position: 'relative', minWidth: '260px' }}>
+                  <input
+                    type="text"
+                    placeholder="🔍 Search student name or phone..."
+                    value={embeddedSearch}
+                    onChange={e => setEmbeddedSearch(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem 2rem 0.5rem 0.85rem',
+                      borderRadius: '8px',
+                      background: 'rgba(255,255,255,0.04)',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      color: '#fff',
+                      fontSize: '0.85rem'
+                    }}
+                  />
+                  {embeddedSearch && (
+                    <button
+                      onClick={() => setEmbeddedSearch('')}
+                      style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#888', cursor: 'pointer' }}
+                    >✕</button>
+                  )}
+                </div>
+              </div>
 
-              if (list.length === 0) {
-                return (
-                  <div style={{ padding: '3rem 1rem', textAlign: 'center', color: '#777' }}>
-                    <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📭</div>
-                    <p style={{ margin: 0 }}>No delivery records match your selection.</p>
-                  </div>
-                );
-              }
+              {/* Embedded Full Table (No Height Restrictions, Clean Display) */}
+              <div style={{ overflowX: 'auto' }}>
+                {(() => {
+                  let list = [];
+                  if (embeddedFilter === 'SUCCESS') list = reminderLog.successList || [];
+                  else if (embeddedFilter === 'FAILED') list = reminderLog.failList || [];
+                  else {
+                    list = [
+                      ...(reminderLog.successList || []).map(item => ({ ...item, isSuccess: true })),
+                      ...(reminderLog.failList || []).map(item => ({ ...item, isSuccess: false }))
+                    ];
+                  }
 
-              return (
-                <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 6px', textAlign: 'left' }}>
-                  <thead>
-                    <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
-                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.78rem', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Student ID</th>
-                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.78rem', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Student Name</th>
-                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.78rem', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Phone Number</th>
-                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.78rem', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Sent Time</th>
-                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.78rem', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Delivery Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {list.map((item, idx) => {
-                      const isSuccess = embeddedFilter === 'SUCCESS' || (embeddedFilter === 'ALL' && item.isSuccess);
-                      const sentTimestamp = item.time || (reminderLog.startedAt ? new Date(reminderLog.startedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : 'N/A');
-                      
-                      return (
-                        <tr 
-                          key={idx}
-                          style={{ 
-                            background: 'rgba(255,255,255,0.025)',
-                            transition: 'all 0.2s ease'
-                          }}
-                          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
-                          onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.025)'}
-                        >
-                          <td style={{ padding: '0.85rem 1rem', fontSize: '0.88rem', color: '#d4af37', fontWeight: 'bold', borderRadius: '8px 0 0 8px' }}>
-                            #{item.studentId}
-                          </td>
-                          <td style={{ padding: '0.85rem 1rem', fontSize: '0.9rem', color: '#fff', fontWeight: '600' }}>
-                            {item.name}
-                          </td>
-                          <td style={{ padding: '0.85rem 1rem', fontSize: '0.88rem', color: '#ccc' }}>
-                            {formatDisplayPhone(item.phone)}
-                          </td>
-                          <td style={{ padding: '0.85rem 1rem', fontSize: '0.85rem', color: '#25D366', fontWeight: '600', fontFamily: 'monospace' }}>
-                            ⏰ {sentTimestamp}
-                          </td>
-                          <td style={{ padding: '0.85rem 1rem', fontSize: '0.82rem', borderRadius: '0 8px 8px 0' }}>
-                            {isSuccess ? (
-                              <span style={{ color: '#25D366', background: 'rgba(37,211,102,0.12)', padding: '5px 12px', borderRadius: '6px', border: '1px solid rgba(37,211,102,0.3)', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                                ✅ Sent Successfully
-                              </span>
-                            ) : (
-                              <span style={{ color: '#ff6b6b', background: 'rgba(220,53,69,0.12)', padding: '5px 12px', borderRadius: '6px', border: '1px solid rgba(220,53,69,0.3)', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                                ❌ Failed: {item.error || 'Failed'}
-                              </span>
-                            )}
-                          </td>
+                  if (embeddedSearch.trim()) {
+                    const query = embeddedSearch.toLowerCase();
+                    list = list.filter(item =>
+                      (item.name || '').toLowerCase().includes(query) ||
+                      (item.studentId || '').toString().toLowerCase().includes(query) ||
+                      (item.phone || '').includes(query)
+                    );
+                  }
+
+                  if (list.length === 0) {
+                    return (
+                      <div style={{ padding: '3rem 1rem', textAlign: 'center', color: '#777' }}>
+                        <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📭</div>
+                        <p style={{ margin: 0 }}>No delivery records match your selection.</p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 6px', textAlign: 'left' }}>
+                      <thead>
+                        <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
+                          <th style={{ padding: '0.75rem 1rem', fontSize: '0.78rem', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Student ID</th>
+                          <th style={{ padding: '0.75rem 1rem', fontSize: '0.78rem', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Student Name</th>
+                          <th style={{ padding: '0.75rem 1rem', fontSize: '0.78rem', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Phone Number</th>
+                          <th style={{ padding: '0.75rem 1rem', fontSize: '0.78rem', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Sent Time</th>
+                          <th style={{ padding: '0.75rem 1rem', fontSize: '0.78rem', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Delivery Status</th>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              );
-            })()}
-          </div>
+                      </thead>
+                      <tbody>
+                        {list.map((item, idx) => {
+                          const isSuccess = embeddedFilter === 'SUCCESS' || (embeddedFilter === 'ALL' && item.isSuccess);
+                          const sentTimestamp = formatSentTime(item, reminderLog);
+
+                          return (
+                            <tr
+                              key={idx}
+                              style={{
+                                background: 'rgba(255,255,255,0.025)',
+                                transition: 'all 0.2s ease'
+                              }}
+                              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+                              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.025)'}
+                            >
+                              <td style={{ padding: '0.85rem 1rem', fontSize: '0.88rem', color: '#d4af37', fontWeight: 'bold', borderRadius: '8px 0 0 8px' }}>
+                                #{item.studentId}
+                              </td>
+                              <td style={{ padding: '0.85rem 1rem', fontSize: '0.9rem', color: '#fff', fontWeight: '600' }}>
+                                {item.name}
+                              </td>
+                              <td style={{ padding: '0.85rem 1rem', fontSize: '0.88rem', color: '#ccc' }}>
+                                {formatDisplayPhone(item.phone)}
+                              </td>
+                              <td style={{ padding: '0.85rem 1rem', fontSize: '0.85rem', color: '#25D366', fontWeight: '600', fontFamily: 'monospace' }}>
+                                ⏰ {sentTimestamp}
+                              </td>
+                              <td style={{ padding: '0.85rem 1rem', fontSize: '0.82rem', borderRadius: '0 8px 8px 0' }}>
+                                {isSuccess ? (
+                                  <span style={{ color: '#25D366', background: 'rgba(37,211,102,0.12)', padding: '5px 12px', borderRadius: '6px', border: '1px solid rgba(37,211,102,0.3)', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                    ✅ Sent Successfully
+                                  </span>
+                                ) : (
+                                  <span style={{ color: '#ff6b6b', background: 'rgba(220,53,69,0.12)', padding: '5px 12px', borderRadius: '6px', border: '1px solid rgba(220,53,69,0.3)', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                    ❌ Failed: {item.error || 'Failed'}
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  );
+                })()}
+              </div>
+            </>
+          )}
         </div>
       )}
 
@@ -862,27 +1028,27 @@ const FeesManager = () => {
       <div className="manager-header" style={{ marginBottom: '2rem', display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
         <div className="form-group" style={{ minWidth: '200px' }}>
           <label>Select Month</label>
-          <input 
-            type="month" 
-            value={selectedMonth} 
+          <input
+            type="month"
+            value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
           />
         </div>
 
         <div className="form-group" style={{ minWidth: '250px', flex: '1' }}>
           <label>Search Student Name or ID</label>
-          <input 
-            type="text" 
+          <input
+            type="text"
             placeholder="Search students..."
-            value={searchTerm} 
+            value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
         <div className="form-group" style={{ minWidth: '150px' }}>
           <label>Status Filter</label>
-          <select 
-            value={statusFilter} 
+          <select
+            value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
             <option value="All" style={{ background: '#15151a', color: '#fff' }}>All Students</option>
@@ -892,9 +1058,9 @@ const FeesManager = () => {
         </div>
 
         {/* Bulk Mark All Paid Button */}
-        <div className="form-group" style={{ minWidth: '180px' }}>
+        <div className="form-group" style={{ minWidth: '170px' }}>
           <label>Bulk Actions</label>
-          <button 
+          <button
             onClick={handleMarkAllPaid}
             style={{
               width: '100%',
@@ -924,10 +1090,46 @@ const FeesManager = () => {
           </button>
         </div>
 
+        {/* Clear All for Selected Month */}
+        <div className="form-group" style={{ minWidth: '150px' }}>
+          <label>Clear Month</label>
+          <button
+            onClick={handleClearAllForMonth}
+            style={{
+              width: '100%',
+              padding: '0.6rem 1rem',
+              borderRadius: '8px',
+              border: '1px solid rgba(220, 53, 69, 0.4)',
+              background: 'rgba(220, 53, 69, 0.12)',
+              color: '#ff6b6b',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              fontSize: '0.85rem',
+              transition: 'all 0.3s ease',
+              height: '42px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = 'rgba(220, 53, 69, 0.25)';
+              e.currentTarget.style.borderColor = '#dc3545';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = 'rgba(220, 53, 69, 0.12)';
+              e.currentTarget.style.borderColor = 'rgba(220, 53, 69, 0.4)';
+            }}
+            title={`Clear all recorded fees for ${getMonthName(selectedMonth)} only`}
+          >
+            🗑️ Clear All
+          </button>
+        </div>
+
         {/* Send Reminders Trigger Button */}
         <div className="form-group" style={{ minWidth: '220px' }}>
           <label>WhatsApp Automation</label>
-          <button 
+          <button
             onClick={handleSendReminders}
             disabled={sendingReminders}
             style={{
@@ -1011,19 +1213,19 @@ const FeesManager = () => {
             ) : (
               sortedStudents.map(student => {
                 const status = fees[student.studentId]?.[selectedMonth] || 'Not Paid';
-                
+
                 return (
                   <tr key={student.studentId} style={{ opacity: student.isPaused ? 0.7 : 1 }}>
                     <td>#{highlightMatch(student.studentId, searchTerm)}</td>
                     <td>
                       {highlightMatch(student.studentName || student.name || 'N/A', searchTerm)}
                       {student.isPaused && (
-                        <span style={{ 
-                          marginLeft: '8px', 
-                          fontSize: '0.7rem', 
-                          background: 'rgba(255, 107, 107, 0.15)', 
-                          color: '#ff6b6b', 
-                          padding: '2px 6px', 
+                        <span style={{
+                          marginLeft: '8px',
+                          fontSize: '0.7rem',
+                          background: 'rgba(255, 107, 107, 0.15)',
+                          color: '#ff6b6b',
+                          padding: '2px 6px',
                           borderRadius: '4px',
                           fontWeight: 'bold',
                           border: '1px solid rgba(255, 107, 107, 0.3)'
@@ -1059,7 +1261,7 @@ const FeesManager = () => {
                       )}
                     </td>
                     <td className="action-btns" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                      <button 
+                      <button
                         className="edit-btn"
                         onClick={() => setSelectedStudentForView(student)}
                         style={{
@@ -1077,14 +1279,14 @@ const FeesManager = () => {
                         </span>
                       ) : (
                         <>
-                          <button 
+                          <button
                             className="edit-btn"
                             onClick={() => handleFeeChange(student.studentId, 'Paid')}
                             disabled={status === 'Paid'}
                           >
                             Mark as Paid
                           </button>
-                          <button 
+                          <button
                             className="delete-btn"
                             onClick={() => handleFeeChange(student.studentId, 'Not Paid')}
                             disabled={status === 'Not Paid'}
@@ -1136,7 +1338,7 @@ const FeesManager = () => {
                   <h2 style={{ margin: 0, color: '#fff' }}>{selectedStudentForView.studentName || selectedStudentForView.name}</h2>
                   <span style={{ color: '#d4af37', fontWeight: '700' }}>#{selectedStudentForView.studentId}</span>
                 </div>
-                
+
                 {detailRow('Full Name', selectedStudentForView.studentName || selectedStudentForView.name)}
                 {detailRow('Email Address', selectedStudentForView.email)}
                 {detailRow('Phone Number', formatDisplayPhone(selectedStudentForView.phoneNumber || selectedStudentForView.phone || selectedStudentForView.whatsappNo))}
@@ -1149,12 +1351,12 @@ const FeesManager = () => {
                 {detailRow('FIDE Rating', selectedStudentForView.fideRating && String(selectedStudentForView.fideRating).trim() ? selectedStudentForView.fideRating : 'N/A')}
                 {detailRow('Parent Name', selectedStudentForView.parentName)}
                 {detailRow('Parent Occupation', selectedStudentForView.parentOccupation)}
-                
+
                 <div style={{ marginTop: '1.5rem' }}>
-                   <span style={{ color: '#aaa', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '0.5rem' }}>Address</span>
-                   <p style={{ color: '#fff', fontSize: '0.95rem', background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', lineHeight: '1.6', border: '1px solid rgba(255,255,255,0.05)' }}>
-                     {selectedStudentForView.address || 'No address provided.'}
-                   </p>
+                  <span style={{ color: '#aaa', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '0.5rem' }}>Address</span>
+                  <p style={{ color: '#fff', fontSize: '0.95rem', background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', lineHeight: '1.6', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    {selectedStudentForView.address || 'No address provided.'}
+                  </p>
                 </div>
               </div>
               <div style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
@@ -1170,7 +1372,7 @@ const FeesManager = () => {
 
       {/* WhatsApp Reminder Log Modal Popup */}
       {logModalType && reminderLog && (
-        <div 
+        <div
           onClick={() => setLogModalType(null)}
           style={{
             position: 'fixed',
@@ -1188,15 +1390,14 @@ const FeesManager = () => {
             padding: '1.25rem'
           }}
         >
-          <div 
+          <div
             onClick={e => e.stopPropagation()}
             style={{
               background: '#121318',
-              border: `1px solid ${
-                logModalType === 'SUCCESS' ? 'rgba(37, 211, 102, 0.4)' :
-                logModalType === 'FAILED' ? 'rgba(220, 53, 69, 0.4)' :
-                'rgba(212, 175, 55, 0.4)'
-              }`,
+              border: `1px solid ${logModalType === 'SUCCESS' ? 'rgba(37, 211, 102, 0.4)' :
+                  logModalType === 'FAILED' ? 'rgba(220, 53, 69, 0.4)' :
+                    'rgba(212, 175, 55, 0.4)'
+                }`,
               borderRadius: '18px',
               width: '92%',
               maxWidth: '920px',
@@ -1215,10 +1416,10 @@ const FeesManager = () => {
               display: 'flex',
               justify: 'space-between',
               alignItems: 'center',
-              background: 
+              background:
                 logModalType === 'SUCCESS' ? 'linear-gradient(135deg, rgba(37,211,102,0.12), rgba(0,0,0,0))' :
-                logModalType === 'FAILED' ? 'linear-gradient(135deg, rgba(220,53,69,0.12), rgba(0,0,0,0))' :
-                'linear-gradient(135deg, rgba(212,175,55,0.12), rgba(0,0,0,0))'
+                  logModalType === 'FAILED' ? 'linear-gradient(135deg, rgba(220,53,69,0.12), rgba(0,0,0,0))' :
+                    'linear-gradient(135deg, rgba(212,175,55,0.12), rgba(0,0,0,0))'
             }}>
               <div>
                 <h3 style={{ margin: 0, color: '#fff', fontSize: '1.25rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -1235,7 +1436,7 @@ const FeesManager = () => {
                 </p>
               </div>
 
-              <button 
+              <button
                 onClick={() => setLogModalType(null)}
                 style={{
                   background: 'rgba(255,255,255,0.08)',
@@ -1292,7 +1493,7 @@ const FeesManager = () => {
 
               {/* Search Box */}
               <div style={{ position: 'relative', width: '280px' }}>
-                <input 
+                <input
                   type="text"
                   placeholder="🔍 Search student name, ID or phone..."
                   value={logModalSearch}
@@ -1308,7 +1509,7 @@ const FeesManager = () => {
                   }}
                 />
                 {logModalSearch && (
-                  <button 
+                  <button
                     onClick={() => setLogModalSearch('')}
                     style={{
                       position: 'absolute',
@@ -1329,11 +1530,11 @@ const FeesManager = () => {
             </div>
 
             {/* Modal Scrollable Content Container */}
-            <div 
-              style={{ 
-                padding: '1rem 1.75rem 1.5rem 1.75rem', 
-                overflowY: 'auto', 
-                flex: 1 
+            <div
+              style={{
+                padding: '1rem 1.75rem 1.5rem 1.75rem',
+                overflowY: 'auto',
+                flex: 1
               }}
             >
               {(() => {
@@ -1349,7 +1550,7 @@ const FeesManager = () => {
 
                 if (logModalSearch.trim()) {
                   const query = logModalSearch.toLowerCase();
-                  list = list.filter(item => 
+                  list = list.filter(item =>
                     (item.name || '').toLowerCase().includes(query) ||
                     (item.studentId || '').toString().toLowerCase().includes(query) ||
                     (item.phone || '').includes(query)
@@ -1380,12 +1581,12 @@ const FeesManager = () => {
                     <tbody>
                       {list.map((item, idx) => {
                         const isSuccess = logModalType === 'SUCCESS' || (logModalType === 'ALL' && item.isSuccess);
-                        const sentTimestamp = item.time || (reminderLog.startedAt ? new Date(reminderLog.startedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : 'N/A');
-                        
+                        const sentTimestamp = formatSentTime(item, reminderLog);
+
                         return (
-                          <tr 
-                            key={idx} 
-                            style={{ 
+                          <tr
+                            key={idx}
+                            style={{
                               background: 'rgba(255,255,255,0.02)',
                               transition: 'background 0.2s ease'
                             }}

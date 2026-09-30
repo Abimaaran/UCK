@@ -4,8 +4,8 @@ const whatsappService = require('../services/whatsappService');
 const getMonthName = (monthStr) => {
   try {
     const [year, month] = monthStr.split('-');
-    const date = new Date(year, parseInt(month) - 1, 1);
-    return date.toLocaleString('default', { month: 'long', year: 'numeric' });
+    const date = new Date(parseInt(year, 10), parseInt(month, 10) - 1, 1);
+    return date.toLocaleString('en-US', { month: 'long', year: 'numeric' });
   } catch (e) {
     return monthStr;
   }
@@ -15,7 +15,7 @@ exports.getAll = async (req, res) => {
   try {
     const { data, error } = await supabase.from('fees').select('*');
     if (error) throw error;
-    
+
     const formatted = (data || []).map(f => ({
       id: f.id,
       studentId: f.student_id,
@@ -126,6 +126,37 @@ exports.markAllAsPaid = async (req, res) => {
   }
 };
 
+exports.clearAllForMonth = async (req, res) => {
+  try {
+    const { month } = req.body;
+    if (!month) return res.status(400).json({ error: 'Month parameter is required' });
+
+    // 1. Delete all fee entries for this specific month only
+    const { data: deletedFees, error: feeErr } = await supabase
+      .from('fees')
+      .delete()
+      .eq('month', month)
+      .select();
+
+    if (feeErr) throw feeErr;
+
+    // 2. Also reset reminder logs for this month so status and table are clean
+    await supabase
+      .from('reminder_logs')
+      .delete()
+      .eq('month', month);
+
+    res.status(200).json({
+      success: true,
+      message: `Cleared all recorded fee payments for ${month}.`,
+      count: (deletedFees || []).length
+    });
+  } catch (error) {
+    console.error('Error clearing fees for month:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 const processRemindersInBackground = async (unpaidStudents, month, runType = 'Manual') => {
   console.log(`\n🤖 WhatsApp: Starting background reminders for ${unpaidStudents.length} students for month ${month} (${runType})`);
   let successCount = 0;
@@ -170,8 +201,25 @@ const processRemindersInBackground = async (unpaidStudents, month, runType = 'Ma
         await new Promise(resolve => setTimeout(resolve, 5000));
       }
       const formattedMonth = getMonthName(month);
-      const reminderMsg = `♟️ *UCK Chess Academy*\n\nDear Parent/Student *${name}*,\nThis is a gentle reminder regarding the academy fee for *${formattedMonth}*.\n\n_Please ignore this message if you have already paid._\n\nThank you!\n*UCK Chess Academy Management*`;
-      
+      const reminderMsg = `Uncrowned Kings 
+Chess Academy (Pvt) Ltd.
+
+Dear Parent/Student  ${name}
+
+🔔 Friendly Fee Reminder
+
+This is a gentle reminder regarding the Academy Fee for ${formattedMonth}, which is currently due.
+
+We kindly request you to settle the fee at your earliest convenience.
+
+_If you have already made the payment, please disregard this message_.
+
+Thank you for your kind cooperation and continued support. 🙏
+
+Regards,
+UCK
+Management Team`;
+
       // Retry logic: try up to 3 times
       let sent = false;
       let lastError = null;
@@ -190,19 +238,23 @@ const processRemindersInBackground = async (unpaidStudents, month, runType = 'Ma
         }
       }
 
-      const currentTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+      const now = new Date();
+      const currentTime = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Colombo', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+      const sentAtIso = now.toISOString();
 
       if (sent) {
         successCount++;
-        successList.push({ studentId, name, phone, time: currentTime });
+        successList.push({ studentId, name, phone, time: currentTime, sentAt: sentAtIso });
       } else {
         failCount++;
-        failList.push({ studentId, name, phone, error: lastError?.message || 'Failed after 3 attempts', time: currentTime });
+        failList.push({ studentId, name, phone, error: lastError?.message || 'Failed after 3 attempts', time: currentTime, sentAt: sentAtIso });
       }
     } catch (err) {
-      const currentTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+      const now = new Date();
+      const currentTime = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Colombo', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+      const sentAtIso = now.toISOString();
       failCount++;
-      failList.push({ studentId, name, phone, error: err.message, time: currentTime });
+      failList.push({ studentId, name, phone, error: err.message, time: currentTime, sentAt: sentAtIso });
     }
 
     if (logId) {
