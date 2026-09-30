@@ -124,6 +124,16 @@
   background: linear-gradient(135deg, var(--accent-gold), #000000);
   color: #ffffff;
   box-shadow: 0 4px 20px rgba(194, 65, 12, 0.4);
+  animation: heroBtnPulse 2.5s infinite;
+}
+
+@keyframes heroBtnPulse {
+  0%, 100% {
+    box-shadow: 0 4px 20px rgba(212, 175, 55, 0.4);
+  }
+  50% {
+    box-shadow: 0 8px 30px rgba(212, 175, 55, 0.7);
+  }
 }
 
 [data-theme='light'] .hero-btn.primary {
@@ -132,8 +142,8 @@
 }
 
 .hero-btn.primary:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 25px rgba(255, 215, 0, 0.6);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 8px 30px rgba(255, 215, 0, 0.7);
 }
 
 .hero-btn.secondary {
@@ -146,6 +156,7 @@
 .hero-btn.secondary:hover {
   background: rgba(255, 215, 0, 0.1);
   border-color: #cc7400;
+  transform: translateY(-3px);
 }
 
 .hero-stats {
@@ -157,6 +168,11 @@
 
 .stat {
   text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.stat:hover {
+  transform: translateY(-5px);
 }
 
 .stat h3 {
@@ -167,6 +183,11 @@
   background-clip: text;
   -webkit-text-fill-color: transparent;
   margin-bottom: 0.5rem;
+  transition: transform 0.3s ease;
+}
+
+.stat:hover h3 {
+  transform: scale(1.08);
 }
 
 .stat p {

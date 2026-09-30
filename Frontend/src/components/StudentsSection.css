@@ -331,19 +331,30 @@
   font-weight: 700;
   border-radius: 50px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   overflow: hidden;
   letter-spacing: 0.5px;
+  box-shadow: 0 4px 20px rgba(255, 215, 0, 0.3);
+  animation: ctaBtnPulse 3s infinite;
+}
+
+@keyframes ctaBtnPulse {
+  0%, 100% {
+    box-shadow: 0 4px 20px rgba(255, 215, 0, 0.3);
+  }
+  50% {
+    box-shadow: 0 8px 32px rgba(255, 215, 0, 0.6);
+  }
 }
 
 .cta-button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+  transform: translateY(-4px) scale(1.04);
+  box-shadow: 0 12px 35px rgba(255, 215, 0, 0.5);
 }
 
 .cta-button:active {
-  transform: translateY(-1px);
+  transform: translateY(-1px) scale(0.98);
 }
 
 /* Recent Wins Section Styles */

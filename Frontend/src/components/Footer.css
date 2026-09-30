@@ -572,3 +572,30 @@
     gap: 1.5rem;
   }
 }
+
+/* Quick Links Styles */
+.quick-links .links-list {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.footer-link {
+  color: var(--text-secondary, #a0aec0);
+  text-decoration: none;
+  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0.25rem 0;
+}
+
+.footer-link:hover {
+  color: var(--accent-gold, #d4af37);
+  transform: translateX(6px);
+  text-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+}

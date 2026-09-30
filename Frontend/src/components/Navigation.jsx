@@ -124,13 +124,13 @@ const Navigation = () => {
             className={`${baseClass} admin-active-btn`}
             onClick={() => { navigate('/admin'); setIsOpen(false); }}
           >
-            Admin Panel
+            👑 Admin Panel
           </button>
           <button
             className={`${baseClass} logout-btn`}
             onClick={() => { handleAdminLogout(); setIsOpen(false); }}
           >
-            Logout
+            🚪 Logout
           </button>
         </div>
       );
@@ -152,7 +152,7 @@ const Navigation = () => {
             className={`${baseClass} logout-btn`}
             onClick={() => { handleStudentLogout(); setIsOpen(false); }}
           >
-            Logout
+            🚪 Logout
           </button>
         </div>
       );
@@ -167,7 +167,7 @@ const Navigation = () => {
             setIsOpen(false); 
           }}
         >
-          Portal Login
+          🔐 Portal Login
         </button>
       </div>
     );
@@ -191,13 +191,13 @@ const Navigation = () => {
 
         {/* Center: Navigation Links */}
         <div className="nav-links desktop-links">
-          <button onClick={() => scrollToSection('home')} className={`nav-link ${activeSection === 'home' ? 'active' : ''}`}>Home</button>
-          <button onClick={() => scrollToSection('about')} className={`nav-link ${activeSection === 'about' ? 'active' : ''}`}>About</button>
-          <button onClick={() => scrollToSection('students')} className={`nav-link ${activeSection === 'students' ? 'active' : ''}`}>Students</button>
-          <button onClick={() => scrollToSection('tournaments')} className={`nav-link ${activeSection === 'tournaments' ? 'active' : ''}`}>Tournaments</button>
-          <button onClick={() => scrollToSection('timetable')} className={`nav-link ${activeSection === 'timetable' ? 'active' : ''}`}>Timetable</button>
-          <button onClick={() => scrollToSection('coaches')} className={`nav-link ${activeSection === 'coaches' ? 'active' : ''}`}>Coaches</button>
-          <button onClick={() => scrollToSection('contact')} className={`nav-link ${activeSection === 'contact' ? 'active' : ''}`}>Contact</button>
+          <button onClick={() => scrollToSection('home')} className={`nav-link ${activeSection === 'home' ? 'active' : ''}`}>🏠 Home</button>
+          <button onClick={() => scrollToSection('about')} className={`nav-link ${activeSection === 'about' ? 'active' : ''}`}>ℹ️ About</button>
+          <button onClick={() => scrollToSection('students')} className={`nav-link ${activeSection === 'students' ? 'active' : ''}`}>🏆 Students</button>
+          <button onClick={() => scrollToSection('tournaments')} className={`nav-link ${activeSection === 'tournaments' ? 'active' : ''}`}>⚔️ Tournaments</button>
+          <button onClick={() => scrollToSection('timetable')} className={`nav-link ${activeSection === 'timetable' ? 'active' : ''}`}>📅 Timetable</button>
+          <button onClick={() => scrollToSection('coaches')} className={`nav-link ${activeSection === 'coaches' ? 'active' : ''}`}>♟️ Coaches</button>
+          <button onClick={() => scrollToSection('contact')} className={`nav-link ${activeSection === 'contact' ? 'active' : ''}`}>📞 Contact</button>
         </div>
 
         {/* Right: Actions */}
@@ -224,13 +224,13 @@ const Navigation = () => {
       {/* Mobile Menu Dropdown */}
       <div className={`mobile-menu ${isOpen ? 'open' : ''}`}>
         <div className="mobile-links">
-          <button onClick={() => scrollToSection('home')} className={`mobile-link ${activeSection === 'home' ? 'active' : ''}`}>Home</button>
-          <button onClick={() => scrollToSection('about')} className={`mobile-link ${activeSection === 'about' ? 'active' : ''}`}>About Us</button>
-          <button onClick={() => scrollToSection('students')} className={`mobile-link ${activeSection === 'students' ? 'active' : ''}`}>Students</button>
-          <button onClick={() => scrollToSection('tournaments')} className={`mobile-link ${activeSection === 'tournaments' ? 'active' : ''}`}>Tournaments</button>
-          <button onClick={() => scrollToSection('timetable')} className={`mobile-link ${activeSection === 'timetable' ? 'active' : ''}`}>Timetable</button>
-          <button onClick={() => scrollToSection('coaches')} className={`mobile-link ${activeSection === 'coaches' ? 'active' : ''}`}>Coaches</button>
-          <button onClick={() => scrollToSection('contact')} className={`mobile-link ${activeSection === 'contact' ? 'active' : ''}`}>Contact Us</button>
+          <button onClick={() => scrollToSection('home')} className={`mobile-link ${activeSection === 'home' ? 'active' : ''}`}>🏠 Home</button>
+          <button onClick={() => scrollToSection('about')} className={`mobile-link ${activeSection === 'about' ? 'active' : ''}`}>ℹ️ About Us</button>
+          <button onClick={() => scrollToSection('students')} className={`mobile-link ${activeSection === 'students' ? 'active' : ''}`}>🏆 Students</button>
+          <button onClick={() => scrollToSection('tournaments')} className={`mobile-link ${activeSection === 'tournaments' ? 'active' : ''}`}>⚔️ Tournaments</button>
+          <button onClick={() => scrollToSection('timetable')} className={`mobile-link ${activeSection === 'timetable' ? 'active' : ''}`}>📅 Timetable</button>
+          <button onClick={() => scrollToSection('coaches')} className={`mobile-link ${activeSection === 'coaches' ? 'active' : ''}`}>♟️ Coaches</button>
+          <button onClick={() => scrollToSection('contact')} className={`mobile-link ${activeSection === 'contact' ? 'active' : ''}`}>📞 Contact Us</button>
         </div>
         
         <div className="mobile-divider"></div>

@@ -24,10 +24,10 @@ const HeroSection = () => {
               console.log("Register Now clicked!");
               window.dispatchEvent(new Event('showRegisterModal'));
             }}>
-              Register Now..
+              🚀 Register Now
             </button>
             <button className="hero-btn secondary" onClick={() => setShowVideo(true)}>
-              Watch Demo Class
+              ▶️ Watch Demo Class
             </button>
           </div>
 
@@ -49,15 +49,15 @@ const HeroSection = () => {
           )}
           <div className="hero-stats">
             <div className="stat">
-              <h3>5+</h3>
+              <h3>🎖️ 5+</h3>
               <p>Years Experienced Coaches</p>
             </div>
             <div className="stat">
-              <h3>150+</h3>
+              <h3>👥 150+</h3>
               <p>Students Trained</p>
             </div>
             <div className="stat">
-              <h3>50+</h3>
+              <h3>🏆 50+</h3>
               <p>Tournaments Won</p>
             </div>
           </div>

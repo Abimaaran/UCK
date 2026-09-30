@@ -88,7 +88,7 @@ const TournamentsSection = () => {
             <h2 className="section-title">Tournaments & Events</h2>
             <div className="chess-board-icon">♜</div>
           </div>
-          <p className="section-subtitle">Compete, Learn, and Grow with Uncrowned Kings</p>
+          <p className="section-subtitle">⚔️ Compete, Learn, and Grow with Uncrowned Kings 🏆</p>
         </div>
 
         <div className="tournaments-container">
@@ -126,7 +126,7 @@ const TournamentsSection = () => {
 
                 <div className="plate-footer" style={{ display: 'flex', gap: '1rem' }}>
                   <button className="view-details-btn" style={{ flex: 1 }} onClick={() => { setSelectedTournament(tournament); setShowDescription(false); }}>
-                    View More
+                    🔍 View Details
                   </button>
                   {tournament.pdfUrl && (
                     <button
@@ -154,7 +154,7 @@ const TournamentsSection = () => {
       {selectedTournament && (
         <div className="tournament-modal-overlay" onClick={() => setSelectedTournament(null)}>
           <div className="tournament-modal-content focus-mode" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close-btn" onClick={() => setSelectedTournament(null)}>×</button>
+            <button className="modal-close-btn" onClick={() => setSelectedTournament(null)}>✕</button>
 
             <div className="modal-focus-view">
               <div className="modal-image-full">
@@ -165,7 +165,7 @@ const TournamentsSection = () => {
                 />
 
                 <div className={`modal-description-overlay ${showDescription ? "active" : ""}`}>
-                  <h2 className="modal-tournament-name">{selectedTournament.name}</h2>
+                  <h2 className="modal-tournament-name">🏆 {selectedTournament.name}</h2>
                   <div className="modal-description-text">
                     {renderDescription(selectedTournament.description)}
                   </div>
@@ -182,10 +182,10 @@ const TournamentsSection = () => {
 
               <div className="modal-actions-bar">
                 <button className="back-to-grid-btn" onClick={() => setSelectedTournament(null)}>
-                  ← Back
+                  ← Back to Tournaments
                 </button>
                 <button className="toggle-description-btn" onClick={() => setShowDescription(!showDescription)}>
-                  {showDescription ? "✕ Hide Details" : "ⓘ Show Details"}
+                  {showDescription ? "✕ Hide Details" : "✨ Show Details"}
                 </button>
               </div>
             </div>

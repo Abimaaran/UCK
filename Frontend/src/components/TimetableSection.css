@@ -21,14 +21,14 @@
   border-radius: 15px;
   padding: 2rem;
   backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
 }
 
 .schedule-card:hover {
-  transform: translateY(-5px);
-  border-color: rgba(212, 175, 55, 0.4);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  transform: translateY(-8px) scale(1.02);
+  border-color: rgba(212, 175, 55, 0.5);
+  box-shadow: 0 15px 35px rgba(212, 175, 55, 0.2), 0 5px 15px rgba(0, 0, 0, 0.4);
 }
 
 .day-group {
@@ -38,12 +38,15 @@
 .day-header {
   font-size: 2rem;
   color: #d4af37;
-  border-bottom: 2px solid rgba(212, 175, 55, 0.2);
+  border-bottom: 2px solid rgba(212, 175, 55, 0.25);
   padding-bottom: 0.5rem;
   margin-bottom: 2rem;
-  text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 1.5px;
   font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
 }
 
 .card-inner {

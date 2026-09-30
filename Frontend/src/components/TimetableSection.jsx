@@ -54,14 +54,14 @@ const TimetableSection = () => {
             <h2 className="section-title">Academy Schedule</h2>
             <div className="clock-icon">📅</div>
           </div>
-          <p className="section-subtitle">Weekly training schedule categorized by day and level</p>
+          <p className="section-subtitle">♟️ Weekly training schedule categorized by day and level ⏰</p>
         </div>
 
         <div className="timetable-grouped-container">
           {sortedDays.length > 0 ? (
             sortedDays.map((day) => (
               <div key={day} className="day-group">
-                <h3 className="day-header">{day}</h3>
+                <h3 className="day-header">🗓️ {day}</h3>
                 <div className="timetable-grid">
                   {groupedTimetable[day].map((session) => (
                     <div key={session.id || session._id} className="schedule-card">
@@ -87,13 +87,13 @@ const TimetableSection = () => {
             ))
           ) : (
             <div className="empty-timetable">
-              <p>No schedule available at the moment.</p>
+              <p>⏳ No schedule available at the moment.</p>
             </div>
           )}
         </div>
 
         <div className="timetable-note">
-          <p>* All timings are in local time. Schedule subject to change during tournaments.</p>
+          <p>ℹ️ All timings are in local time. Schedule subject to change during tournaments.</p>
         </div>
       </div>
     </section>

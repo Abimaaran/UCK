@@ -270,7 +270,7 @@ const StudentPortal = () => {
         <div className="portal-welcome-card">
           <div className="portal-avatar">{initials}</div>
           <div className="portal-welcome-text">
-            <h1>Welcome back, {displayName}! ♟️</h1>
+            <h1>Welcome back, {displayName}! 👑♟️</h1>
             <p>Your chess journey continues at Uncrowned Kings.</p>
           </div>
         </div>
@@ -333,7 +333,7 @@ const StudentPortal = () => {
               fontWeight: '700',
               cursor: 'pointer'
             }}>
-              Open Analyzer
+              Open Analyzer ♟️
             </button>
           </div>
         </div>
@@ -341,7 +341,7 @@ const StudentPortal = () => {
         {/* Detailed Feedbacks History */}
         <div id="feedback-section" className="portal-section" style={{ marginTop: '2.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-            <h3 style={{ color: 'var(--accent-gold)', margin: 0, fontSize: '1.5rem' }}>Performance Feedbacks & Reviews</h3>
+            <h3 style={{ color: 'var(--accent-gold)', margin: 0, fontSize: '1.5rem' }}>🏆 Performance Feedbacks &amp; Reviews</h3>
             <button 
               onClick={() => setIsFeedbackHistoryVisible(!isFeedbackHistoryVisible)}
               style={{
@@ -356,7 +356,7 @@ const StudentPortal = () => {
                 transition: 'all 0.3s ease'
               }}
             >
-              {isFeedbackHistoryVisible ? 'Hide History' : 'View All Feedbacks'}
+              {isFeedbackHistoryVisible ? '✕ Hide History' : '💬 View All Feedbacks'}
             </button>
           </div>
 
@@ -425,7 +425,7 @@ const StudentPortal = () => {
         {/* Detailed History */}
         <div className="portal-section" style={{ marginTop: '3rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-            <h3 style={{ margin: 0, color: 'var(--accent-gold)', fontSize: '1.5rem' }}>Daily Attendance Log</h3>
+            <h3 style={{ margin: 0, color: 'var(--accent-gold)', fontSize: '1.5rem' }}>📅 Daily Attendance Log</h3>
             <span style={{ fontSize: '0.9rem', color: '#888' }}>Month: {new Date(viewMonth + '-01').toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
           </div>
 

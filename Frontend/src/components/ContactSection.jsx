@@ -52,7 +52,7 @@ const ContactSection = () => {
             <h2 className="section-title">Contact Us</h2>
             <div className="contact-icon">📍</div>
           </div>
-          <p className="section-subtitle">Get in Touch with Uncrowned Kings Chess Academy</p>
+          <p className="section-subtitle">💬 Get in Touch with Uncrowned Kings Chess Academy ♟️</p>
         </div>
         
         <div className="contact-top-section">
@@ -130,15 +130,15 @@ const ContactSection = () => {
                 <h4 className="hours-title">Class Hours</h4>
                 <div className="hours-grid">
                   <div className="hours-item">
-                    <span className="hours-day">Tuesday & Friday</span>
+                    <span className="hours-day">🗓️ Tuesday & Friday</span>
                     <span className="hours-time">4:00 PM - 7:00 PM</span>
                   </div>
                   <div className="hours-item">
-                    <span className="hours-day">Saturday & Sunday</span>
+                    <span className="hours-day">🗓️ Saturday & Sunday</span>
                     <span className="hours-time">9:00 AM - 12:00 noon</span>
                   </div>
                   <div className="hours-item">
-                    <span className="hours-day">Online Classes</span>
+                    <span className="hours-day">💻 Online Classes</span>
                     <span className="hours-time">Starting Soon</span>
                   </div>
                 </div>
@@ -284,7 +284,7 @@ Any suggestions for improvement?"
                             </>
                           ) : (
                             <>
-                              <span className="submit-icon">📤</span>
+                              <span className="submit-icon">🚀</span>
                               Submit Review
                             </>
                           )}

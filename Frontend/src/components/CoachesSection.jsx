@@ -37,7 +37,7 @@ const CoachesSection = () => {
             <h2 className="section-title">Meet Our Expert Coaches</h2>
             <div className="crown-icon">♔</div>
           </div>
-          <p className="section-subtitle">Learn from Internationally Rated FIDE Coaches</p>
+          <p className="section-subtitle">♟️ Learn from Internationally Rated FIDE Coaches ⭐</p>
         </div>
 
         <div className="coaches-container">
@@ -63,7 +63,7 @@ const CoachesSection = () => {
                     <h3 className="coach-name">{coach.name}</h3>
                     <div className="rating-badge">
                       <span className="rating-star">★</span>
-                      <span className="rating-text">Rated: {coach.rating}</span>
+                      <span className="rating-text">⭐ Rated: {coach.rating}</span>
                     </div>
                   </div>
 
@@ -78,7 +78,7 @@ const CoachesSection = () => {
                         {(isTitleValid || cleanExp) && (
                           <div className="coach-title-container">
                             {isTitleValid && <span className="coach-title">{cleanTitle}</span>}
-                            {cleanExp && <span className="experience-badge">{cleanExp}</span>}
+                            {cleanExp && <span className="experience-badge">⏱️ {cleanExp}</span>}
                           </div>
                         )}
                       </>
@@ -90,7 +90,7 @@ const CoachesSection = () => {
                   <div className="achievements-preview">
                     {Array.isArray(coach.achievements) && coach.achievements.slice(0, 2).map((achievement, idx) => (
                       <span key={idx} className="achievement-tag">
-                        {achievement}
+                        🏆 {achievement}
                       </span>
                     ))}
                     {Array.isArray(coach.achievements) && coach.achievements.length > 2 && (

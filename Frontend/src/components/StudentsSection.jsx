@@ -79,7 +79,7 @@ const StudentsSection = () => {
             <h2 className="section-title">Our Students' Achievements</h2>
             <div className="trophy-icon">🏆</div>
           </div>
-          <p className="section-subtitle">Building Champions Since 2025</p>
+          <p className="section-subtitle">✨ Building Champions Since 2025 🏆</p>
         </div>
 
         <div className="achievements-container">
@@ -162,11 +162,11 @@ const StudentsSection = () => {
         )}
 
         <div className="students-cta">
-          <p className="cta-text">Join our winning team and start your journey to chess mastery</p>
+          <p className="cta-text">✨ Join our winning team and start your journey to chess mastery ♟️</p>
           <button className="cta-button" onClick={() => {
             console.log("Start Your Journey clicked!");
             window.dispatchEvent(new Event('showRegisterModal'));
-          }}>Start Your Journey</button>
+          }}>🚀 Start Your Journey</button>
         </div>
       </div>
     </section>

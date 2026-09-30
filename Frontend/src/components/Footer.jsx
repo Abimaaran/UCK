@@ -32,12 +32,12 @@ const Footer = ({ hideQuickLinks = false }) => {
             <div className="footer-section quick-links">
             <h4 className="section-title">Quick Links</h4>
             <ul className="links-list">
-              <li><a href="#home" className="footer-link">Home</a></li>
-              <li><a href="#about" className="footer-link">About Us</a></li>
-              <li><a href="#coaches" className="footer-link">Coaches</a></li>
-              <li><a href="#students" className="footer-link">Students</a></li>
-              <li><a href="#tournaments" className="footer-link">Tournaments</a></li>
-              <li><a href="#contact" className="footer-link">Contact</a></li>
+              <li><a href="#home" className="footer-link">🏠 Home</a></li>
+              <li><a href="#about" className="footer-link">ℹ️ About Us</a></li>
+              <li><a href="#coaches" className="footer-link">♟️ Coaches</a></li>
+              <li><a href="#students" className="footer-link">🏆 Students</a></li>
+              <li><a href="#tournaments" className="footer-link">⚔️ Tournaments</a></li>
+              <li><a href="#contact" className="footer-link">📞 Contact</a></li>
             </ul>
           </div>
           )}

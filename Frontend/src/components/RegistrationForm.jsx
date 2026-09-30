@@ -145,7 +145,7 @@ const RegistrationForm = () => {
 
       <form onSubmit={handleSubmit} className="registration-form">
         <div className="form-section">
-          <h2>Personal Information</h2>
+          <h2>👤 Personal Information</h2>
 
           <div className="form-group">
             <label htmlFor="studentName">Student Name *</label>
@@ -240,7 +240,7 @@ const RegistrationForm = () => {
         </div>
 
         <div className="form-section">
-          <h2>Chess Background</h2>
+          <h2>♟️ Chess Background</h2>
 
           <div className="form-row">
             <div className="form-group">
@@ -287,7 +287,7 @@ const RegistrationForm = () => {
         </div>
 
         <div className="form-section">
-          <h2>Contact Information</h2>
+          <h2>📞 Contact Information</h2>
 
           <div className="form-row">
             <div className="form-group">
@@ -333,7 +333,7 @@ const RegistrationForm = () => {
         </div>
 
         <div className="form-section">
-          <h2>Educational & Residential Details</h2>
+          <h2>🏫 Educational &amp; Residential Details</h2>
 
           <div className="form-group">
             <label htmlFor="school">School/College Name *</label>
@@ -365,7 +365,7 @@ const RegistrationForm = () => {
         </div>
 
         <div className="form-section">
-          <h2>Parent/Guardian Information</h2>
+          <h2>👨‍👩‍👦 Parent/Guardian Information</h2>
 
           <div className="form-row">
             <div className="form-group">
@@ -397,7 +397,7 @@ const RegistrationForm = () => {
         </div>
 
         <div className="form-section">
-          <h2>Class Preferences</h2>
+          <h2>🎯 Class Preferences</h2>
 
           <div className="form-row">
             <div className="form-group">
@@ -443,7 +443,7 @@ const RegistrationForm = () => {
           </div>
         </div>
         <div className="form-section">
-          <h2>Security</h2>
+          <h2>🔒 Security</h2>
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="password">Password *</label>
@@ -495,7 +495,7 @@ const RegistrationForm = () => {
             Cancel
           </button>
           <button type="submit" className="btn-primary">
-            Submit Registration
+            🚀 Submit Registration
           </button>
         </div>
       </form>

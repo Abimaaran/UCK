@@ -158,7 +158,7 @@ const LoginSection = () => {
 
         <div className="section-header" style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
           <h2 className="section-title" style={{ fontSize: '2rem', margin: 0, background: 'linear-gradient(45deg, var(--text-primary, #fff), var(--accent-gold, #d4af37))', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            {!isLogin ? 'Join the Academy' : 'Academy Portal'}
+            {!isLogin ? '✨ Join the Academy' : '🔐 Academy Portal'}
           </h2>
           <p className="section-subtitle" style={{ fontSize: '0.85rem', color: 'var(--text-secondary, #aaa)', marginTop: '0.5rem' }}>
             {!isLogin ? 'Begin your royal chess journey today' : 'Secure login for authorized access'}
@@ -171,7 +171,7 @@ const LoginSection = () => {
             <div className="login-form pulse-in">
               <form onSubmit={handleLogin}>
                 <div className="form-group">
-                  <label>Student ID</label>
+                  <label>👤 Student ID</label>
                   <input
                     type="text"
                     placeholder="Enter Student ID"
@@ -181,7 +181,7 @@ const LoginSection = () => {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Password</label>
+                  <label>🔑 Password</label>
                   <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                     <input
                       type={showPassword ? "text" : "password"}
@@ -229,7 +229,7 @@ const LoginSection = () => {
                 )}
 
                 <button type="submit" className="submit-btn portal-submit">
-                  Login to Portal
+                  🚀 Login to Portal
                 </button>
               </form>
 
@@ -248,7 +248,7 @@ const LoginSection = () => {
                     padding: 0
                   }}
                 >
-                  Register Here
+                  Register Here ✍️
                 </button>
               </div>
             </div>
@@ -256,7 +256,7 @@ const LoginSection = () => {
             /* ── REGISTER FORM ──────────────────────────────── */
             isRegistered ? (
               <div className="registration-success-card pulse-in" style={{ textAlign: 'center' }}>
-                <div className="success-icon">⏳</div>
+                <div className="success-icon">🎉</div>
                 <h3>Registration Submitted</h3>
                 <div className="success-details" style={{ fontSize: '0.9rem', color: '#ccc', margin: '1rem 0' }}>
                   <p>Your enrollment application has been sent for <strong>Admin Approval</strong>.</p>
@@ -266,7 +266,7 @@ const LoginSection = () => {
                   </div>
                 </div>
                 <button className="submit-btn" onClick={() => setIsLogin(true)}>
-                  Proceed to Login
+                  Proceed to Login 🔑
                 </button>
                 <button className="back-btn center" onClick={() => setIsOpen(false)}>
                   ← Close Gateway
@@ -277,40 +277,40 @@ const LoginSection = () => {
                 <button className="back-btn" onClick={() => setIsOpen(false)}>
                   ← Exit Registration
                 </button>
-                <h3>Create New Account</h3>
+                <h3>✨ Create New Account</h3>
                 <p style={{ fontSize: '0.82rem', color: '#888', marginBottom: '1.5rem' }}>
                   Please fill out the details below to request admission.
                 </p>
                 <form onSubmit={handleRegister}>
                   <div className="form-row">
                     <div className="form-group">
-                      <label>First Name</label>
+                      <label>👤 First Name</label>
                       <input name="firstName" type="text" placeholder="First Name" required />
                     </div>
                     <div className="form-group">
-                      <label>Last Name</label>
+                      <label>👤 Last Name</label>
                       <input name="lastName" type="text" placeholder="Last Name" required />
                     </div>
                   </div>
                   <div className="form-group">
-                    <label>Email Address</label>
+                    <label>📧 Email Address</label>
                     <input name="email" type="email" placeholder="john@example.com" required />
                   </div>
                   <div className="form-group">
-                    <label>Phone Number</label>
+                    <label>📱 Phone Number</label>
                     <input name="phone" type="tel" placeholder="Phone Number" />
                   </div>
                   <div className="form-group">
-                    <label>Address</label>
+                    <label>📍 Address</label>
                     <input name="address" type="text" placeholder="Your full address" required />
                   </div>
                   <div className="form-group">
-                    <label>Date of Birth (DD/MM/YYYY)</label>
+                    <label>🎂 Date of Birth (DD/MM/YYYY)</label>
                     <input name="dob" type="date" placeholder="DD/MM/YYYY" required />
                   </div>
                   <div className="form-row">
                     <div className="form-group">
-                      <label>Password</label>
+                      <label>🔒 Password</label>
                       <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                         <input 
                           name="password" 
@@ -350,7 +350,7 @@ const LoginSection = () => {
                       </div>
                     </div>
                     <div className="form-group">
-                      <label>Confirm Password</label>
+                      <label>🔒 Confirm Password</label>
                       <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                         <input 
                           name="confirmPassword" 
@@ -391,7 +391,7 @@ const LoginSection = () => {
                     </div>
                   </div>
                   <div className="form-group">
-                    <label>Select Level</label>
+                    <label>♟️ Select Chess Level</label>
                     <select name="level" required style={{ background: '#15151a', color: '#fff' }}>
                       <option value="" style={{ background: '#15151a', color: '#fff' }}>Choose a level</option>
                       <option value="Beginner" style={{ background: '#15151a', color: '#fff' }}>Beginner Level</option>
@@ -406,7 +406,7 @@ const LoginSection = () => {
                     </label>
                   </div>
                   <button type="submit" className="submit-btn" style={{ background: '#d4af37', color: '#000', marginTop: '1rem' }}>
-                    Register &amp; Request Approval
+                    🚀 Register &amp; Request Approval
                   </button>
                 </form>
 
@@ -425,7 +425,7 @@ const LoginSection = () => {
                       padding: 0
                     }}
                   >
-                    Login Here
+                    Login Here 🔑
                   </button>
                 </div>
               </div>
