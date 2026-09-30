@@ -142,12 +142,76 @@ const FeesManager = ({ initialStudents }) => {
   const waSecTimerRef = useRef(null);
   const [sendingReminders, setSendingReminders] = useState(false);
   const [selectedStudentForView, setSelectedStudentForView] = useState(null);
+  const [isEditingStudent, setIsEditingStudent] = useState(false);
+  const [studentEditForm, setStudentEditForm] = useState({});
+  const [isSavingStudent, setIsSavingStudent] = useState(false);
   const [reminderLog, setReminderLog] = useState(null);
   const [logModalType, setLogModalType] = useState(null); // 'SUCCESS' | 'FAILED' | 'ALL' | null
   const [logModalSearch, setLogModalSearch] = useState('');
   const [embeddedFilter, setEmbeddedFilter] = useState('ALL'); // 'ALL' | 'SUCCESS' | 'FAILED'
   const [embeddedSearch, setEmbeddedSearch] = useState('');
   const [showReportTable, setShowReportTable] = useState(false);
+
+  const handleSaveStudentEdit = async () => {
+    if (!selectedStudentForView) return;
+    try {
+      setIsSavingStudent(true);
+      const targetDbId = selectedStudentForView.id || selectedStudentForView._id || selectedStudentForView.studentId;
+      const updatedFields = {
+        studentName: (studentEditForm.studentName || '').trim(),
+        name: (studentEditForm.studentName || '').trim(),
+        email: (studentEditForm.email || '').trim(),
+        phone: (studentEditForm.phoneNumber || '').trim(),
+        phoneNumber: (studentEditForm.phoneNumber || '').trim(),
+        dob: (studentEditForm.dateOfBirth || '').trim(),
+        dateOfBirth: (studentEditForm.dateOfBirth || '').trim(),
+        level: studentEditForm.chessExperience || 'Beginner',
+        chessExperience: studentEditForm.chessExperience || 'Beginner',
+        school: (studentEditForm.school || '').trim(),
+        gender: studentEditForm.gender || 'N/A',
+        fideId: (studentEditForm.fideId || '').trim(),
+        fideRating: (studentEditForm.fideRating || '').trim(),
+        parentName: (studentEditForm.parentName || '').trim(),
+        parentOccupation: (studentEditForm.parentOccupation || '').trim(),
+        address: (studentEditForm.address || '').trim()
+      };
+
+      await updateItem('students', targetDbId, updatedFields);
+
+      // Merge updated values
+      const merged = {
+        ...selectedStudentForView,
+        ...updatedFields
+      };
+      setSelectedStudentForView(merged);
+
+      // Update in approvedStudents state
+      setApprovedStudents(prev => prev.map(s => {
+        if ((s.id && s.id === targetDbId) || (s._id && s._id === targetDbId) || s.studentId === selectedStudentForView.studentId) {
+          return { ...s, ...updatedFields };
+        }
+        return s;
+      }));
+
+      // Update in cache
+      if (cachedApprovedStudents) {
+        cachedApprovedStudents = cachedApprovedStudents.map(s => {
+          if ((s.id && s.id === targetDbId) || (s._id && s._id === targetDbId) || s.studentId === selectedStudentForView.studentId) {
+            return { ...s, ...updatedFields };
+          }
+          return s;
+        });
+      }
+
+      setIsEditingStudent(false);
+      alert('✅ Student details updated successfully!');
+    } catch (err) {
+      console.error('Failed to update student:', err);
+      alert('Failed to update student details: ' + (err.response?.data?.error || err.message));
+    } finally {
+      setIsSavingStudent(false);
+    }
+  };
 
   // Lock background page scroll when modal is open
   useEffect(() => {
@@ -1535,15 +1599,67 @@ const FeesManager = ({ initialStudents }) => {
             <span style={{ color: '#fff', fontWeight: '600' }}>{value || 'N/A'}</span>
           </div>
         );
+
+        const editField = (label, name, value, type = 'text', options = null) => (
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', color: '#d4af37', fontSize: '0.8rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.35rem' }}>
+              {label}
+            </label>
+            {options ? (
+              <select
+                value={value}
+                onChange={(e) => setStudentEditForm(prev => ({ ...prev, [name]: e.target.value }))}
+                style={{
+                  width: '100%', padding: '0.65rem 0.85rem', background: '#101014',
+                  border: '1px solid rgba(212,175,55,0.35)', borderRadius: '6px', color: '#fff', fontSize: '0.9rem',
+                  outline: 'none', boxSizing: 'border-box'
+                }}
+              >
+                {options.map(opt => {
+                  const optVal = typeof opt === 'object' ? opt.value : opt;
+                  const optLabel = typeof opt === 'object' ? opt.label : opt;
+                  return (
+                    <option key={optVal} value={optVal} style={{ background: '#15151a', color: '#fff' }}>
+                      {optLabel}
+                    </option>
+                  );
+                })}
+              </select>
+            ) : type === 'textarea' ? (
+              <textarea
+                rows="2"
+                value={value}
+                onChange={(e) => setStudentEditForm(prev => ({ ...prev, [name]: e.target.value }))}
+                style={{
+                  width: '100%', padding: '0.65rem 0.85rem', background: '#101014',
+                  border: '1px solid rgba(212,175,55,0.35)', borderRadius: '6px', color: '#fff', fontSize: '0.9rem',
+                  outline: 'none', boxSizing: 'border-box', resize: 'vertical'
+                }}
+              />
+            ) : (
+              <input
+                type={type}
+                value={value}
+                onChange={(e) => setStudentEditForm(prev => ({ ...prev, [name]: e.target.value }))}
+                style={{
+                  width: '100%', padding: '0.65rem 0.85rem', background: '#101014',
+                  border: '1px solid rgba(212,175,55,0.35)', borderRadius: '6px', color: '#fff', fontSize: '0.9rem',
+                  outline: 'none', boxSizing: 'border-box'
+                }}
+              />
+            )}
+          </div>
+        );
+
         return (
           <div style={{
             position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
             background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)',
             display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 10000,
             padding: '1rem'
-          }} onClick={() => setSelectedStudentForView(null)}>
+          }} onClick={() => { setSelectedStudentForView(null); setIsEditingStudent(false); }}>
             <div style={{
-              background: '#15151a', width: '100%', maxWidth: '500px',
+              background: '#15151a', width: '100%', maxWidth: '520px',
               borderRadius: '15px', border: '1px solid rgba(212,175,55,0.3)',
               boxShadow: '0 25px 50px rgba(0,0,0,0.5)', overflow: 'hidden'
             }} onClick={e => e.stopPropagation()}>
@@ -1552,9 +1668,12 @@ const FeesManager = ({ initialStudents }) => {
                 borderBottom: '1px solid rgba(212,175,55,0.2)',
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center'
               }}>
-                <h3 style={{ margin: 0, color: '#d4af37', fontSize: '1.25rem' }}>Student Profile Details</h3>
-                <button onClick={() => setSelectedStudentForView(null)} style={{ background: 'none', border: 'none', color: '#fff', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+                <h3 style={{ margin: 0, color: '#d4af37', fontSize: '1.25rem' }}>
+                  {isEditingStudent ? '✏️ Edit Student Details' : 'Student Profile Details'}
+                </h3>
+                <button onClick={() => { setSelectedStudentForView(null); setIsEditingStudent(false); }} style={{ background: 'none', border: 'none', color: '#fff', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
               </div>
+
               <div style={{ padding: '1.5rem', maxHeight: '70vh', overflowY: 'auto' }}>
                 <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
                   <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🎓</div>
@@ -1562,32 +1681,114 @@ const FeesManager = ({ initialStudents }) => {
                   <span style={{ color: '#d4af37', fontWeight: '700' }}>#{selectedStudentForView.studentId}</span>
                 </div>
 
-                {detailRow('Full Name', selectedStudentForView.studentName || selectedStudentForView.name)}
-                {detailRow('Email Address', selectedStudentForView.email)}
-                {detailRow('Phone Number', formatDisplayPhone(selectedStudentForView.phoneNumber || selectedStudentForView.phone || selectedStudentForView.whatsappNo))}
-                {detailRow('Date of Birth', formatDOB(selectedStudentForView.dateOfBirth || selectedStudentForView.dob))}
-                {detailRow('Chess Level', selectedStudentForView.chessExperience || selectedStudentForView.level)}
-                {detailRow('Registration Date', formatDate(selectedStudentForView.approvedDate || selectedStudentForView.approved_date || selectedStudentForView.createdAt || selectedStudentForView.created_at))}
-                {detailRow('School / College', selectedStudentForView.school)}
-                {detailRow('Gender', selectedStudentForView.gender)}
-                {detailRow('FIDE ID', selectedStudentForView.fideId && String(selectedStudentForView.fideId).trim() ? selectedStudentForView.fideId : 'N/A')}
-                {detailRow('FIDE Rating', selectedStudentForView.fideRating && String(selectedStudentForView.fideRating).trim() ? selectedStudentForView.fideRating : 'N/A')}
-                {detailRow('Parent Name', selectedStudentForView.parentName)}
-                {detailRow('Parent Occupation', selectedStudentForView.parentOccupation)}
+                {isEditingStudent ? (
+                  /* ── EDIT MODE ── */
+                  <div>
+                    {editField('Full Name *', 'studentName', studentEditForm.studentName || '')}
+                    {editField('Email Address', 'email', studentEditForm.email || '', 'email')}
+                    {editField('Phone Number *', 'phoneNumber', studentEditForm.phoneNumber || '')}
+                    {editField('Date of Birth (DD/MM/YYYY)', 'dateOfBirth', studentEditForm.dateOfBirth || '')}
+                    {editField('Chess Level', 'chessExperience', studentEditForm.chessExperience || 'Beginner', 'select', [
+                      { value: 'Beginner', label: 'Beginner' },
+                      { value: 'Intermediate', label: 'Intermediate' },
+                      { value: 'Advanced', label: 'Advanced' }
+                    ])}
+                    {editField('School / College', 'school', studentEditForm.school || '')}
+                    {editField('Gender', 'gender', studentEditForm.gender || 'N/A', 'select', ['Male', 'Female', 'Other', 'N/A'])}
+                    {editField('FIDE ID', 'fideId', studentEditForm.fideId || '')}
+                    {editField('FIDE Rating', 'fideRating', studentEditForm.fideRating || '')}
+                    {editField('Parent Name', 'parentName', studentEditForm.parentName || '')}
+                    {editField('Parent Occupation', 'parentOccupation', studentEditForm.parentOccupation || '')}
+                    {editField('Address', 'address', studentEditForm.address || '', 'textarea')}
+                  </div>
+                ) : (
+                  /* ── VIEW MODE ── */
+                  <>
+                    {detailRow('Full Name', selectedStudentForView.studentName || selectedStudentForView.name)}
+                    {detailRow('Email Address', selectedStudentForView.email)}
+                    {detailRow('Phone Number', formatDisplayPhone(selectedStudentForView.phoneNumber || selectedStudentForView.phone || selectedStudentForView.whatsappNo))}
+                    {detailRow('Date of Birth', formatDOB(selectedStudentForView.dateOfBirth || selectedStudentForView.dob))}
+                    {detailRow('Chess Level', selectedStudentForView.chessExperience || selectedStudentForView.level)}
+                    {detailRow('Registration Date', formatDate(selectedStudentForView.approvedDate || selectedStudentForView.approved_date || selectedStudentForView.createdAt || selectedStudentForView.created_at))}
+                    {detailRow('School / College', selectedStudentForView.school)}
+                    {detailRow('Gender', selectedStudentForView.gender)}
+                    {detailRow('FIDE ID', selectedStudentForView.fideId && String(selectedStudentForView.fideId).trim() ? selectedStudentForView.fideId : 'N/A')}
+                    {detailRow('FIDE Rating', selectedStudentForView.fideRating && String(selectedStudentForView.fideRating).trim() ? selectedStudentForView.fideRating : 'N/A')}
+                    {detailRow('Parent Name', selectedStudentForView.parentName)}
+                    {detailRow('Parent Occupation', selectedStudentForView.parentOccupation)}
 
-                <div style={{ marginTop: '1.5rem' }}>
-                  <span style={{ color: '#aaa', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '0.5rem' }}>Address</span>
-                  <p style={{ color: '#fff', fontSize: '0.95rem', background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', lineHeight: '1.6', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    {selectedStudentForView.address || 'No address provided.'}
-                  </p>
+                    <div style={{ marginTop: '1.5rem' }}>
+                      <span style={{ color: '#aaa', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '0.5rem' }}>Address</span>
+                      <p style={{ color: '#fff', fontSize: '0.95rem', background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', lineHeight: '1.6', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        {selectedStudentForView.address || 'No address provided.'}
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Modal Footer Controls */}
+              {isEditingStudent ? (
+                <div style={{ padding: '1.25rem 1.5rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingStudent(false)}
+                    disabled={isSavingStudent}
+                    style={{
+                      padding: '0.65rem 1.4rem', background: 'rgba(255,255,255,0.08)', color: '#bbb',
+                      border: '1px solid rgba(255,255,255,0.15)', borderRadius: '6px', fontWeight: '600', cursor: 'pointer'
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveStudentEdit}
+                    disabled={isSavingStudent}
+                    style={{
+                      padding: '0.65rem 1.8rem', background: '#20C997', color: '#000',
+                      border: 'none', borderRadius: '6px', fontWeight: '700', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', gap: '6px'
+                    }}
+                  >
+                    {isSavingStudent ? 'Saving...' : '💾 Save Changes'}
+                  </button>
                 </div>
-              </div>
-              <div style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
-                <button onClick={() => setSelectedStudentForView(null)} style={{
-                  padding: '0.6rem 2rem', background: '#d4af37', color: '#000',
-                  border: 'none', borderRadius: '6px', fontWeight: '700', cursor: 'pointer'
-                }}>Close Details</button>
-              </div>
+              ) : (
+                <div style={{ padding: '1.25rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStudentEditForm({
+                        studentName: selectedStudentForView.studentName || selectedStudentForView.name || '',
+                        email: selectedStudentForView.email || '',
+                        phoneNumber: selectedStudentForView.phoneNumber || selectedStudentForView.phone || selectedStudentForView.whatsappNo || '',
+                        dateOfBirth: selectedStudentForView.dateOfBirth || selectedStudentForView.dob || '',
+                        chessExperience: selectedStudentForView.chessExperience || selectedStudentForView.level || 'Beginner',
+                        school: selectedStudentForView.school || '',
+                        gender: selectedStudentForView.gender || 'N/A',
+                        fideId: selectedStudentForView.fideId || '',
+                        fideRating: selectedStudentForView.fideRating || '',
+                        parentName: selectedStudentForView.parentName || '',
+                        parentOccupation: selectedStudentForView.parentOccupation || '',
+                        address: selectedStudentForView.address || ''
+                      });
+                      setIsEditingStudent(true);
+                    }}
+                    style={{
+                      padding: '0.65rem 1.4rem', background: 'rgba(212,175,55,0.15)', color: '#d4af37',
+                      border: '1px solid #d4af37', borderRadius: '6px', fontWeight: '700', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s'
+                    }}
+                  >
+                    ✏️ Edit Details
+                  </button>
+                  <button onClick={() => { setSelectedStudentForView(null); setIsEditingStudent(false); }} style={{
+                    padding: '0.65rem 2rem', background: '#d4af37', color: '#000',
+                    border: 'none', borderRadius: '6px', fontWeight: '700', cursor: 'pointer'
+                  }}>Close Details</button>
+                </div>
+              )}
             </div>
           </div>
         );

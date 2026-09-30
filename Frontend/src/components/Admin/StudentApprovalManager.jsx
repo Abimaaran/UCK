@@ -121,6 +121,10 @@ const StudentApprovalManager = ({ students, setStudents, targetItem }) => {
         <StudentDetailsModal
           student={viewingStudent}
           onClose={() => setViewingStudent(null)}
+          onStudentUpdated={(updatedStudent) => {
+            setViewingStudent(updatedStudent);
+            refresh_();
+          }}
         />
       )}
     </div>
@@ -1416,7 +1420,19 @@ const InfoBanner = ({ text }) => (
 );
 
 /* ── Student Details Modal ── */
-const StudentDetailsModal = ({ student, onClose }) => {
+const StudentDetailsModal = ({ student, onClose, onStudentUpdated }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [currentStudent, setCurrentStudent] = useState(student);
+
+  useEffect(() => {
+    setCurrentStudent(student);
+    setIsEditing(false);
+  }, [student]);
+
+  if (!currentStudent) return null;
+
   const detailRow = (label, value) => (
     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
       <span style={{ color: '#aaa', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>
@@ -1424,15 +1440,104 @@ const StudentDetailsModal = ({ student, onClose }) => {
     </div>
   );
 
+  const editField = (label, name, value, type = 'text', options = null) => (
+    <div style={{ marginBottom: '1rem' }}>
+      <label style={{ display: 'block', color: '#d4af37', fontSize: '0.8rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.35rem' }}>
+        {label}
+      </label>
+      {options ? (
+        <select
+          value={value}
+          onChange={(e) => setEditForm(prev => ({ ...prev, [name]: e.target.value }))}
+          style={{
+            width: '100%', padding: '0.65rem 0.85rem', background: '#101014',
+            border: '1px solid rgba(212,175,55,0.35)', borderRadius: '6px', color: '#fff', fontSize: '0.9rem',
+            outline: 'none', boxSizing: 'border-box'
+          }}
+        >
+          {options.map(opt => {
+            const optVal = typeof opt === 'object' ? opt.value : opt;
+            const optLabel = typeof opt === 'object' ? opt.label : opt;
+            return (
+              <option key={optVal} value={optVal} style={{ background: '#15151a', color: '#fff' }}>
+                {optLabel}
+              </option>
+            );
+          })}
+        </select>
+      ) : type === 'textarea' ? (
+        <textarea
+          rows="2"
+          value={value}
+          onChange={(e) => setEditForm(prev => ({ ...prev, [name]: e.target.value }))}
+          style={{
+            width: '100%', padding: '0.65rem 0.85rem', background: '#101014',
+            border: '1px solid rgba(212,175,55,0.35)', borderRadius: '6px', color: '#fff', fontSize: '0.9rem',
+            outline: 'none', boxSizing: 'border-box', resize: 'vertical'
+          }}
+        />
+      ) : (
+        <input
+          type={type}
+          value={value}
+          onChange={(e) => setEditForm(prev => ({ ...prev, [name]: e.target.value }))}
+          style={{
+            width: '100%', padding: '0.65rem 0.85rem', background: '#101014',
+            border: '1px solid rgba(212,175,55,0.35)', borderRadius: '6px', color: '#fff', fontSize: '0.9rem',
+            outline: 'none', boxSizing: 'border-box'
+          }}
+        />
+      )}
+    </div>
+  );
+
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      const targetDbId = currentStudent.id || currentStudent._id || currentStudent.studentId;
+      const updatedFields = {
+        studentName: (editForm.studentName || '').trim(),
+        name: (editForm.studentName || '').trim(),
+        email: (editForm.email || '').trim(),
+        phone: (editForm.phoneNumber || '').trim(),
+        phoneNumber: (editForm.phoneNumber || '').trim(),
+        dob: (editForm.dateOfBirth || '').trim(),
+        dateOfBirth: (editForm.dateOfBirth || '').trim(),
+        level: editForm.chessExperience || 'Beginner',
+        chessExperience: editForm.chessExperience || 'Beginner',
+        school: (editForm.school || '').trim(),
+        gender: editForm.gender || 'N/A',
+        fideId: (editForm.fideId || '').trim(),
+        fideRating: (editForm.fideRating || '').trim(),
+        parentName: (editForm.parentName || '').trim(),
+        parentOccupation: (editForm.parentOccupation || '').trim(),
+        address: (editForm.address || '').trim()
+      };
+
+      await updateItem('students', targetDbId, updatedFields);
+
+      const merged = { ...currentStudent, ...updatedFields };
+      setCurrentStudent(merged);
+      if (onStudentUpdated) onStudentUpdated(merged);
+      setIsEditing(false);
+      alert('✅ Student details updated successfully!');
+    } catch (err) {
+      console.error('Failed to update student details:', err);
+      alert('Failed to update student: ' + (err.response?.data?.error || err.message));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div style={{
       position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
       background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)',
       display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 10000,
       padding: '1rem'
-    }} onClick={onClose}>
+    }} onClick={() => { onClose(); setIsEditing(false); }}>
       <div style={{
-        background: '#15151a', width: '100%', maxWidth: '500px',
+        background: '#15151a', width: '100%', maxWidth: '520px',
         borderRadius: '15px', border: '1px solid rgba(212,175,55,0.3)',
         boxShadow: '0 25px 50px rgba(0,0,0,0.5)', overflow: 'hidden'
       }} onClick={e => e.stopPropagation()}>
@@ -1441,42 +1546,126 @@ const StudentDetailsModal = ({ student, onClose }) => {
           borderBottom: '1px solid rgba(212,175,55,0.2)',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center'
         }}>
-          <h3 style={{ margin: 0, color: '#d4af37', fontSize: '1.25rem' }}>Student Profile Details</h3>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+          <h3 style={{ margin: 0, color: '#d4af37', fontSize: '1.25rem' }}>
+            {isEditing ? '✏️ Edit Student Details' : 'Student Profile Details'}
+          </h3>
+          <button onClick={() => { onClose(); setIsEditing(false); }} style={{ background: 'none', border: 'none', color: '#fff', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
         </div>
         <div style={{ padding: '1.5rem', maxHeight: '70vh', overflowY: 'auto' }}>
           <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
             <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🎓</div>
-            <h2 style={{ margin: 0, color: '#fff' }}>{student.studentName || student.name}</h2>
-            <span style={{ color: '#d4af37', fontWeight: '700' }}>#{student.studentId}</span>
+            <h2 style={{ margin: 0, color: '#fff' }}>{currentStudent.studentName || currentStudent.name}</h2>
+            <span style={{ color: '#d4af37', fontWeight: '700' }}>#{currentStudent.studentId}</span>
           </div>
-          
-          {detailRow('Full Name', student.studentName || student.name)}
-          {detailRow('Email Address', student.email)}
-          {detailRow('Phone Number', formatDisplayPhone(student.phoneNumber || student.phone || student.whatsappNo))}
-          {detailRow('Date of Birth', formatDOB(student.dateOfBirth || student.dob))}
-          {detailRow('Chess Level', student.chessExperience || student.level)}
-          {detailRow('Registration Date', formatDate(student.approvedDate || student.approved_date || student.createdAt || student.created_at))}
-          {detailRow('School / College', student.school)}
-          {detailRow('Gender', student.gender)}
-          {detailRow('FIDE ID', student.fideId && String(student.fideId).trim() ? student.fideId : 'N/A')}
-          {detailRow('FIDE Rating', student.fideRating && String(student.fideRating).trim() ? student.fideRating : 'N/A')}
-          {detailRow('Parent Name', student.parentName)}
-          {detailRow('Parent Occupation', student.parentOccupation)}
-          
-          <div style={{ marginTop: '1.5rem' }}>
-             <span style={{ color: '#aaa', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '0.5rem' }}>Address</span>
-             <p style={{ color: '#fff', fontSize: '0.95rem', background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', lineHeight: '1.6', border: '1px solid rgba(255,255,255,0.05)' }}>
-               {student.address || 'No address provided.'}
-             </p>
+
+          {isEditing ? (
+            /* ── EDIT MODE ── */
+            <div>
+              {editField('Full Name *', 'studentName', editForm.studentName || '')}
+              {editField('Email Address', 'email', editForm.email || '', 'email')}
+              {editField('Phone Number *', 'phoneNumber', editForm.phoneNumber || '')}
+              {editField('Date of Birth (DD/MM/YYYY)', 'dateOfBirth', editForm.dateOfBirth || '')}
+              {editField('Chess Level', 'chessExperience', editForm.chessExperience || 'Beginner', 'select', [
+                { value: 'Beginner', label: 'Beginner' },
+                { value: 'Intermediate', label: 'Intermediate' },
+                { value: 'Advanced', label: 'Advanced' }
+              ])}
+              {editField('School / College', 'school', editForm.school || '')}
+              {editField('Gender', 'gender', editForm.gender || 'N/A', 'select', ['Male', 'Female', 'Other', 'N/A'])}
+              {editField('FIDE ID', 'fideId', editForm.fideId || '')}
+              {editField('FIDE Rating', 'fideRating', editForm.fideRating || '')}
+              {editField('Parent Name', 'parentName', editForm.parentName || '')}
+              {editField('Parent Occupation', 'parentOccupation', editForm.parentOccupation || '')}
+              {editField('Address', 'address', editForm.address || '', 'textarea')}
+            </div>
+          ) : (
+            /* ── VIEW MODE ── */
+            <>
+              {detailRow('Full Name', currentStudent.studentName || currentStudent.name)}
+              {detailRow('Email Address', currentStudent.email)}
+              {detailRow('Phone Number', formatDisplayPhone(currentStudent.phoneNumber || currentStudent.phone || currentStudent.whatsappNo))}
+              {detailRow('Date of Birth', formatDOB(currentStudent.dateOfBirth || currentStudent.dob))}
+              {detailRow('Chess Level', currentStudent.chessExperience || currentStudent.level)}
+              {detailRow('Registration Date', formatDate(currentStudent.approvedDate || currentStudent.approved_date || currentStudent.createdAt || currentStudent.created_at))}
+              {detailRow('School / College', currentStudent.school)}
+              {detailRow('Gender', currentStudent.gender)}
+              {detailRow('FIDE ID', currentStudent.fideId && String(currentStudent.fideId).trim() ? currentStudent.fideId : 'N/A')}
+              {detailRow('FIDE Rating', currentStudent.fideRating && String(currentStudent.fideRating).trim() ? currentStudent.fideRating : 'N/A')}
+              {detailRow('Parent Name', currentStudent.parentName)}
+              {detailRow('Parent Occupation', currentStudent.parentOccupation)}
+
+              <div style={{ marginTop: '1.5rem' }}>
+                <span style={{ color: '#aaa', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '0.5rem' }}>Address</span>
+                <p style={{ color: '#fff', fontSize: '0.95rem', background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', lineHeight: '1.6', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  {currentStudent.address || 'No address provided.'}
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Modal Footer Controls */}
+        {isEditing ? (
+          <div style={{ padding: '1.25rem 1.5rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+            <button
+              type="button"
+              onClick={() => setIsEditing(false)}
+              disabled={isSaving}
+              style={{
+                padding: '0.65rem 1.4rem', background: 'rgba(255,255,255,0.08)', color: '#bbb',
+                border: '1px solid rgba(255,255,255,0.15)', borderRadius: '6px', fontWeight: '600', cursor: 'pointer'
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={isSaving}
+              style={{
+                padding: '0.65rem 1.8rem', background: '#20C997', color: '#000',
+                border: 'none', borderRadius: '6px', fontWeight: '700', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: '6px'
+              }}
+            >
+              {isSaving ? 'Saving...' : '💾 Save Changes'}
+            </button>
           </div>
-        </div>
-        <div style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
-          <button onClick={onClose} style={{
-            padding: '0.6rem 2rem', background: '#d4af37', color: '#000',
-            border: 'none', borderRadius: '6px', fontWeight: '700', cursor: 'pointer'
-          }}>Close Details</button>
-        </div>
+        ) : (
+          <div style={{ padding: '1.25rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+            <button
+              type="button"
+              onClick={() => {
+                setEditForm({
+                  studentName: currentStudent.studentName || currentStudent.name || '',
+                  email: currentStudent.email || '',
+                  phoneNumber: currentStudent.phoneNumber || currentStudent.phone || currentStudent.whatsappNo || '',
+                  dateOfBirth: currentStudent.dateOfBirth || currentStudent.dob || '',
+                  chessExperience: currentStudent.chessExperience || currentStudent.level || 'Beginner',
+                  school: currentStudent.school || '',
+                  gender: currentStudent.gender || 'N/A',
+                  fideId: currentStudent.fideId || '',
+                  fideRating: currentStudent.fideRating || '',
+                  parentName: currentStudent.parentName || '',
+                  parentOccupation: currentStudent.parentOccupation || '',
+                  address: currentStudent.address || ''
+                });
+                setIsEditing(true);
+              }}
+              style={{
+                padding: '0.65rem 1.4rem', background: 'rgba(212,175,55,0.15)', color: '#d4af37',
+                border: '1px solid #d4af37', borderRadius: '6px', fontWeight: '700', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s'
+              }}
+            >
+              ✏️ Edit Details
+            </button>
+            <button onClick={() => { onClose(); setIsEditing(false); }} style={{
+              padding: '0.65rem 2rem', background: '#d4af37', color: '#000',
+              border: 'none', borderRadius: '6px', fontWeight: '700', cursor: 'pointer'
+            }}>Close Details</button>
+          </div>
+        )}
       </div>
     </div>
   );
