@@ -399,13 +399,12 @@ const PendingTab = ({ students, setStudents, onRefresh, setViewingStudent }) => 
 ═══════════════════════════════════════════════════════════ */
 const ManualAddTab = ({ onRefresh }) => {
   const [form, setForm] = useState({
-    studentId: '',
     name: '',
-    email: '',
-    dob: '',
-    level: 'Beginner',
     phone: '',
+    email: '',
     school: '',
+    level: 'Beginner',
+    dob: '',
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -414,7 +413,7 @@ const ManualAddTab = ({ onRefresh }) => {
     const { name, value } = e.target;
     setForm({
       ...form,
-      [name]: name === 'studentId' ? value.toUpperCase() : value
+      [name]: value
     });
   };
 
@@ -423,28 +422,27 @@ const ManualAddTab = ({ onRefresh }) => {
     setError('');
     setSuccess('');
 
-    const formattedId = form.studentId.trim().toUpperCase();
-    if (!formattedId) { setError('Student ID is required.'); return; }
-    if (!form.name.trim()) { setError('Name is required.'); return; }
-    if (!form.dob) { setError('Date of Birth is required (used as portal password).'); return; }
+    if (!form.name.trim()) { setError('Full Name is required.'); return; }
+    if (!form.phone.trim()) { setError('Phone Number is required.'); return; }
+    if (!form.dob.trim()) { setError('Date of Birth is required (used as portal password).'); return; }
 
     try {
-      await createItem('students', {
-        studentId: formattedId,
+      const res = await createItem('students', {
         name: form.name.trim(),
-        email: form.email.trim(),
-        dob: form.dob,
-        level: form.level,
         phone: form.phone.trim(),
+        email: form.email.trim(),
         school: form.school.trim(),
+        level: form.level,
+        dob: form.dob.trim(),
         status: 'Approved',
         approvedDate: new Date().toISOString().split('T')[0],
       });
       onRefresh();
-      setSuccess(`Student added! Credentials — Username: ${formattedId} | Password: ${form.dob}`);
-      setForm({ studentId: '', name: '', email: '', dob: '', level: 'Beginner', phone: '', school: '' });
+      const assignedId = res?.studentId || res?.student_id || 'Assigned';
+      setSuccess(`Student added successfully! Credentials — Student ID: ${assignedId} | Password: ${form.dob}`);
+      setForm({ name: '', phone: '', email: '', school: '', level: 'Beginner', dob: '' });
     } catch (err) {
-      setError(`Failed to add student. The ID may already be in use.`);
+      setError(`Failed to add student. Please check input details.`);
     }
   };
 
@@ -471,7 +469,7 @@ const ManualAddTab = ({ onRefresh }) => {
 
   return (
     <div style={{ maxWidth: '620px' }}>
-      <InfoBanner text="Manually add a student with a custom Student ID. They should use their provided password to log in once approved." />
+      <InfoBanner text="Manually add a student with approved status. An official Student ID will be generated automatically, and they can log in using their credentials." />
 
       {error && (
         <div style={{
@@ -491,20 +489,22 @@ const ManualAddTab = ({ onRefresh }) => {
       )}
 
       <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-        {/* Student ID — full width, admin-defined */}
-        <div style={{ gridColumn: '1 / -1' }}>
-          <label style={labelStyle}>
-            🪪 Student ID <span style={{ color: '#d4af37' }}>(you define this — it becomes the username)</span>
-          </label>
-          <input name="studentId" value={form.studentId} onChange={handle}
-            placeholder="e.g. UCK01" style={{ ...inputStyle, borderColor: 'rgba(212,175,55,0.45)', fontWeight: '700', fontSize: '1rem', textTransform: 'uppercase' }} required />
-        </div>
-
         {/* Name */}
         <div style={{ gridColumn: '1 / -1' }}>
-          <label style={labelStyle}>Full Name</label>
+          <label style={labelStyle}>
+            Full Name <span style={{ color: '#d4af37' }}>*</span>
+          </label>
           <input name="name" value={form.name} onChange={handle}
             placeholder="Student full name" style={inputStyle} required />
+        </div>
+
+        {/* Phone */}
+        <div>
+          <label style={labelStyle}>
+            Phone Number <span style={{ color: '#d4af37' }}>*</span>
+          </label>
+          <input name="phone" value={form.phone} onChange={handle}
+            placeholder="e.g. 0771234567" style={{ ...inputStyle, borderColor: 'rgba(212,175,55,0.45)' }} required />
         </div>
 
         {/* Email */}
@@ -512,13 +512,6 @@ const ManualAddTab = ({ onRefresh }) => {
           <label style={labelStyle}>Email Address</label>
           <input name="email" type="email" value={form.email} onChange={handle}
             placeholder="student@example.com" style={inputStyle} />
-        </div>
-
-        {/* Phone */}
-        <div>
-          <label style={labelStyle}>Phone Number</label>
-          <input name="phone" value={form.phone} onChange={handle}
-            placeholder="e.g. 0771234567" style={inputStyle} />
         </div>
 
         {/* School / College */}
@@ -542,7 +535,7 @@ const ManualAddTab = ({ onRefresh }) => {
         {/* DOB — password */}
         <div style={{ gridColumn: '1 / -1' }}>
           <label style={labelStyle}>
-            🔑 Date of Birth (DD/MM/YYYY) <span style={{ color: '#d4af37' }}>(becomes portal password)</span>
+            🔑 Date of Birth (DD/MM/YYYY) <span style={{ color: '#d4af37' }}>* (becomes portal password)</span>
           </label>
           <input name="dob" type="text" value={form.dob} onChange={handle} placeholder="DD/MM/YYYY" style={inputStyle} required />
         </div>

@@ -39,8 +39,22 @@ exports.register = async (req, res) => {
       fideRating: fideRatingVal
     };
 
+    let finalStudentId = data.studentId ? String(data.studentId).trim().toUpperCase() : null;
+    if (!finalStudentId) {
+      const { data: allStudents } = await supabase.from('students').select('student_id');
+      const maxNum = (allStudents || []).reduce((max, s) => {
+        const match = String(s.student_id || '').match(/UCK(\d+)/i);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          return num > max ? num : max;
+        }
+        return max;
+      }, 0);
+      finalStudentId = `UCK${maxNum + 1}`;
+    }
+
     const newStudent = {
-      student_id: data.studentId ? String(data.studentId).trim().toUpperCase() : null,
+      student_id: finalStudentId,
       student_name: data.studentName || data.name || 'Anonymous Student',
       email: data.email || null,
       phone_number: data.phone || data.phoneNumber || data.whatsappNo || null,
@@ -66,6 +80,7 @@ exports.register = async (req, res) => {
       message: 'Registration successful',
       id: inserted.id,
       ...inserted,
+      studentId: finalStudentId,
       school: schoolVal,
       address: addressVal,
       parentName: parentNameVal,
@@ -274,15 +289,15 @@ exports.login = async (req, res) => {
 
     const idStr = String(studentId).trim();
 
-    // Query Supabase for student by student_id (ilike for case insensitivity)
-    const { data: student, error } = await supabase
+    // Query Supabase for student by student_id or phone_number (case-insensitive)
+    let { data: student, error } = await supabase
       .from('students')
       .select('*')
-      .ilike('student_id', idStr)
-      .single();
+      .or(`student_id.ilike.${idStr},phone_number.eq.${idStr}`)
+      .maybeSingle();
 
     if (error || !student) {
-      return res.status(401).json({ error: 'Invalid Student ID or account does not exist.' });
+      return res.status(401).json({ error: 'Invalid Student ID / Phone Number or account does not exist.' });
     }
 
     const currentStatus = (student.status || 'Pending').toLowerCase();
