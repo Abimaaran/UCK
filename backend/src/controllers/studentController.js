@@ -112,7 +112,9 @@ exports.update = async (req, res) => {
     const body = req.body;
 
     const updatePayload = {};
-    if (body.studentId !== undefined) updatePayload.student_id = body.studentId;
+    if (body.studentId !== undefined) {
+      updatePayload.student_id = typeof body.studentId === 'string' ? body.studentId.trim().toUpperCase() : body.studentId;
+    }
     if (body.studentName !== undefined || body.name !== undefined) updatePayload.student_name = body.studentName || body.name;
     if (body.email !== undefined) updatePayload.email = body.email;
     if (body.phone !== undefined || body.phoneNumber !== undefined) updatePayload.phone_number = body.phone || body.phoneNumber;

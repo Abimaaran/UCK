@@ -182,10 +182,10 @@ const PendingTab = ({ students, setStudents, onRefresh, setViewingStudent }) => 
   const handleApprove = async (student) => {
     const rawId = customIds[student.id] || student.id; // fallback to original id if no custom ID
     if (!rawId || !String(rawId).trim()) {
-      alert('⚠️ Required: Please assign a UCK Student ID (e.g. uck01) before approving the registration.');
+      alert('⚠️ Required: Please assign a UCK Student ID (e.g. UCK01) before approving the registration.');
       return;
     }
-    const studentId = String(rawId).trim();
+    const studentId = String(rawId).trim().toUpperCase();
 
     try {
       await approveStudentApi(studentId, student);
@@ -364,9 +364,9 @@ const PendingTab = ({ students, setStudents, onRefresh, setViewingStudent }) => 
                   <td>
                     <input
                       type="text"
-                      placeholder="SID"
+                      placeholder="e.g. UCK01"
                       value={customIds[student.id] || ''}
-                      onChange={e => setCustomIds({ ...customIds, [student.id]: e.target.value })}
+                      onChange={e => setCustomIds({ ...customIds, [student.id]: e.target.value.toUpperCase() })}
                       style={{
                         width: '100px',
                         padding: '0.4rem 0.6rem',
@@ -376,7 +376,8 @@ const PendingTab = ({ students, setStudents, onRefresh, setViewingStudent }) => 
                         color: '#fff',
                         fontWeight: '700',
                         fontSize: '0.9rem',
-                        textAlign: 'center'
+                        textAlign: 'center',
+                        textTransform: 'uppercase'
                       }}
                     />
                   </td>
@@ -410,20 +411,27 @@ const ManualAddTab = ({ onRefresh }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const handle = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handle = (e) => {
+    const { name, value } = e.target;
+    setForm({
+      ...form,
+      [name]: name === 'studentId' ? value.toUpperCase() : value
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
 
-    if (!form.studentId.trim()) { setError('Student ID is required.'); return; }
+    const formattedId = form.studentId.trim().toUpperCase();
+    if (!formattedId) { setError('Student ID is required.'); return; }
     if (!form.name.trim()) { setError('Name is required.'); return; }
     if (!form.dob) { setError('Date of Birth is required (used as portal password).'); return; }
 
     try {
       await createItem('students', {
-        studentId: form.studentId.trim(),
+        studentId: formattedId,
         name: form.name.trim(),
         email: form.email.trim(),
         dob: form.dob,
@@ -433,7 +441,7 @@ const ManualAddTab = ({ onRefresh }) => {
         approvedDate: new Date().toISOString().split('T')[0],
       });
       onRefresh();
-      setSuccess(`Student added! Credentials — Username: ${form.studentId.trim()} | Password: ${form.dob}`);
+      setSuccess(`Student added! Credentials — Username: ${formattedId} | Password: ${form.dob}`);
       setForm({ studentId: '', name: '', email: '', dob: '', level: 'Beginner', phone: '' });
     } catch (err) {
       setError(`Failed to add student. The ID may already be in use.`);
@@ -489,7 +497,7 @@ const ManualAddTab = ({ onRefresh }) => {
             🪪 Student ID <span style={{ color: '#d4af37' }}>(you define this — it becomes the username)</span>
           </label>
           <input name="studentId" value={form.studentId} onChange={handle}
-            placeholder="e.g. 1005" style={{ ...inputStyle, borderColor: 'rgba(212,175,55,0.45)', fontWeight: '700', fontSize: '1rem' }} required />
+            placeholder="e.g. UCK01" style={{ ...inputStyle, borderColor: 'rgba(212,175,55,0.45)', fontWeight: '700', fontSize: '1rem', textTransform: 'uppercase' }} required />
         </div>
 
         {/* Name */}
@@ -707,7 +715,9 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
 
   const handleEditChange = (e) => {
     const { name, value } = e.target;
-    if (name === 'phoneNumber' || name === 'phone') {
+    if (name === 'studentId') {
+      setEditForm({ ...editForm, studentId: value.toUpperCase() });
+    } else if (name === 'phoneNumber' || name === 'phone') {
       setEditForm({ ...editForm, phoneNumber: value, phone: value });
     } else {
       setEditForm({ ...editForm, [name]: value });
@@ -721,9 +731,13 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
         alert("Cannot update student: Student ID is missing.");
         return;
       }
-      await updateItem('students', id, editForm);
+      const payload = { ...editForm };
+      if (payload.studentId) {
+        payload.studentId = String(payload.studentId).trim().toUpperCase();
+      }
+      await updateItem('students', id, payload);
       
-      const newPhone = editForm.phoneNumber || editForm.phone;
+      const newPhone = payload.phoneNumber || payload.phone;
 
       // Instantly update local UI state
       setApproved(prev => prev.map(s => {
@@ -896,7 +910,7 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
                   <tr key={sId}>
                     <td>
                       {isEditing ? (
-                        <input name="studentId" value={editForm.studentId} onChange={handleEditChange} style={{ ...miniInput, fontWeight: '700', color: '#d4af37' }} />
+                        <input name="studentId" value={editForm.studentId} onChange={handleEditChange} style={{ ...miniInput, fontWeight: '700', color: '#d4af37', textTransform: 'uppercase' }} />
                       ) : (
                         <strong style={{ color: '#d4af37' }}>#{highlightMatch(s.studentId, searchTerm)}</strong>
                       )}
