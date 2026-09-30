@@ -399,6 +399,7 @@ const PendingTab = ({ students, setStudents, onRefresh, setViewingStudent }) => 
 ═══════════════════════════════════════════════════════════ */
 const ManualAddTab = ({ onRefresh }) => {
   const [form, setForm] = useState({
+    studentId: '',
     name: '',
     phone: '',
     email: '',
@@ -413,7 +414,7 @@ const ManualAddTab = ({ onRefresh }) => {
     const { name, value } = e.target;
     setForm({
       ...form,
-      [name]: value
+      [name]: name === 'studentId' ? value.toUpperCase() : value
     });
   };
 
@@ -422,12 +423,15 @@ const ManualAddTab = ({ onRefresh }) => {
     setError('');
     setSuccess('');
 
+    const formattedId = form.studentId.trim().toUpperCase();
+    if (!formattedId) { setError('Student ID is required.'); return; }
     if (!form.name.trim()) { setError('Full Name is required.'); return; }
     if (!form.phone.trim()) { setError('Phone Number is required.'); return; }
     if (!form.dob.trim()) { setError('Date of Birth is required (used as portal password).'); return; }
 
     try {
       const res = await createItem('students', {
+        studentId: formattedId,
         name: form.name.trim(),
         phone: form.phone.trim(),
         email: form.email.trim(),
@@ -438,11 +442,10 @@ const ManualAddTab = ({ onRefresh }) => {
         approvedDate: new Date().toISOString().split('T')[0],
       });
       onRefresh();
-      const assignedId = res?.studentId || res?.student_id || 'Assigned';
-      setSuccess(`Student added successfully! Credentials — Student ID: ${assignedId} | Password: ${form.dob}`);
-      setForm({ name: '', phone: '', email: '', school: '', level: 'Beginner', dob: '' });
+      setSuccess(`Student added successfully! Credentials — Student ID: ${formattedId} | Password: ${form.dob}`);
+      setForm({ studentId: '', name: '', phone: '', email: '', school: '', level: 'Beginner', dob: '' });
     } catch (err) {
-      setError(`Failed to add student. Please check input details.`);
+      setError(`Failed to add student. The Student ID may already be in use.`);
     }
   };
 
@@ -469,7 +472,7 @@ const ManualAddTab = ({ onRefresh }) => {
 
   return (
     <div style={{ maxWidth: '620px' }}>
-      <InfoBanner text="Manually add a student with approved status. An official Student ID will be generated automatically, and they can log in using their credentials." />
+      <InfoBanner text="Manually add a student with a custom Student ID. They should use their provided password to log in once approved." />
 
       {error && (
         <div style={{
@@ -489,6 +492,27 @@ const ManualAddTab = ({ onRefresh }) => {
       )}
 
       <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        {/* Student ID — full width, mandatory, auto uppercase */}
+        <div style={{ gridColumn: '1 / -1' }}>
+          <label style={labelStyle}>
+            🪪 Student ID <span style={{ color: '#d4af37' }}>* (you define this — automatically converts to uppercase)</span>
+          </label>
+          <input
+            name="studentId"
+            value={form.studentId}
+            onChange={handle}
+            placeholder="e.g. UCK01"
+            style={{
+              ...inputStyle,
+              borderColor: 'rgba(212,175,55,0.45)',
+              fontWeight: '700',
+              fontSize: '1rem',
+              textTransform: 'uppercase'
+            }}
+            required
+          />
+        </div>
+
         {/* Name */}
         <div style={{ gridColumn: '1 / -1' }}>
           <label style={labelStyle}>
