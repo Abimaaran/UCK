@@ -665,6 +665,15 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
   const handleTogglePause = async (student) => {
     const isPaused = !student.isPaused;
     const targetDbId = student.id || student._id || student.studentId;
+    const nameText = student.studentName || student.name || '';
+    const idText = student.studentId ? `(ID: ${student.studentId})` : '';
+    const displayInfo = [nameText, idText].filter(Boolean).join(' ') || 'this student';
+
+    const confirmMsg = isPaused 
+      ? `Are you sure you want to pause student ${displayInfo}?`
+      : `Are you sure you want to resume student ${displayInfo}?`;
+
+    if (!window.confirm(confirmMsg)) return;
 
     // Instantly update UI state in-place (ZERO page reload)
     setApproved(prev => prev.map(s => {
@@ -680,7 +689,7 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
       });
     } catch (err) {
       console.error("Failed to toggle pause status:", err);
-      alert("Could not update student status in database.");
+      alert(`Could not update pause status for student ${displayInfo} in database.`);
       fetchApproved();
     }
   };
@@ -830,9 +839,18 @@ const ApprovedTab = ({ onRefresh, setViewingStudent }) => {
         fideId: payload.fideId,
         fideRating: payload.fideRating
       });
+
+      const nameText = newName ? newName : '';
+      const idText = newSid ? `(ID: ${newSid})` : '';
+      const displayInfo = [nameText, idText].filter(Boolean).join(' ') || 'this student';
+
+      alert(`✅ Details updated successfully for student ${displayInfo}!`);
     } catch (err) {
       console.error("Failed to save edit:", err);
-      alert(err.response?.data?.error || err.message || "Failed to update student details in database.");
+      const nameText = editForm.studentName || editForm.name || '';
+      const idText = editForm.studentId ? `(ID: ${editForm.studentId})` : '';
+      const displayInfo = [nameText, idText].filter(Boolean).join(' ') || 'this student';
+      alert(`Failed to update student ${displayInfo} in database: ` + (err.response?.data?.error || err.message));
       fetchApproved();
     }
   };
