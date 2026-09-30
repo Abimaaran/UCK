@@ -236,6 +236,11 @@
   color: var(--accent-primary-light);
 }
 
+.nav-item:active {
+  transform: scale(0.96);
+  transition: transform 0.05s ease;
+}
+
 .nav-item.active {
   background: var(--accent-primary);
   color: #ffffff;

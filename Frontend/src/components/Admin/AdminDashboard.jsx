@@ -319,12 +319,8 @@ const AdminDashboard = () => {
     setActiveTab(tabKey);
     localStorage.setItem('adminActiveTab', tabKey);
     setIsSidebarOpen(false); // Mobile drawer close
-    setIsHovered(false);     // Instantly collapse desktop hover sidebar on click!
     setIsSearchFocused(false);
     setSearchQuery('');
-    if (document.activeElement) {
-      document.activeElement.blur();
-    }
   };
 
   const handleRefreshCurrentTab = () => {
@@ -361,9 +357,9 @@ const AdminDashboard = () => {
       case 'timetable':
         return <TimetableManager key={tabRefreshKey} timetable={timetable} setTimetable={setTimetable} targetItem={searchTargetItem} />;
       case 'attendance':
-        return <AttendanceManager key={tabRefreshKey} targetItem={searchTargetItem} />;
+        return <AttendanceManager key={tabRefreshKey} targetItem={searchTargetItem} initialStudents={allStudents} />;
       case 'fees':
-        return <FeesManager key={tabRefreshKey} targetItem={searchTargetItem} />;
+        return <FeesManager key={tabRefreshKey} targetItem={searchTargetItem} initialStudents={allStudents} />;
       case 'reviews':
         return <StudentReviewManager key={tabRefreshKey} targetItem={searchTargetItem} />;
       case 'user-feedbacks':

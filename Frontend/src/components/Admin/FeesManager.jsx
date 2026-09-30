@@ -117,9 +117,17 @@ const formatSentTime = (item, reminderLog) => {
   return item.time || 'N/A';
 };
 
-const FeesManager = () => {
-  const [approvedStudents, setApprovedStudents] = useState([]);
-  const [fees, setFees] = useState({});
+let cachedApprovedStudents = null;
+let cachedFeesMap = null;
+
+const FeesManager = ({ initialStudents }) => {
+  const [approvedStudents, setApprovedStudents] = useState(() => {
+    if (Array.isArray(initialStudents) && initialStudents.length > 0) {
+      return initialStudents.filter(s => s.status === 'Approved' && !s.isPaused);
+    }
+    return cachedApprovedStudents || [];
+  });
+  const [fees, setFees] = useState(() => cachedFeesMap || {});
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -205,35 +213,46 @@ const FeesManager = () => {
   };
 
   useEffect(() => {
+    let isMounted = true;
     const fetchData = async () => {
-      // 1. Fetch Students
       try {
-        const studentData = await getCollection('students');
-        setApprovedStudents(Array.isArray(studentData) ? studentData.filter(s => s.status === 'Approved' && !s.isPaused) : []);
-      } catch (err) {
-        console.warn("Failed to fetch students:", err.message);
-        setApprovedStudents([]);
-      }
+        const [studentData, allFees] = await Promise.all([
+          getCollection('students').catch(err => {
+            console.warn("Failed to fetch students:", err.message);
+            return null;
+          }),
+          getCollection('fees').catch(err => {
+            console.warn("Failed to fetch fees:", err.message);
+            return null;
+          })
+        ]);
 
-      // 2. Fetch Fees
-      try {
-        const allFees = await getCollection('fees');
-        const feesMap = {};
+        if (!isMounted) return;
+
+        if (Array.isArray(studentData)) {
+          const approved = studentData.filter(s => s.status === 'Approved' && !s.isPaused);
+          cachedApprovedStudents = approved;
+          setApprovedStudents(approved);
+        }
+
         if (Array.isArray(allFees)) {
+          const feesMap = {};
           allFees.forEach(record => {
             if (!feesMap[record.studentId]) {
               feesMap[record.studentId] = {};
             }
             feesMap[record.studentId][record.month] = record.status;
           });
+          cachedFeesMap = feesMap;
+          setFees(feesMap);
         }
-        setFees(feesMap);
       } catch (err) {
-        console.warn("Failed to fetch fees:", err.message);
-        setFees({});
+        console.warn("Error fetching fees data:", err);
       }
     };
+
     fetchData();
+    return () => { isMounted = false; };
   }, []);
 
   useEffect(() => {
@@ -457,20 +476,44 @@ const FeesManager = () => {
   };
 
   const handleFeeChange = async (studentId, status) => {
+    const previousStatus = fees[studentId]?.[selectedMonth] || 'Not Paid';
+    if (previousStatus === status) return;
+
+    // ⚡ Optimistic UI Update: Instant visual feedback with zero latency
+    const newFees = {
+      ...fees,
+      [studentId]: {
+        ...(fees[studentId] || {}),
+        [selectedMonth]: status
+      }
+    };
+    setFees(newFees);
+    if (cachedFeesMap) {
+      if (!cachedFeesMap[studentId]) cachedFeesMap[studentId] = {};
+      cachedFeesMap[studentId][selectedMonth] = status;
+    }
+
     try {
       const payload = {
         month: selectedMonth,
         status: status
       };
       await updateItem('fees', studentId, payload);
-
-      const newFees = { ...fees };
-      if (!newFees[studentId]) newFees[studentId] = {};
-      newFees[studentId][selectedMonth] = status;
-      setFees(newFees);
     } catch (err) {
       console.error("Failed to update fees", err);
-      alert("Could not update fees.");
+      // Revert optimistic update on failure
+      const reverted = {
+        ...fees,
+        [studentId]: {
+          ...(fees[studentId] || {}),
+          [selectedMonth]: previousStatus
+        }
+      };
+      setFees(reverted);
+      if (cachedFeesMap) {
+        cachedFeesMap[studentId][selectedMonth] = previousStatus;
+      }
+      alert("Could not update fees. Please try again.");
     }
   };
 

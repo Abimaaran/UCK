@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { getCollection, updateItem, createItem } from '../../services/api';
 
-const AttendanceManager = () => {
-  const [approvedStudents, setApprovedStudents] = useState([]);
-  const [attendance, setAttendance] = useState({});
+let cachedApprovedStudents = null;
+let cachedAttendanceMap = null;
+
+const AttendanceManager = ({ initialStudents }) => {
+  const [approvedStudents, setApprovedStudents] = useState(() => {
+    if (Array.isArray(initialStudents) && initialStudents.length > 0) {
+      return initialStudents.filter(s => s.status === 'Approved' && !s.isPaused);
+    }
+    return cachedApprovedStudents || [];
+  });
+  const [attendance, setAttendance] = useState(() => cachedAttendanceMap || {});
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -45,56 +53,87 @@ const AttendanceManager = () => {
   ];
 
   useEffect(() => {
+    let isMounted = true;
     const fetchData = async () => {
-      // 1. Fetch Students
       try {
-        const studentData = await getCollection('students');
-        setApprovedStudents(Array.isArray(studentData) ? studentData.filter(s => s.status === 'Approved' && !s.isPaused) : []);
-      } catch (err) {
-        console.warn("Failed to fetch students:", err.message);
-        setApprovedStudents([]);
-      }
+        const [studentData, allAttendance] = await Promise.all([
+          getCollection('students').catch(err => {
+            console.warn("Failed to fetch students:", err.message);
+            return null;
+          }),
+          getCollection('attendance').catch(err => {
+            console.warn("Failed to fetch attendance:", err.message);
+            return null;
+          })
+        ]);
 
-      // 2. Fetch Attendance
-      try {
-        const allAttendance = await getCollection('attendance');
-        const attendanceMap = {};
+        if (!isMounted) return;
+
+        if (Array.isArray(studentData)) {
+          const approved = studentData.filter(s => s.status === 'Approved' && !s.isPaused);
+          cachedApprovedStudents = approved;
+          setApprovedStudents(approved);
+        }
+
         if (Array.isArray(allAttendance)) {
+          const attendanceMap = {};
           allAttendance.forEach(record => {
             if (!attendanceMap[record.studentId]) {
               attendanceMap[record.studentId] = {};
             }
             attendanceMap[record.studentId][record.date] = record.status;
           });
+          cachedAttendanceMap = attendanceMap;
+          setAttendance(attendanceMap);
         }
-        setAttendance(attendanceMap);
       } catch (err) {
-        console.warn("Failed to fetch attendance:", err.message);
-        setAttendance({});
+        console.warn("Error fetching attendance data:", err);
       }
     };
+
     fetchData();
+    return () => { isMounted = false; };
   }, []);
 
   const handleAttendanceChange = async (studentId, status, targetDate = selectedDate) => {
+    const previousStatus = attendance[studentId]?.[targetDate];
+    if (previousStatus === status) return;
+
+    // ⚡ Optimistic UI Update: Instant visual feedback with zero latency
+    const newAttendance = {
+      ...attendance,
+      [studentId]: {
+        ...(attendance[studentId] || {}),
+        [targetDate]: status
+      }
+    };
+    setAttendance(newAttendance);
+    if (cachedAttendanceMap) {
+      if (!cachedAttendanceMap[studentId]) cachedAttendanceMap[studentId] = {};
+      cachedAttendanceMap[studentId][targetDate] = status;
+    }
+
     try {
-      // Typically you'd send { studentId, date: targetDate, status } to the backend
-      // Here we assume a PUT/POST to `/attendance/${studentId}` with the date and status
       const payload = {
         date: targetDate,
         status: status
       };
-      // Note: this depends heavily on how your backend expects attendance data.
-      // E.g., a generic update or a specific attendance mark endpoint
       await updateItem('attendance', studentId, payload);
-
-      const newAttendance = { ...attendance };
-      if (!newAttendance[studentId]) newAttendance[studentId] = {};
-      newAttendance[studentId][targetDate] = status;
-      setAttendance(newAttendance);
     } catch (err) {
       console.error("Failed to update attendance", err);
-      alert("Could not update attendance.");
+      // Revert optimistic update on failure
+      const reverted = {
+        ...attendance,
+        [studentId]: {
+          ...(attendance[studentId] || {}),
+          [targetDate]: previousStatus
+        }
+      };
+      setAttendance(reverted);
+      if (cachedAttendanceMap) {
+        cachedAttendanceMap[studentId][targetDate] = previousStatus;
+      }
+      alert("Could not update attendance. Please try again.");
     }
   };
 
@@ -397,7 +436,7 @@ const AttendanceManager = () => {
                               cursor: 'pointer',
                               fontSize: '0.85rem',
                               fontWeight: '700',
-                              transition: 'all 0.3s ease',
+                              transition: 'transform 0.08s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease',
                               display: 'flex',
                               alignItems: 'center',
                               gap: '8px',
@@ -419,7 +458,7 @@ const AttendanceManager = () => {
                               cursor: 'pointer',
                               fontSize: '0.85rem',
                               fontWeight: '700',
-                              transition: 'all 0.3s ease',
+                              transition: 'transform 0.08s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease',
                               display: 'flex',
                               alignItems: 'center',
                               gap: '8px',
