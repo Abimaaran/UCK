@@ -472,7 +472,8 @@ const ManualAddTab = ({ onRefresh }) => {
       setSuccess(`Student added successfully! Credentials — Student ID: ${formattedId} | Password: ${form.dob}`);
       setForm({ studentId: '', name: '', phone: '', email: '', school: '', level: 'Beginner', dob: '' });
     } catch (err) {
-      setError(`Failed to add student. The Student ID may already be in use.`);
+      const serverMsg = err?.response?.data?.error || err?.response?.data?.message || err?.message;
+      setError(`Failed to add student${serverMsg ? `: ${serverMsg}` : '. The Student ID may already be in use.'}`);
     }
   };
 

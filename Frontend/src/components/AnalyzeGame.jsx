@@ -1,4 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
+import {
+  FaChessBoard,
+  FaExpand,
+  FaSlidersH,
+  FaEdit,
+  FaQuestionCircle,
+  FaUndo,
+  FaTrash,
+  FaSync,
+  FaPlay,
+  FaLightbulb
+} from 'react-icons/fa';
 import './AnalyzeGame.css';
 import AnalyzeNavbar from './AnalyzeNavbar.jsx';
 import Footer from './Footer.jsx';
@@ -286,10 +298,10 @@ const AnalyzeGame = () => {
             {/* Board Panel */}
             <div className="analyze-chess-card analyze-chess-card--elevated">
               <div className="analyze-card-header">
-                <h3 className="analyze-card-title"><i className="fas fa-chess-board"></i> UCK Engine</h3>
+                <h3 className="analyze-card-title"><FaChessBoard style={{ marginRight: '6px' }} /> UCK Engine</h3>
                 <div className="analyze-card-actions">
                   <button className="analyze-chess-btn analyze-chess-btn--secondary" style={{ padding: '0.25rem 0.5rem' }}>
-                    <i className="fas fa-expand"></i>
+                    <FaExpand />
                   </button>
                 </div>
               </div>
@@ -309,7 +321,7 @@ const AnalyzeGame = () => {
             {/* Controls Panel */}
             <div className="analyze-chess-card">
               <div className="analyze-card-header">
-                <h3 className="analyze-card-title"><i className="fas fa-sliders-h"></i> Board Settings</h3>
+                <h3 className="analyze-card-title"><FaSlidersH style={{ marginRight: '6px' }} /> Board Settings</h3>
               </div>
               <div className="analyze-card-content">
                 <div className="analyze-controls-panel">
@@ -373,10 +385,10 @@ const AnalyzeGame = () => {
           {/* Editor Section */}
           <div className="analyze-chess-card analyze-chess-card--elevated" style={{ marginTop: '2rem' }}>
             <div className="analyze-card-header">
-              <h3 className="analyze-card-title"><i className="fas fa-edit"></i> Board Editor</h3>
+              <h3 className="analyze-card-title"><FaEdit style={{ marginRight: '6px' }} /> Board Editor</h3>
               <div className="analyze-card-actions">
                 <button className="analyze-chess-btn analyze-chess-btn--secondary" style={{ padding: '0.25rem 0.5rem' }}>
-                  <i className="fas fa-question-circle"></i>
+                  <FaQuestionCircle />
                 </button>
               </div>
             </div>
@@ -385,16 +397,16 @@ const AnalyzeGame = () => {
                 <div className="analyze-board-column">
                   <div className="analyze-action-buttons analyze-action-buttons--top">
                     <button className="analyze-chess-btn analyze-chess-btn--secondary" onClick={setStart}>
-                      <i className="fas fa-undo"></i> Start
+                      <FaUndo style={{ marginRight: '6px' }} /> Start
                     </button>
                     <button className="analyze-chess-btn analyze-chess-btn--danger" onClick={() => { setBoard(Array.from({ length: 8 }, () => Array(8).fill(''))); setSelectedSquare(null); }}>
-                      <i className="fas fa-trash"></i> Clear
+                      <FaTrash style={{ marginRight: '6px' }} /> Clear
                     </button>
                     <button className="analyze-chess-btn analyze-chess-btn--secondary" onClick={() => setFlip(!flip)}>
-                      <i className="fas fa-sync"></i> Flip
+                      <FaSync style={{ marginRight: '6px' }} /> Flip
                     </button>
                     <button className="analyze-chess-btn analyze-chess-btn--accent" onClick={handleApply}>
-                      <i className="fas fa-play"></i> Analyze
+                      <FaPlay style={{ marginRight: '6px' }} /> Analyze
                     </button>
                   </div>
                   <div className="analyze-board-with-coords">
@@ -481,7 +493,7 @@ const AnalyzeGame = () => {
               </div>
 
               <p className="analyze-hint-text">
-                <i className="fas fa-lightbulb"></i> Tip: Use 🖐 Hand to move (click or drag). Use 🗑 to erase (or right-click a square).
+                <FaLightbulb style={{ marginRight: '6px' }} /> Tip: Use 🖐 Hand to move (click or drag). Use 🗑 to erase (or right-click a square).
               </p>
             </div>
           </div>

@@ -11,6 +11,43 @@ const parseMeta = (scheduleStr) => {
   }
 };
 
+const normalizeDateToISO = (dateStr) => {
+  if (!dateStr) return null;
+  const str = String(dateStr).trim();
+  if (!str) return null;
+
+  // If already YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    return str;
+  }
+
+  // If DD/MM/YYYY or DD-MM-YYYY or DD.MM.YYYY
+  const dmyMatch = str.match(/^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{4})$/);
+  if (dmyMatch) {
+    const day = dmyMatch[1].padStart(2, '0');
+    const month = dmyMatch[2].padStart(2, '0');
+    const year = dmyMatch[3];
+    return `${year}-${month}-${day}`;
+  }
+
+  // If YYYY/MM/DD or YYYY.MM.DD
+  const ymdMatch = str.match(/^(\d{4})[/\-.](\d{1,2})[/\-.](\d{1,2})$/);
+  if (ymdMatch) {
+    const year = ymdMatch[1];
+    const month = ymdMatch[2].padStart(2, '0');
+    const day = ymdMatch[3].padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  // Fallback to Date parser
+  const d = new Date(str);
+  if (!isNaN(d.getTime())) {
+    return d.toISOString().split('T')[0];
+  }
+
+  return null;
+};
+
 exports.register = async (req, res) => {
   try {
     const data = req.body;
@@ -59,7 +96,7 @@ exports.register = async (req, res) => {
       student_name: data.studentName || data.name || 'Anonymous Student',
       email: data.email || null,
       phone_number: data.phone || data.phoneNumber || data.whatsappNo || null,
-      dob: data.dob || data.dateOfBirth || null,
+      dob: normalizeDateToISO(data.dob || data.dateOfBirth),
       level: data.level || data.chessExperience || 'Beginner',
       chess_experience: data.chessExperience || data.level || null,
       preferred_schedule: JSON.stringify(extraMeta),
@@ -198,7 +235,10 @@ exports.update = async (req, res) => {
     if (body.studentName !== undefined || body.name !== undefined) updatePayload.student_name = body.studentName || body.name;
     if (body.email !== undefined) updatePayload.email = body.email;
     if (body.phone !== undefined || body.phoneNumber !== undefined) updatePayload.phone_number = body.phone || body.phoneNumber;
-    if (body.dob !== undefined || body.dateOfBirth !== undefined) updatePayload.dob = body.dob || body.dateOfBirth;
+    if (body.dob !== undefined || body.dateOfBirth !== undefined) {
+      const rawDob = body.dob !== undefined ? body.dob : body.dateOfBirth;
+      updatePayload.dob = normalizeDateToISO(rawDob);
+    }
     if (body.level !== undefined || body.chessExperience !== undefined) {
       updatePayload.level = body.level || body.chessExperience;
       updatePayload.chess_experience = body.chessExperience || body.level;
@@ -312,7 +352,10 @@ exports.login = async (req, res) => {
 
     // Verify Password/DOB
     let isMatch = false;
-    if (student.dob && student.dob === loginSecret) {
+    const normalizedLogin = normalizeDateToISO(loginSecret);
+    const normalizedDbDob = normalizeDateToISO(student.dob);
+
+    if (student.dob && (student.dob === loginSecret || (normalizedLogin && normalizedLogin === normalizedDbDob))) {
       isMatch = true;
     } else {
       isMatch = true; // Flexible matching to support registered students
